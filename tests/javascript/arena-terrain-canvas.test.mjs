@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -141,6 +141,13 @@ test('distant destruction events retain separate local repaint clips', () => {
     ]);
 });
 
+test('staggered ambush craters do not transitively merge their repaint clips across the map', () => {
+    const changed = [4, 12, 20, 28, 36, 44].map(row => row * 32 + 10);
+    const regions = terrainDirtyRegions(32, 60, changed);
+    assert.equal(regions.length, changed.length, 'distant damage stays in separate small repaint clips');
+    assert.ok(regions.every(region => region.r1 - region.r0 <= 5), 'overdraw overlap cannot grow a whole-map region');
+});
+
 test('more than 40 impacted blocks never force an unconditional full terrain repaint', () => {
     const clips = [], clears = [];
     const ctx = { ...recorder(), beginPath() {}, clip() {}, rect(...rect) { clips.push(rect); },
@@ -161,6 +168,37 @@ test('more than 40 impacted blocks never force an unconditional full terrain rep
     assert.equal(clips.length, 2, 'distant changes require two independent clips');
     assert.equal(clears.length, 2);
     assert.ok(clears.every(rect => rect[2] < 32 * 32), 'neither local clip spans the map width');
+});
+
+test('a new site with the same terrain revision replaces the entire cached image', () => {
+    const clears = [];
+    const ctx = { ...recorder(), clearRect(...rectangle) { clears.push(rectangle); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const initial = { ...frame(4, 4, new Array(16).fill(0)), visualSeed: 101 };
+    assert.equal(cache.update(initial, 0), true);
+    const firstMaps = cache.kindMaps;
+    assert.equal(cache.update({ ...initial, visualSeed: 202 }, 0), true,
+        'different arenas with the same revision cannot share the rendered terrain');
+    assert.equal(cache.repaints, 2);
+    assert.equal(clears.length, 2, 'both site loads must clear and redraw the complete terrain surface');
+    assert.notEqual(cache.kindMaps, firstMaps, 'a new arena must not reuse a previous arena texture mask');
+});
+
+test('ground-cover placement stays fixed across impacts and resets for a new site', () => {
+    const initial = mergeTerrainFrame(null, { revision: 1, columns: 2, rows: 2, visualSeed: 101,
+        surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [] });
+    initial.coverField = new Float32Array([.5, 0, 0, 1]);
+    initial.roadNear = new Float32Array([1, 2, 3, 4]);
+    initial.rockNear = new Float32Array([4, 3, 2, 1]);
+    const changed = mergeTerrainFrame(initial, { revision: 2, columns: 2, rows: 2, visualSeed: 101,
+        surface: [-1, 0, 0, 0], material: [0, 0, 0, 0],
+        fine: [{ index: 0, heights: new Array(64).fill(-1), topsoil: 0, stoneTop: -8 }] });
+    assert.equal(changed.coverField, initial.coverField);
+    assert.equal(changed.roadNear, initial.roadNear);
+    assert.equal(changed.rockNear, initial.rockNear);
+    const nextSite = mergeTerrainFrame(changed, { revision: 1, columns: 2, rows: 2, visualSeed: 202,
+        surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [] });
+    assert.equal(nextSite.coverField, undefined, 'new sites calculate their own cover');
 });
 
 test('cache draw copies the visible window from the padded surface into world space', () => {
@@ -305,6 +343,44 @@ test('merging a delta frame adds, replaces and drops subdivided columns without 
     assert.equal(second.revision, 9);
     assert.equal(mergeTerrainFrame(first, null), first, 'no news keeps the old frame');
     assert.equal(mergeTerrainFrame(undefined, null), null);
+});
+
+test('terrain damage preserves original splat pixels in all undamaged neighbour columns', () => {
+    const columns = 4, rows = 4;
+    const surface = new Array(columns * rows).fill(0);
+    const material = surface.map(() => TERRAIN_MATERIAL.Soil);
+    material[5] = TERRAIN_MATERIAL.Ash;
+    material[9] = TERRAIN_MATERIAL.Stone;
+    const original = mergeTerrainFrame(null, { revision: 1, columns, rows, surface, material, visualSeed: 1204, fine: [] });
+    const cells = [1, 4, 6, 8, 9, 10, 13, 14];
+    const pixels = new Map(cells.map(index => [index, Array.from(terrainBaseKindMap(original, 0, index % columns, Math.floor(index / columns)) ?? [])]));
+    const damagedSurface = surface.slice();
+    damagedSurface[5] = -3;
+    const damaged = mergeTerrainFrame(original, { revision: 2, columns, rows, surface: damagedSurface, material,
+        visualSeed: 1204, fine: [{ index: 5, heights: new Array(64).fill(-3), topsoil: TERRAIN_MATERIAL.Ash, stoneTop: -8 }] });
+    assert.equal(damaged.baseSurface[5], 0, 'the original substrate height is immutable');
+    assert.equal(damaged.surface[5], -3, 'the physical damage is still real');
+    for (const index of cells)
+        assert.deepEqual(Array.from(terrainBaseKindMap(damaged, 0, index % columns, Math.floor(index / columns)) ?? []),
+            pixels.get(index), `untouched column ${index} cannot change its terrain texture because a neighbour was dug`);
+    const fartherDamage = damagedSurface.slice();
+    fartherDamage[5] = -5;
+    const next = mergeTerrainFrame(damaged, { revision: 3, columns, rows, surface: fartherDamage, material,
+        visualSeed: 1204, fine: [{ index: 5, heights: new Array(64).fill(-5), topsoil: TERRAIN_MATERIAL.Ash, stoneTop: -8 }] });
+    for (const index of cells)
+        assert.deepEqual(Array.from(terrainBaseKindMap(next, 0, index % columns, Math.floor(index / columns)) ?? []),
+            pixels.get(index), `repeated hits must not shift original splat pixels in column ${index}`);
+});
+
+test('regional terrain repaint never invalidates the authored splat map', () => {
+    const ctx = { ...recorder(), beginPath() {}, clip() {}, rect() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const original = frame(4, 4, new Array(16).fill(0));
+    cache.update(original, 0);
+    const originalPixels = new Uint8Array([3, 4, 5]);
+    cache.kindMaps.set(5, originalPixels);
+    cache.update({ ...original, revision: 2, changed: [5] }, 0);
+    assert.equal(cache.kindMaps.get(5), originalPixels, 'a hit may repaint the region, but must reuse its identical texture mask');
 });
 
 test('microcolumn height reads the overlay and falls back to the whole column', () => {

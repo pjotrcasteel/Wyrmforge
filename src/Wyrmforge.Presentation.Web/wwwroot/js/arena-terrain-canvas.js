@@ -231,7 +231,10 @@ export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
  */
 export function mergeTerrainFrame(previous, incoming) {
     if (!incoming) return previous ?? null;
-    const fine = new Map(previous?.fine ?? []);
+    const visualSeed = incoming.visualSeed ?? previous?.visualSeed ?? 0;
+    const sameSite = previous && previous.columns === incoming.columns && previous.rows === incoming.rows &&
+        previous.visualSeed === visualSeed && incoming.revision >= previous.revision;
+    const fine = new Map(sameSite ? previous.fine : []);
     for (const block of incoming.fine ?? []) {
         if (!block.heights?.length) fine.delete(block.index);
         else if (isUprightProp(incoming.material?.[block.index]))
@@ -255,7 +258,14 @@ export function mergeTerrainFrame(previous, incoming) {
     }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface, material, fine, trunks, boulders,
-        visualSeed: incoming.visualSeed ?? previous?.visualSeed ?? 0,
+        // Damage changes physical heights, not the authored ground's splat/blend pattern. Capture it once for this site.
+        baseSurface: sameSite ? (previous.baseSurface ?? Array.from(previous.surface)) : Array.from(surface),
+        baseMaterial: sameSite ? (previous.baseMaterial ?? Array.from(previous.material)) : Array.from(material),
+        // Ground cover is part of the original site: do not rebuild its whole-map placement on each impact.
+        coverField: sameSite ? previous.coverField : undefined,
+        roadNear: sameSite ? previous.roadNear : undefined,
+        rockNear: sameSite ? previous.rockNear : undefined,
+        visualSeed,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
         changed: (incoming.fine ?? []).map(block => block.index),
         // The generated crack network travels once, with the first full load; so do the road (1/16 cell polyline) and the torches.
@@ -525,6 +535,8 @@ const ROAD_HALF_WIDTH = 76;
  * Returns null when nothing varies (lava, dug soil), otherwise one kind index per art pixel.
  */
 function kindMap(frame, band, column, row, ownKind, height) {
+    const baseSurface = frame.baseSurface ?? frame.surface;
+    const baseMaterial = frame.baseMaterial ?? frame.material;
     const cache = frame.kindMaps ??= new Map();
     const key = row * frame.columns + column;
     if (cache.has(key)) return cache.get(key);
@@ -535,13 +547,13 @@ function kindMap(frame, band, column, row, ownKind, height) {
         around[slot] = own;
         if (c < 0 || r < 0 || c >= frame.columns || r >= frame.rows) continue;
         const index = r * frame.columns + c;
-        if (frame.fine?.has(index)) continue;
-        const kind = topTileKind(band, frame.material[index], frame.surface[index], frame, c, r);
-        // Ground at a similar level blends; a lava column also shows the shore of any land around it, however high, as a beach on its own level.
-        if (kind && (Math.abs(frame.surface[index] - height) <= 3 || (ownKind === 'lavaTop' && kind !== 'lavaTop'))) around[slot] = KIND_INDEX[kind];
+        // Even a subdivided neighbour retains its original ground identity; only its excavated microcells look different.
+        const kind = topTileKind(band, baseMaterial[index], baseSurface[index], frame, c, r);
+        if (kind && (Math.abs(baseSurface[index] - height) <= 3 || (ownKind === 'lavaTop' && kind !== 'lavaTop')))
+            around[slot] = KIND_INDEX[kind];
         if (around[slot] !== own) uniform = false;
     }
-    const rockCap = ownKind === 'grassTop' && frame.material[key] === TERRAIN_MATERIAL.Stone;
+    const rockCap = ownKind === 'grassTop' && baseMaterial[key] === TERRAIN_MATERIAL.Stone;
     const patchy = ownKind === 'grassTop' || ownKind === 'ashTop' || ownKind === 'slabTop';
     const segments = ownKind === 'lavaTop' || ownKind === 'dirtTop' ? null : roadSegmentsFor(frame, column, row);
     if (uniform && !patchy && !segments) { cache.set(key, null); return null; }
@@ -592,6 +604,15 @@ function kindMap(frame, band, column, row, ownKind, height) {
     }
     cache.set(key, map);
     return map;
+}
+
+/** The immutable site texture for one block, independent of subsequent terrain excavation. */
+export function terrainBaseKindMap(frame, band, column, row) {
+    const index = row * frame.columns + column;
+    const baseSurface = frame.baseSurface ?? frame.surface;
+    const baseMaterial = frame.baseMaterial ?? frame.material;
+    const kind = topTileKind(band, baseMaterial[index], baseSurface[index], frame, column, row);
+    return kind ? kindMap(frame, band, column, row, kind, baseSurface[index]) : null;
 }
 
 /** Paints a column's top face from its kind map: the most common ground whole, every other ground through its own pixel mask. */
@@ -779,22 +800,66 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
     const atlas = grain ? terrainAtlas(band) : null;
     const shade = atlas ? cellShadow(frame, column, row, block.heights) : null;
     // The column's whole-block ground (with its patches and road) is the reference for its undisturbed microcolumns, so chipped ground still matches its neighbours.
-    const coarseHeight = frame.surface[row * columns + column];
-    const baseKind = atlas ? topTileKind(band, frame.material[row * columns + column], coarseHeight, frame, column, row) : null;
-    const baseMap = baseKind ? kindMap(frame, band, column, row, baseKind, coarseHeight) : null;
+    const index = row * columns + column;
+    const coarseHeight = (frame.baseSurface ?? frame.surface)[index];
+    const baseMaterial = (frame.baseMaterial ?? frame.material)[index];
+    const baseKind = atlas ? topTileKind(band, baseMaterial, coarseHeight, frame, column, row) : null;
+    const baseMap = baseKind ? terrainBaseKindMap(frame, band, column, row) : null;
     const microArt = TILE / MICRO_PER_COLUMN;
     let painted = 0;
+    const preserveTop = Boolean(atlas && baseKind && !isUprightProp(block.topsoil));
+    if (preserveTop) {
+        // The original pixel-level splat is still correct for untouched microcells. Clip out damaged
+        // microcells FIRST; drawing the original full face without this clip puts a false lid over craters.
+        ctx.save();
+        ctx.beginPath();
+        let hasIntact = false;
+        for (let my = 0; my < MICRO_PER_COLUMN; my++) {
+            let run = -1;
+            for (let mx = 0; mx <= MICRO_PER_COLUMN; mx++) {
+                const height = mx < MICRO_PER_COLUMN ? block.heights[my * MICRO_PER_COLUMN + mx] : null;
+                const intact = height === coarseHeight && microMaterial(block, height) === baseMaterial;
+                if (intact && run < 0) run = mx;
+                if (!intact && run >= 0) {
+                    ctx.rect(column * FACE_PIXELS + run * MICRO_UNITS,
+                        row * FACE_PIXELS + my * MICRO_UNITS - coarseHeight * MICROCELL_UNITS,
+                        (mx - run) * MICRO_UNITS, MICRO_UNITS);
+                    run = -1;
+                    hasIntact = true;
+                }
+            }
+        }
+        if (hasIntact) {
+            ctx.clip();
+            const originalTop = blockTopRect(column, row, coarseHeight);
+            if (baseMap) painted += drawSplat(ctx, atlas, baseMap, column, row, originalTop.x, originalTop.y);
+            else {
+                ctx.drawImage(atlas[baseKind][0], texX(column), texY(row), TILE, TILE,
+                    originalTop.x, originalTop.y, originalTop.width, originalTop.height);
+                painted++;
+            }
+            const tint = heightTint(coarseHeight);
+            if (tint) { ctx.fillStyle = tint; ctx.fillRect(originalTop.x, originalTop.y, originalTop.width, originalTop.height); painted++; }
+            if (baseKind !== 'lavaTop') {
+                painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, originalTop);
+                painted += paintShadow(ctx, cellShadow(frame, column, row, coarseHeight), originalTop.x, originalTop.y);
+            }
+            painted += wholeDepthCues(ctx, frame, column, row, coarseHeight, originalTop);
+        }
+        ctx.restore();
+    }
     for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
             const height = block.heights[microY * MICRO_PER_COLUMN + microX];
             const material = microMaterial(block, height);
             const x = column * FACE_PIXELS + microX * MICRO_UNITS;
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
-            // Undisturbed ground keeps the whole block's kind; rock cut below its turf cap, and soil dug below ground level, show bare material.
-            const undisturbed = baseKind && (material === TERRAIN_MATERIAL.Stone ? block.topsoil === TERRAIN_MATERIAL.Stone && height >= coarseHeight - 1 : material === block.topsoil && height >= 0);
-            const tileKind = !atlas ? null : undisturbed ? (baseMap ? TOP_KINDS[baseMap[(microY * microArt + microArt / 2) * TILE + microX * microArt + microArt / 2]] : baseKind)
-                : topTileKind(band, material, height, frame, column, row, false);
-            if (tileKind) {
+            // Preserve every original art pixel unless this individual microcolumn lost height or changed material.
+            const unchangedTop = preserveTop && height === coarseHeight && material === baseMaterial;
+            const tileKind = !atlas ? null : topTileKind(band, material, height, frame, column, row, false);
+            if (unchangedTop) {
+                // The exact original pixel mask is already on the canvas, including decals and normal maps.
+            } else if (tileKind) {
                 ctx.drawImage(atlas[tileKind][0], texX(column) + microX * microArt, texY(row) + microY * microArt, microArt, microArt,
                     x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
                 const tint = heightTint(height);
@@ -804,8 +869,8 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                     : scaleHex(heightShade(topFaceColor(band, material, height), height), 1);
                 ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
-            painted++;
-            if (shade && material !== TERRAIN_MATERIAL.Lava) {
+            if (!unchangedTop) painted++;
+            if (shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
                 for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
                     const level = shade[(microY * 2 + j) * SHADOW_SAMPLES + microX * 2 + i];
                     if (!level) continue;
@@ -821,7 +886,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                 ctx.fillRect(x + crack.x, y - height * MICROCELL_UNITS + crack.y, crack.w, crack.h);
                 painted++;
             }
-            painted += microDepthCues(ctx, frame, column, row, microX, microY, height, x, y - height * MICROCELL_UNITS);
+            if (!unchangedTop) painted += microDepthCues(ctx, frame, column, row, microX, microY, height, x, y - height * MICROCELL_UNITS);
             const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
@@ -1069,10 +1134,11 @@ export function terrainDirtyRegions(columns, rows, changed) {
         const c = index % columns, r = Math.floor(index / columns);
         let region = { c0: Math.max(0, c - 1), c1: Math.min(columns - 1, c + 4),
             r0: Math.max(0, r - 1), r1: Math.min(rows - 1, r + 4) };
-        // Merge overlapping paint clips, including the height overdraw (four rows north and south), to avoid painting a shared area twice.
+        // Merge genuinely adjoining dirty cells only. Joining clips through their large height-overdraw margins
+        // can transitively repaint nearly an entire arena when an ambush creates several separated craters.
         for (let i = 0; i < regions.length;) {
             const other = regions[i];
-            if (region.c0 > other.c1 || other.c0 > region.c1 || region.r0 > other.r1 + 9 || other.r0 > region.r1 + 9) {
+            if (region.c0 > other.c1 || other.c0 > region.c1 || region.r0 > other.r1 || other.r0 > region.r1) {
                 i++;
                 continue;
             }
@@ -1091,8 +1157,7 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
     const { columns, rows } = frame;
     let painted = 0;
     for (const { c0, c1, r0, r1 } of regions) {
-        for (let r = Math.max(0, r0 - 1); r <= Math.min(rows - 1, r1 + 1); r++)
-            for (let c = Math.max(0, c0 - 1); c <= Math.min(columns - 1, c1 + 1); c++) frame.kindMaps?.delete(r * columns + c);
+        // Keep existing splat maps: they describe the site's original ground, not its excavated state.
         // Raised columns can overdraw four rows north and fronts reach south; include the source rows whose faces touch the clip.
         const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
         const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
@@ -1121,6 +1186,7 @@ export class TerrainCanvasCache {
         this.normalCanvas = null;
         this.canvas = null;
         this.revision = null;
+        this.visualSeed = null;
         this.band = null;
         this.repaints = 0;
         this.totalRepaintMs = 0;
@@ -1136,11 +1202,12 @@ export class TerrainCanvasCache {
         if (!frame) return false;
         // The ground cover comes from the forest kit, which downloads after the first frame: one more full repaint once it is there.
         const kitReady = Boolean(forestKit());
-        if (this.canvas && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
+        const visualSeed = frame.visualSeed ?? 0;
+        if (this.canvas && this.visualSeed === visualSeed && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS * ART;
         const height = (frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2) * ART;
-        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null || this.kitReady !== kitReady;
+        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null || this.visualSeed !== visualSeed || this.kitReady !== kitReady;
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
         if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
@@ -1162,6 +1229,7 @@ export class TerrainCanvasCache {
             paintTerrain(ctx, frame, band, TERRAIN_PAD_UNITS);
         }
         this.revision = frame.revision;
+        this.visualSeed = visualSeed;
         this.band = band;
         this.kitReady = kitReady;
         this.repaints++;
