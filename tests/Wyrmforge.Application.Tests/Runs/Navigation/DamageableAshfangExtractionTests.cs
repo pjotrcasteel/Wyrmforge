@@ -135,34 +135,36 @@ public sealed class DamageableAshfangExtractionTests
 
             var player = frame.Player;
             var hazard = (frame.HuntHazards ?? []).OrderBy(h =>
-                Math.Hypot(player.X - h.X, player.Y - h.Y) - h.Radius).FirstOrDefault();
-            if (hazard is not null && Math.Hypot(player.X - hazard.X, player.Y - hazard.Y) < hazard.Radius + 85)
+                Length(player.X - h.X, player.Y - h.Y) - h.Radius).FirstOrDefault();
+            if (hazard is not null && Length(player.X - hazard.X, player.Y - hazard.Y) < hazard.Radius + 85)
             {
                 var hx = player.X - hazard.X;
                 var hy = player.Y - hazard.Y;
-                return Math.Hypot(hx, hy) > .001 ? Move(hx, hy) : Move(player.Y - wyrm.Y, wyrm.X - player.X);
+                return Length(hx, hy) > .001 ? Move(hx, hy) : Move(player.Y - wyrm.Y, wyrm.X - player.X);
             }
 
             if (wyrm.ActionPhase == "windup")
             {
                 var x = player.X - wyrm.AttackTargetX;
                 var y = player.Y - wyrm.AttackTargetY;
-                if (Math.Hypot(x, y) < 180)
-                    return Math.Hypot(x, y) > .001 ? Move(x, y) : Move(wyrm.Y - player.Y, player.X - wyrm.X);
+                if (Length(x, y) < 180)
+                    return Length(x, y) > .001 ? Move(x, y) : Move(wyrm.Y - player.Y, player.X - wyrm.X);
             }
 
             // Strafe around the Wyrm rather than walking into its melee/cone telegraphs.
             // Only move radially if the real spell range or contact distance requires it.
             var dx = player.X - wyrm.X;
             var dy = player.Y - wyrm.Y;
-            var distance = Math.Max(1, Math.Hypot(dx, dy));
+            var distance = Math.Max(1, Length(dx, dy));
             var radial = distance < wyrm.Radius + 110 ? 1.1 : distance > 265 ? -0.6 : 0;
             return Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial);
         }
 
+        private static double Length(double x, double y) => Math.Sqrt(x * x + y * y);
+
         private static MovementInput Move(double x, double y)
         {
-            var length = Math.Hypot(x, y);
+            var length = Length(x, y);
             return length < .0001 ? new MovementInput(0, 0) : new MovementInput(x / length, y / length);
         }
 
