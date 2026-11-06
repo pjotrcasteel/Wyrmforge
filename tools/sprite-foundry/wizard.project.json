@@ -1,0 +1,42 @@
+{
+  "schema": "wyrmforge.sprite-foundry.v1",
+  "character": "grey-wizard",
+  "cell": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "idle": {
+      "frames": 1,
+      "fps": 8
+    },
+    "walk": {
+      "frames": 16,
+      "fps": 16
+    }
+  },
+  "directionRules": {
+    "requireDistinctFacings": true,
+    "forbidMirroredFacings": true
+  },
+  "visualReview": [
+    "Preserve the approved Gothic grey Wizard identity: bent hat, long beard, worn grey robe, and right-hand flaming staff",
+    "Keep robe holes, scars, sewn seams, belt and upper-garment folds continuous across S, SE, E and the other facings",
+    "Check anatomical right-hand staff grip and planted, passing and recovery poses before authoring walk loops",
+    "Review actual game scale at 320px and 390px with G lighting, depth occlusion and mobile performance"
+  ]
+}

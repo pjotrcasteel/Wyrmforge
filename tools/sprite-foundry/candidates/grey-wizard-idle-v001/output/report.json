@@ -1,0 +1,18 @@
+{
+  "schema": "wyrmforge.sprite-foundry.report.v1",
+  "technicalStatus": "technical-pass",
+  "artApproval": "REJECTED",
+  "gameplayApproval": "NOT_TESTED",
+  "source": "tools/sprite-foundry/candidates/grey-wizard-idle-v001/source",
+  "missingFrames": 0,
+  "warnings": [],
+  "errors": [],
+  "requiredVisualReview": [
+    "Eight independently authored views with consistent hat, hands and staff",
+    "Actual gait: planted feet, passing poses, natural weight transfer",
+    "Continuous directional turns and animation transitions",
+    "Gothic readability at 320px and 390px in the real Hunt",
+    "Shared G lighting/materials, foot-depth occlusion and mobile performance"
+  ],
+  "rejectionReason": "Owner rejected incorrect visual facing directions; atlas row order also conflicted with existing Sprite Lab"
+}

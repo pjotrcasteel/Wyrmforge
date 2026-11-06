@@ -1,0 +1,46 @@
+{
+  "schema": "wyrmforge.sprite-foundry.pose-lock.v1",
+  "character": "grey-wizard",
+  "recordedOn": "2026-11-02",
+  "ownerFeedback": "The pose looks good!",
+  "status": "pose-reference-frozen__appearance-not-approved",
+  "referenceCommit": "4fe0085f32427bfe28433cdf4eee98cf34574841",
+  "dimensions": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "worldScalePixelsPerUnit": 17.2,
+  "directionYawDegrees": {
+    "S": 0,
+    "SE": 45,
+    "E": 90,
+    "NE": 135,
+    "N": 180,
+    "NW": 225,
+    "W": 270,
+    "SW": 315
+  },
+  "handedness": "staff constrained to anatomical right hand",
+  "geometryGitBlobSha": "f388dc5cc1a44af6fc9bde1a5ca73ccda68fcfee",
+  "cameraGitBlobSha": "c9d826e27d69b98f4269dbc1f4989b4b296979bf",
+  "frozen": [
+    "one shared mesh",
+    "pose and proportions",
+    "right-hand staff grip",
+    "camera projection",
+    "feet anchor",
+    "64x80 sprite silhouette"
+  ],
+  "open": [
+    "robe seam/rip styling",
+    "garment surface colors",
+    "hat, face, and beard shading",
+    "lighting material maps",
+    "animation",
+    "owner full art approval"
+  ]
+}

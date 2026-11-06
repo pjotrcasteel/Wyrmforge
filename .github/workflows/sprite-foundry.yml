@@ -1,0 +1,93 @@
+name: Sprite Foundry standalone checks
+
+on:
+  pull_request:
+    paths:
+      - 'tools/sprite-foundry/**'
+      - '.github/workflows/sprite-foundry.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/sprite-foundry/**'
+      - '.github/workflows/sprite-foundry.yml'
+  workflow_dispatch:
+
+jobs:
+  foundry-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install free image dependency
+        run: python -m pip install -r tools/sprite-foundry/requirements.txt
+      - name: Compile and test isolated exporter
+        run: |
+          python -m py_compile tools/sprite-foundry/foundry.py
+          python -m unittest discover -s tools/sprite-foundry/tests -v
+      - name: Render shared-master mechanical blockout (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --preview tools/sprite-foundry/output/shared-master-blockout.png
+      - name: Render shared-mesh damage and front-decal comparison (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --comparison tools/sprite-foundry/output/shared-master-front-decal.png
+      - name: Render 8x S/SE/E garment close-up (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --preview tools/sprite-foundry/output/garment-damage-closeup.png
+      - name: Reproduce physical robe landmark painting overlay (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/robe_uv.py --output tools/sprite-foundry/output/robe-uv-generated.png --guide-output tools/sprite-foundry/output/robe-uv-guide.png
+      - name: Render shared robe UV close-up (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --preview tools/sprite-foundry/output/robe-uv-S-SE-E.png
+      - name: Render eight-way shared robe UV comparison (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --comparison tools/sprite-foundry/output/robe-uv-8way.png
+      - name: Reproduce single-source mantle sleeve and hat atlas (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/upper_uv.py --output tools/sprite-foundry/output/upper-cloth-uv-generated.png --guide-output tools/sprite-foundry/output/upper-cloth-uv-guide.png
+      - name: Render complete shared-garment S/SE/E study (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --preview tools/sprite-foundry/output/full-garment-uv-S-SE-E.png
+      - name: Render eight-way complete shared-garment comparison (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --comparison tools/sprite-foundry/output/full-garment-uv-8way.png
+      - name: Reproduce shared beard and face paint atlas (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/head_uv.py --output tools/sprite-foundry/output/head-uv-generated.png --guide-output tools/sprite-foundry/output/head-uv-guide.png
+      - name: Render shared head and garment S/SE/E study (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --preview tools/sprite-foundry/output/full-head-uv-S-SE-E.png
+      - name: Render eight-way shared head and garment continuity study (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --comparison tools/sprite-foundry/output/full-head-uv-8way.png
+      - name: Audit real staff occlusion in all eight directions (diagnostic, known W/NW review gap)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --staff-audit tools/sprite-foundry/output/staff-visibility-8way-NOT-APPROVED.png --staff-audit-json tools/sprite-foundry/output/staff-visibility-report.json
+      - name: Render frozen NW/W versus compensated hand and staff (review only)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --pose-comparison tools/sprite-foundry/output/pose-NW-W-before-after-NOT-APPROVED.png
+      - name: Strict structural audit of the opt-in NW/W pose candidate (not art approval)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --presentation-pose-review --staff-audit tools/sprite-foundry/output/staff-visibility-8way-candidate-NOT-APPROVED.png --staff-audit-json tools/sprite-foundry/output/staff-visibility-candidate-report.json --strict-staff-audit
+      - name: Render actual 64x80 four-key walk contact (unapproved animation)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --preview tools/sprite-foundry/output/walk-four-key-8way-NOT-APPROVED.png
+      - name: Render native 16-frame walk animation (NOT APPROVED)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --gif tools/sprite-foundry/output/walk-16-frame-S-SE-E-NOT-APPROVED.gif
+      - name: Upload unapproved single-mesh studies
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-wizard-master-studies-NOT-APPROVED
+          path: |
+            tools/sprite-foundry/output/shared-master-blockout.png
+            tools/sprite-foundry/output/walk-four-key-8way-NOT-APPROVED.png
+            tools/sprite-foundry/output/walk-16-frame-S-SE-E-NOT-APPROVED.gif
+            tools/sprite-foundry/output/shared-master-front-decal.png
+            tools/sprite-foundry/output/garment-damage-closeup.png
+            tools/sprite-foundry/output/robe-uv-S-SE-E.png
+            tools/sprite-foundry/output/robe-uv-8way.png
+            tools/sprite-foundry/output/robe-uv-guide.png
+            tools/sprite-foundry/output/robe-uv-generated.png
+            tools/sprite-foundry/output/upper-cloth-uv-generated.png
+            tools/sprite-foundry/output/upper-cloth-uv-guide.png
+            tools/sprite-foundry/output/full-garment-uv-S-SE-E.png
+            tools/sprite-foundry/output/full-garment-uv-8way.png
+            tools/sprite-foundry/output/head-uv-generated.png
+            tools/sprite-foundry/output/head-uv-guide.png
+            tools/sprite-foundry/output/full-head-uv-S-SE-E.png
+            tools/sprite-foundry/output/full-head-uv-8way.png
+            tools/sprite-foundry/output/staff-visibility-8way-NOT-APPROVED.png
+            tools/sprite-foundry/output/staff-visibility-report.json
+            tools/sprite-foundry/output/pose-NW-W-before-after-NOT-APPROVED.png
+            tools/sprite-foundry/output/staff-visibility-8way-candidate-NOT-APPROVED.png
+            tools/sprite-foundry/output/staff-visibility-candidate-report.json
+          if-no-files-found: error

@@ -1,0 +1,70 @@
+{
+  "schema": "wyrmforge.wizard.school-overlays.v1",
+  "base": {
+    "cell": [
+      64,
+      80
+    ],
+    "feetAnchor": [
+      32,
+      74
+    ],
+    "direction": "side-view candidate only",
+    "clips": {
+      "idle": 4,
+      "run": 6
+    }
+  },
+  "schools": {
+    "fire": {
+      "name": "Fire",
+      "accentLight": "#F18B4C",
+      "accentDark": "#943F2C",
+      "futureStaff": "ember",
+      "futureGlyph": "flame"
+    },
+    "frost": {
+      "name": "Frost",
+      "accentLight": "#9BE3ED",
+      "accentDark": "#437B9A",
+      "futureStaff": "ice-crystal",
+      "futureGlyph": "snowflake"
+    },
+    "storm": {
+      "name": "Storm",
+      "accentLight": "#F5D55E",
+      "accentDark": "#8269A8",
+      "futureStaff": "lightning-fork",
+      "futureGlyph": "bolt"
+    },
+    "arcane": {
+      "name": "Arcane",
+      "accentLight": "#C397F4",
+      "accentDark": "#664AAB",
+      "futureStaff": "arcane-orb",
+      "futureGlyph": "rune"
+    },
+    "necromancer": {
+      "name": "Necromancer",
+      "accentLight": "#9AC873",
+      "accentDark": "#486E53",
+      "futureStaff": "soul-flame",
+      "futureGlyph": "skull"
+    },
+    "summoner": {
+      "name": "Summoner",
+      "accentLight": "#CDA465",
+      "accentDark": "#537044",
+      "futureStaff": "carved-wood-antler",
+      "futureGlyph": "bear"
+    }
+  },
+  "status": {
+    "hatBand": "rendered",
+    "robeHem": "rendered",
+    "staff": "not authored",
+    "backGlyph": "not authored",
+    "otherDirections": "not authored",
+    "editableLayers": "rendered; school/ layers/*.png, opaque-body paint only"
+  }
+}

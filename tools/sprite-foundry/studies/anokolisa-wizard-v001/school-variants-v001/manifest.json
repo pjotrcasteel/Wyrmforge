@@ -1,0 +1,36 @@
+{
+  "schema": "wyrmforge.wizard.school-overlays.v1",
+  "schoolIds": [
+    "fire",
+    "frost",
+    "storm",
+    "arcane",
+    "necromancer",
+    "summoner"
+  ],
+  "baseRun": "run-side-grey-6f-64x80.png",
+  "baseIdle": "idle-side-grey-4f-64x80.png",
+  "cell": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "directionStatus": "side-facing candidate only; not an eight-way sheet",
+  "renderedModifiers": [
+    "school hat band",
+    "robe front hem trim"
+  ],
+  "editableSchoolLayers": "<school>/layers/<clip>-side-64x80.png",
+  "layerSource": "generated",
+  "layerSafety": "opaque foundation pixels only; no silhouette edits",
+  "reservedModifiers": [
+    "staff object",
+    "back symbol",
+    "spell glow",
+    "attachments"
+  ],
+  "approvedForGame": false
+}
