@@ -284,7 +284,8 @@
 @if (pendingRefundId is not null || pendingReset)
 {
     <dialog @ref="refundDialog" class="school-refund-dialog" aria-labelledby="school-refund-title" @onkeydown="RefundDialogKey">
-        <h2 id="school-refund-title">Refund inactive-school points?</h2>
+        <h2 id="school-refund-title">Refund Arcane points?</h2>
+        <p>@(pendingReset ? $"Refund {Selection.Selected.Count} nodes for {Selection.SpentPoints} points?" : $"Refund {FocusedNode.Name} for {FocusedNode.Cost} points?")</p>
         <p>Removed bonuses stop applying immediately. Refunded points become available to spend in your active school.</p>
         <div><button @onclick="CancelRefund">Cancel</button><button class="confirm-refund" @onclick="ConfirmRefundAsync">Refund points</button></div>
     </dialog>

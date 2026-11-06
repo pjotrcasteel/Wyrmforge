@@ -42,7 +42,7 @@ public sealed class LevelChoiceService(
         if (count <= 0) return Array.Empty<LevelChoice>();
         if (!trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel))
         {
-            var major = CreateMajorPool(build);
+            var major = CreateMajorPool(build, rewardLevel);
             if (major.Count > 0) return DraftMilestone(major, build, rewardLevel, resonance, count);
         }
 
@@ -62,6 +62,8 @@ public sealed class LevelChoiceService(
         // Reject old/forged spell-rank and evolution cards even when a
         // stale client attempts to submit them directly.
         if (trailReward || !PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)) return false;
+        if (choice.Kind == LevelChoiceKind.Rune && Enum.TryParse<RunUpgradeId>(choice.Id.AsSpan("rune:".Length), out var breakthrough)
+            && FireHuntBreakthroughs.IsBreakthrough(breakthrough)) return build.RunUpgrades.Apply(breakthrough);
         return Apply(build, choice);
     }
 
@@ -118,22 +120,21 @@ public sealed class LevelChoiceService(
                 })
                 .ToList();
         // Breakthrough drafts: a higher-rarity card from the very same legal milestone pool. Evolutions are never gilded.
-        if (replaced.Kind == LevelChoiceKind.Evolution) return [];
-        return candidates.Where(choice => choice.Rarity > replaced.Rarity).Select(choice => choice with { Gilded = true }).ToList();
+        if (replaced.Kind == LevelChoiceKind.Evolution || replaced.Id == "rune:SolarWake") return [];
+        return candidates.Where(choice => choice.Rarity > replaced.Rarity && choice.Id != "rune:SolarWake").Select(choice => choice with { Gilded = true }).ToList();
     }
 
     /// <summary>The exact legal pool used by hunt drafts and Fateweave rerolls.</summary>
     private List<LevelChoice> DraftPool(RunBuildState build, int rewardLevel, bool trailReward) =>
-        !trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel) && CreateMajorPool(build) is { Count: > 0 } major
+        !trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel) && CreateMajorPool(build, rewardLevel) is { Count: > 0 } major
             ? major : RefinementPool(build);
 
-    // Never include spell ranks, new active spells, spell evolutions or school
-    // combinations as Hunt cards. These are owned by the Nexus and Research.
-    private static List<LevelChoice> CreateMajorPool(RunBuildState build)
+    // Preserve Nexus ranks. Explicit temporary transformations have their own gated run-only IDs.
+    private static List<LevelChoice> CreateMajorPool(RunBuildState build, int rewardLevel)
     {
         var school = SpellCatalog.Get(build.Spells.ActiveSpell).School;
         var major = RunUpgradeCatalog.All
-            .Where(upgrade => PowerMilestoneProfile.IsMajorRune(upgrade.Id)
+            .Where(upgrade => (PowerMilestoneProfile.IsMajorRune(upgrade.Id) || FireHuntBreakthroughs.CanOffer(build, upgrade.Id, rewardLevel))
                 && build.RunUpgrades[upgrade.Id] < upgrade.MaxRank
                 && (Telemetry.ChoiceSchools.RuneSchool(upgrade.Id) is not { } affinity || affinity == school))
             .Select(upgrade => new LevelChoice(
@@ -200,7 +201,8 @@ public sealed class LevelChoiceService(
             build.EmpowerSchool(school);
             return true;
         }
-        if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
+        if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return !FireHuntBreakthroughs.IsBreakthrough(ParseRunUpgrade(choice.Id))
+            && build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
         if (choice.Id.StartsWith("focus:", StringComparison.Ordinal)) return !build.Spells.IsPrimaryCommitted && build.Spells.TryFocus(ParseSpell(choice.Id));
         if (choice.Id.StartsWith("spell:", StringComparison.Ordinal))
         {
@@ -560,6 +562,8 @@ public sealed class LevelChoiceService(
 
     private static RewardRarity RuneRarity(RunUpgradeId id) => id switch
     {
+        RunUpgradeId.SolarWake => RewardRarity.Legendary,
+        RunUpgradeId.CinderCascade => RewardRarity.Rare,
         RunUpgradeId.Multicast or RunUpgradeId.FrostTouch or RunUpgradeId.ChainSpark or RunUpgradeId.ArcaneEcho or RunUpgradeId.Emberbrand or RunUpgradeId.StaticCharge => RewardRarity.Rare,
         RunUpgradeId.Potency or RunUpgradeId.Quickening or RunUpgradeId.Fleetfoot or RunUpgradeId.Bulwark or RunUpgradeId.Velocity => RewardRarity.Uncommon,
         _ => RewardRarity.Common,

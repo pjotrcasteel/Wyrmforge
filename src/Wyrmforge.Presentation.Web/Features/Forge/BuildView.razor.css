@@ -1870,3 +1870,12 @@
 .school-switch-panel span { flex: 1 1 180px; font-size: .85rem; }
 .school-switch-panel button { min-height: 44px; padding: .5rem 1rem; color: #f0deb5; background: #302b24; border: 1px solid #78664b; }
 .dormant-effect { color: #aebed3; font-size: .85rem; }
+.web-node.tier-grand { border: 3px double #dbad58; box-shadow: 0 0 18px #a86c2944; }
+.web-node.tier-keystone { border: 3px solid #b785ae; }
+@media (prefers-reduced-motion: no-preference) {
+    .web-node, .wheel-school-badge, .web-region-label { transition: left .55s ease, top .55s ease; }
+}
+/* Overview emphasizes destinations; details return as the player zooms into a route. */
+.arcane-web-viewport[data-lod="overview"] .kind-travel .node-label,
+.arcane-web-viewport[data-lod="overview"] .minor-node-effects { visibility: hidden; }
+.arcane-web-viewport[data-lod="paths"] .kind-travel:not(.focused):not(.preview) .node-label { visibility: hidden; }

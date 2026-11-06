@@ -11,6 +11,7 @@
         state.canvas.style.transform = `translate(${x}px, ${y}px) scale(${state.scale})`;
         state.canvas.style.setProperty('--web-scale', String(state.scale));
         viewport.dataset.scale = String(state.scale);
+        viewport.dataset.lod = state.scale < 0.3 ? "overview" : state.scale < 0.65 ? "paths" : "detail";
         viewport.classList.toggle('overview', state.scale < 0.5);
     }
 

@@ -7,6 +7,10 @@ public static class RunUpgradeCatalog
 {
     public static IReadOnlyList<RunUpgradeDefinition> All { get; } =
     [
+        new(RunUpgradeId.CinderCascade, "Mega · Cinder Cascade", "Fireball kills against burning foes erupt into ember explosions. Requires Emberbrand and Hunt Lv10. Temporary.", "✹",
+            [BuildModifierProfile.Empty]),
+        new(RunUpgradeId.SolarWake, "Evolution · Solar Wake", "Cinder Cascade becomes lingering solar fire. Inherits equipped mutations and Web area/duration. Requires Cascade, Nexus Lv2+, an equipped mutator and Hunt Lv15. Temporary.", "☀",
+            [BuildModifierProfile.Empty]),
         new(RunUpgradeId.Potency, "Potency", "+18% spell damage.", "✦",
         [
             Stats(Percent(BuildStatId.Damage, 0.18)),

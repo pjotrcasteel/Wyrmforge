@@ -10,7 +10,7 @@ namespace Wyrmforge.Presentation.Web.Features.LevelUp;
 
 public static class LevelChoicePresentation
 {
-    public static string KindClass(LevelChoice choice) => choice.Kind switch
+    public static string KindClass(LevelChoice choice) => choice.Id == "rune:SolarWake" ? "evolution" : choice.Kind switch
     {
         LevelChoiceKind.Rune or LevelChoiceKind.Refinement or LevelChoiceKind.SchoolPower => "rune",
         LevelChoiceKind.NewSpell or LevelChoiceKind.SpellFocus => "new-spell",
@@ -23,7 +23,14 @@ public static class LevelChoicePresentation
 
     public static string Badge(LevelChoice choice) => choice.Gilded ? $"GILDED {KindBadge(choice)}" : KindBadge(choice);
 
-    private static string KindBadge(LevelChoice choice) => choice.Kind switch
+    private static string KindBadge(LevelChoice choice) => choice.Id switch
+    {
+        "rune:SolarWake" => "EVOLUTION",
+        "rune:CinderCascade" => "MEGA UPGRADE",
+        _ => StandardKindBadge(choice),
+    };
+
+    private static string StandardKindBadge(LevelChoice choice) => choice.Kind switch
     {
         LevelChoiceKind.SchoolPower => "ATTUNEMENT",
         LevelChoiceKind.Rune => "MAJOR RUNE",

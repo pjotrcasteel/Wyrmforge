@@ -14,6 +14,7 @@ public static class PassiveTreeCatalog
     [
         Origin,
         .. FirePassiveNodes.All,
+        .. FireSynergyNodes.All,
         .. FrostPassiveNodes.All,
         .. StormPassiveNodes.All,
         .. ArcanePassiveNodes.All,
@@ -27,6 +28,11 @@ public static class PassiveTreeCatalog
         new(OriginId, "storm-start"),
         new(OriginId, "arcane-start"),
 
+        new("fire-2", "fire-cinder-thread"),
+        new("fire-cinder-thread", "fire-ember-memory"),
+        new("fire-ember-memory", "fire-crucible"),
+        new("fire-crucible", "fire-ember-covenant"),
+        new("fire-ember-covenant", "fire-long-pyre"),
         new("fire-start", "fire-1"),
         new("fire-1", "fire-needle-practice"),
         new("fire-1", "fire-molten-density"),

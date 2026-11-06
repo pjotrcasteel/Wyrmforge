@@ -209,6 +209,7 @@ public sealed partial class RunSimulation
         UpdateLightning(delta);
         ResolveProjectileHits();
         ResolveRelicDefeatBursts();
+        ResolvePendingSynergies();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         CompleteMapEncounterCleanup();
         // All hostile attacks buffer their strongest hit until this exact resolution point.
