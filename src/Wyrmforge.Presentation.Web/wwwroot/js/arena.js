@@ -1,12 +1,12 @@
 import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
-    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js';
+    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261106-default-hunt1-gate-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
@@ -160,6 +160,7 @@ export function readArenaDiagnostics(canvas) {
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        exitLandmark: state.latestSnapshot?.exitLandmark ?? null,
         exitPorts: state.latestSnapshot?.exitPorts ?? [],
         extraction: state.latestSnapshot?.extraction ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
@@ -506,9 +507,13 @@ function draw(state, snapshot, width, height) {
         drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
             spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     }
-    drawArenaExit(ctx, snapshot.exit, visualSeconds);
-    // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
-    for (const port of snapshot.exitPorts ?? []) drawArenaExit(ctx, port, visualSeconds);
+    const exitLayers = [
+        ...(snapshot.exit ?? snapshot.exitLandmark
+            ? [{ kind: 'exit', exit: snapshot.exit ?? snapshot.exitLandmark, locked: !snapshot.exit }] : []),
+        // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
+        ...(snapshot.exitPorts ?? []).map(exit => ({ kind: 'exit', exit, locked: false })),
+    ];
+    if (!gpu) for (const layer of exitLayers) drawArenaExit(ctx, layer.exit, visualSeconds, layer.locked);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
@@ -561,6 +566,7 @@ function draw(state, snapshot, width, height) {
     // a ruined wall goes behind its facade; walking south brings it forward.
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     const depthLayers = [
+        ...exitLayers.map(layer => ({ ...layer, depth: layer.exit.y + layer.exit.radius })),
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
@@ -609,6 +615,8 @@ function draw(state, snapshot, width, height) {
                 drawArenaCloisterElevation(ctx, layer);
             } else if (layer.kind === 'dragon') {
                 drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang, authoredOn);
+            } else if (layer.kind === 'exit') {
+                drawArenaExit(ctx, layer.exit, visualSeconds, layer.locked);
             } else if (layer.kind === 'tree') {
                 drawTree(ctx, layer.tree);
             } else if (layer.kind === 'torch' || layer.kind === 'torchFlame') {
@@ -656,6 +664,7 @@ function draw(state, snapshot, width, height) {
                     physicalVolume: capture.physicalVolume,
                     // Only the flame glows (its light is the C# emitter, not this); the post is an ordinary lit surface.
                     ...(layer.kind === 'torchFlame' ? { material: { roughness: .85, emission: '#ff8a30', emissionIntensity: .35 } } : {}),
+                    ...(layer.kind === 'exit' ? { material: { roughness: .8, emission: '#b18ae1', emissionIntensity: layer.locked ? .12 : .45 } } : {}),
                     ...(emissiveMaterial ? { material: { roughness: .85, ...emissiveMaterial } } : {}),
                     ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;

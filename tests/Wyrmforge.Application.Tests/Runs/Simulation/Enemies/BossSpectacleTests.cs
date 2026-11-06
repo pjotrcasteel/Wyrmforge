@@ -138,4 +138,19 @@ public sealed class BossSpectacleTests
             Assert.IsGreaterThan(early, late, "the glow swells as the change nears its end");
         }
     }
+
+    [TestMethod]
+    public void EveryCombatRoadTheBellWardensRoadAndTheWyrmsLairAreFoughtOnTheSameTerrain()
+    {
+        for (var seed = 1; seed <= 20; seed++)
+        {
+            var nodes = Wyrmforge.Application.Runs.Navigation.WyrmrealmMapGenerator.Generate(1, seed);
+            foreach (var node in nodes.Where(node => node.Type is Wyrmforge.Application.Runs.Navigation.WyrmrealmNodeType.Combat or Wyrmforge.Application.Runs.Navigation.WyrmrealmNodeType.Dragon))
+            {
+                var environment = ArenaEnvironmentState.Create(seed, node, greybox: true, terrain: true);
+                Assert.IsNotNull(environment.Terrain, $"seed {seed} node {node.Id} ({node.Type}{(node.PreLair ? ", pre-lair" : "")}) has terrain");
+                Assert.IsNotNull(environment.TerrainSpawnPosition);
+            }
+        }
+    }
 }

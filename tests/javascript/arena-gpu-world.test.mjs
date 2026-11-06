@@ -200,6 +200,17 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
 });
 
 
+test('the north-road gate is a GPU depth layer, so terrain cannot overwrite it', async () => {
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const exit = { x: 512, y: 110, radius: 37 };
+    const gate = huntLayerCapture({ kind: 'exit', exit, locked: true }, null);
+    assert.equal(gate.id, 'hunt-exit:512:110');
+    assert.equal(gate.size, 192);
+    assert.ok(gate.x <= exit.x - 44 && gate.y <= exit.y - 62, 'The authored waystone fits inside its capture.');
+    assert.deepEqual(gate, huntLayerCapture({ kind: 'exit', exit, locked: false }, null),
+        'Opening the same gate must preserve the stable capture identity.');
+});
+
 test('Hollowed and Ashling shadow anchors do not drift south as capture sizes vary', async () => {
     const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
     const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
