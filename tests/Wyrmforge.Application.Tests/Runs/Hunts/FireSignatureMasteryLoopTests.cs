@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Domain.Combat.Dragons;
@@ -61,6 +62,24 @@ public sealed class FireSignatureMasteryLoopTests
         Assert.IsTrue(oath.IsSealed(DragonId.Ashfang, mastery));
         Assert.AreEqual(1, spells[SpellId.FireBolt], "The milestone must not revive obsolete in-Hunt rank cards.");
         Assert.AreEqual(3, core.Level, "Mastery and oath rewards cannot silently advance permanent core levels.");
+
+        // Persist the actual domain snapshot shapes used by the Nexus, Mastery and Great Hunt.
+        // Reloading must preserve the sealed oath and equipped mutators without awarding anything again.
+        var restoredCore = new FireballCoreState();
+        restoredCore.Restore(JsonSerializer.Deserialize<FireballCoreSave>(JsonSerializer.Serialize(core.ToSave())));
+        var restoredMastery = new SpellMasteryState();
+        restoredMastery.Restore(JsonSerializer.Deserialize<SpellMasteryEntry[]>(JsonSerializer.Serialize(mastery.Snapshot()))!);
+        var restoredOath = new GreatHuntState();
+        restoredOath.Restore(JsonSerializer.Deserialize<GreatHuntEntry[]>(JsonSerializer.Serialize(oath.Snapshot()))!);
+
+        Assert.AreEqual(3, restoredCore.Level);
+        CollectionAssert.AreEquivalent(core.Equipped.ToArray(), restoredCore.Equipped.ToArray());
+        Assert.AreEqual(mastery.Get(SpellId.FireBolt).MeaningfulRuns, restoredMastery.Get(SpellId.FireBolt).MeaningfulRuns);
+        Assert.IsTrue(restoredMastery.Unlocks(SpellEvolutionId.Wyrmfire));
+        Assert.IsTrue(restoredOath.IsSealed(DragonId.Ashfang, restoredMastery));
+        Assert.AreEqual(0, restoredOath.RecordRun(new GreatHuntRunEvidence(2, false,
+            new HashSet<DragonId> { DragonId.Ashfang }, new HashSet<DragonId> { DragonId.Ashfang },
+            [DragonEssenceId.MoltenFang])).Count, "Replaying the same oath evidence must never award a second seal.");
     }
 
     [TestMethod]
