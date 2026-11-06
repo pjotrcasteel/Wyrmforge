@@ -32,6 +32,10 @@ public sealed class ArenaEnvironmentState
     private bool[] terrainProtected = [];
     private (int Column, int Row) terrainExit;
     private (int Column, int Row)? terrainSpawn;
+    private IReadOnlyList<ArenaField> terrainFields = [];
+
+    /// <summary>The open fields along the Hunt 1.0 road: flat, rock-free ground where the field ambush can spring. Empty without terrain.</summary>
+    public IReadOnlyList<ArenaField> AmbushFields => terrainFields;
 
     /// <summary>Where the hunter enters a Hunt 1.0 terrain arena (the south end of the road), or null for the legacy centre start.</summary>
     public Vector2D? TerrainSpawnPosition => terrainSpawn is { } spawn ? ArenaTerrainGrid.CenterOf(spawn.Column, spawn.Row) : null;
@@ -84,6 +88,14 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
+    // String.GetHashCode is randomized between processes; the same chart site must generate the same terrain on every device.
+    private static int StableSiteSeed(string siteId)
+    {
+        var hash = 2166136261u;
+        foreach (var character in siteId) hash = unchecked((hash ^ character) * 16777619u);
+        return unchecked((int)hash);
+    }
+
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
         IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false, double? terrainInfluence = null)
     {
@@ -111,21 +123,32 @@ public sealed class ArenaEnvironmentState
         };
         // The one-metre greybox has no authored scenery, supplies, solid crossings or walls.
         // It keeps only the small breakable salvage props: they are the sole Charred Scrap source.
-        if (node.Type != WyrmrealmNodeType.Combat) return environment;
+        // The Wyrm's lair gets the same terrain as the trails, so the duel is fought on real, destructible ground and not on the old painted arena.
+        var terrainLair = terrain && greybox && node.Type == WyrmrealmNodeType.Dragon;
+        if (node.Type != WyrmrealmNodeType.Combat && !terrainLair) return environment;
         if (terrain && greybox)
         {
             // Hunt 1.0 terrain: the player starts at the arena centre and the exit sits at TrailExitPosition.
             var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
             var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
             // The hunter enters at the south end and the exit is at the north end: the arena is portrait, and the road runs between them.
-            var recipe = ArenaTerrainGenerator.Generate(seed, terrainInfluence ?? node.Influence, columns, rows,
-                (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
+            // Keep the well-tested opening road unchanged; later sites acquire unique, persistent terrain identities.
+            var openingRoad = node.Stage == 1 && node.Lane == 0;
+            var siteTerrainSeed = openingRoad
+                ? seed : unchecked(seed ^ StableSiteSeed(node.Geography?.SiteId ?? node.Id));
+            var recipe = ArenaTerrainGenerator.Generate(siteTerrainSeed, terrainInfluence ?? node.Influence, columns, rows,
+                (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)),
+                siteProfile: openingRoad ? null : node.GenerationProfile ?? node.Geography?.GenerationProfile,
+                habitat: openingRoad ? null : node.Habitat);
             environment.terrainSpawn = recipe.Spawn;
+            environment.terrainFields = recipe.Fields;
             environment.terrain = recipe.Grid;
             environment.terrainBaseline = recipe.Grid.Clone();
             environment.terrainProtected = recipe.ProtectedCells;
             environment.terrainExit = recipe.Exit;
         }
+        // A lair holds the duel only: no salvage props, crossings or supplies.
+        if (terrainLair) return environment;
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
@@ -279,6 +302,45 @@ public sealed class ArenaEnvironmentState
             return [];
         }
         return changes;
+    }
+
+    /// <summary>
+    /// Apply a simultaneous group of impacts with one exit-reachability check. If their combined damage closes the road,
+    /// restore the exact preceding voxels and retry each impact with the ordinary safety rule.
+    /// </summary>
+    public IReadOnlyList<ArenaTerrainChange> ApplyTerrainImpacts(IReadOnlyList<ArenaTerrainImpact> impacts, Vector2D hunter,
+        double hunterRadius, double width, double height)
+    {
+        if (!TerrainActive(width, height) || impacts.Count == 0) return [];
+        var staged = new List<(ArenaTerrainImpact Impact, IReadOnlyList<ArenaTerrainChange> Changes)>();
+        var combined = new List<ArenaTerrainChange>();
+        foreach (var impact in impacts)
+        {
+            if (!appliedImpactIds.Add(impact.Id)) continue;
+            var changes = ArenaTerrainMutation.Apply(terrain!, impact, terrainProtected);
+            staged.Add((impact, changes));
+            combined.AddRange(changes);
+        }
+        if (combined.Count == 0 || terrain!.IsReachable(ArenaTerrainGrid.ColumnOf(hunter), terrainExit, hunterRadius)) return combined;
+
+        for (var index = staged.Count - 1; index >= 0; index--)
+            ArenaTerrainMutation.Revert(terrain, staged[index].Changes);
+        // The hunter was already stranded; these impacts did not cause it. Keep the original combined damage.
+        if (!terrain.IsReachable(ArenaTerrainGrid.ColumnOf(hunter), terrainExit, hunterRadius))
+        {
+            var unchangedSafety = new List<ArenaTerrainChange>();
+            foreach (var (impact, _) in staged)
+                unchangedSafety.AddRange(ArenaTerrainMutation.Apply(terrain, impact, terrainProtected));
+            return unchangedSafety;
+        }
+
+        var safeChanges = new List<ArenaTerrainChange>();
+        foreach (var (impact, _) in staged)
+        {
+            appliedImpactIds.Remove(impact.Id);
+            safeChanges.AddRange(ApplyTerrainImpact(impact, hunter, hunterRadius, width, height));
+        }
+        return safeChanges;
     }
 
     public ArenaTerrainRecord? CaptureTerrainRecord(string siteKey) => terrain is null || terrainBaseline is null ? null

@@ -75,7 +75,12 @@ public sealed class HollowBrowserTests : PageTest
             const canvas=document.querySelector('.enemy-lab canvas');if(!canvas)return false;
             const m=window.__hollowArena;
             const d=m.readArenaDiagnostics(canvas);
-            return d?.hollow.ready&&!d.renderingFailed&&d.hollow.corpses.some(e=>e.age>2&&e.age<3&&e.frame===23);
+            // Authored Hollowed replaces the legacy fracture corpse in a real Hunt. Verify that the approved
+            // death strip has reached its held last frame, not the old 24-frame Hollow sprite renderer.
+            const authored = d?.authored?.loaded.includes('Hollowed');
+            return authored
+                ? !d.renderingFailed&&d.authored.corpsePoses.some(e=>e.name==='Hollowed'&&e.age>2&&e.age<3&&e.frame===e.finalFrame)
+                : d?.hollow.ready&&!d.renderingFailed&&d.hollow.corpses.some(e=>e.age>2&&e.age<3&&e.frame===23);
         }");
         await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, "hollow-held-corpse-390.png"), FullPage = true });
         Assert.IsFalse(await Page.EvaluateAsync<bool>("() => localStorage.getItem('wyrmforge.firstHunt.v1') !== null"));

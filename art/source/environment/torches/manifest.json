@@ -1,0 +1,150 @@
+{
+  "product": "Wyrmforge high-fidelity torches",
+  "revision": 3,
+  "canvas": [
+    64,
+    80
+  ],
+  "foot_pivot": [
+    32,
+    76
+  ],
+  "frame_count": 36,
+  "tags": {
+    "Ignite": {
+      "from": 0,
+      "to": 5
+    },
+    "Burn Loop": {
+      "from": 6,
+      "to": 21
+    },
+    "Wind Gust": {
+      "from": 22,
+      "to": 29
+    },
+    "Extinguish": {
+      "from": 30,
+      "to": 35
+    }
+  },
+  "variants": {
+    "rusted-iron-beacon": {
+      "description": "Mossy wrought-iron beacon with hand-forged rings",
+      "pivot": [
+        32,
+        76
+      ],
+      "source": "rusted-iron-beacon.aseprite",
+      "albedo": "rusted-iron-beacon.albedo.png",
+      "emissive": "rusted-iron-beacon.emissive.png",
+      "occlusion": "rusted-iron-beacon.occlusion.png",
+      "preview": "rusted-iron-beacon.burn.gif",
+      "validation": {
+        "frames": 36,
+        "layers": 5,
+        "cels": 180,
+        "tags": [
+          [
+            "Ignite",
+            0,
+            5
+          ],
+          [
+            "Burn Loop",
+            6,
+            21
+          ],
+          [
+            "Wind Gust",
+            22,
+            29
+          ],
+          [
+            "Extinguish",
+            30,
+            35
+          ]
+        ]
+      }
+    },
+    "ancient-oak-torch": {
+      "description": "Pitch-soaked split oak, rope and iron-band basket",
+      "pivot": [
+        32,
+        76
+      ],
+      "source": "ancient-oak-torch.aseprite",
+      "albedo": "ancient-oak-torch.albedo.png",
+      "emissive": "ancient-oak-torch.emissive.png",
+      "occlusion": "ancient-oak-torch.occlusion.png",
+      "preview": "ancient-oak-torch.burn.gif",
+      "validation": {
+        "frames": 36,
+        "layers": 5,
+        "cels": 180,
+        "tags": [
+          [
+            "Ignite",
+            0,
+            5
+          ],
+          [
+            "Burn Loop",
+            6,
+            21
+          ],
+          [
+            "Wind Gust",
+            22,
+            29
+          ],
+          [
+            "Extinguish",
+            30,
+            35
+          ]
+        ]
+      }
+    },
+    "ruined-gothic-watch": {
+      "description": "Ancient ornamental bronze and trident-prong watch torch",
+      "pivot": [
+        32,
+        76
+      ],
+      "source": "ruined-gothic-watch.aseprite",
+      "albedo": "ruined-gothic-watch.albedo.png",
+      "emissive": "ruined-gothic-watch.emissive.png",
+      "occlusion": "ruined-gothic-watch.occlusion.png",
+      "preview": "ruined-gothic-watch.burn.gif",
+      "validation": {
+        "frames": 36,
+        "layers": 5,
+        "cels": 180,
+        "tags": [
+          [
+            "Ignite",
+            0,
+            5
+          ],
+          [
+            "Burn Loop",
+            6,
+            21
+          ],
+          [
+            "Wind Gust",
+            22,
+            29
+          ],
+          [
+            "Extinguish",
+            30,
+            35
+          ]
+        ]
+      }
+    }
+  }
+}

@@ -17,7 +17,7 @@ public sealed partial class RunSimulation
     private double? hunt1InfluenceOverride;
     private string? walkedExitNodeId;
 
-    /// <summary>Opt in to Hunt 1.0 heightfield terrain in greybox combat arenas (the default for Fire Tier-I arrives with H9).</summary>
+    /// <summary>Enable Hunt 1.0 terrain in combat arenas. The web UI enables this by default, with hunt1=0 as a diagnostic fallback.</summary>
     public void EnableHunt1Terrain(double? influenceOverride = null)
     {
         hunt1TerrainEnabled = true;
@@ -117,6 +117,7 @@ public sealed partial class RunSimulation
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         encounterSeconds = 0;
+        fieldAmbush = null;
         ClearSupportState();
         spawnTimer = 0.15;
         return true;

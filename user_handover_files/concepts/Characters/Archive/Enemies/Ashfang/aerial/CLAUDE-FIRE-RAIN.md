@@ -1,0 +1,23 @@
+# Ashfang overhead fire rain
+
+Use the revised vertical takeoff and eagle-like braking landing sources. Ashfang leaves the top of the viewport after the held wind-up. During overhead flight the dragon is represented by a moving ground shadow. Fire rain reads through fixed ground warnings, descending cinders and brief impact bursts. Ashfang returns for the three braking flaps, late hindleg extension, hindfoot contact and forefoot settle.
+
+## Source sheets
+
+| File under Ashfang/vfx | Reading order and anchor |
+| --- | --- |
+| aerial-falling-cinder-6-poses-DRAFT.png | 3 columns by 2 rows, left to right then top to bottom. Six flicker poses of a falling coal with its bright tip at the bottom. Align the leading tip across frames. |
+| aerial-cinder-impact-6-poses-DRAFT.png | Same grid order. Contact flash, burst, outward fragments, collapse, cooling embers, ash. Align every frame to the same ground impact point. |
+
+Both forms can share these two source sheets. Phase 2 already increases the pressure through cadence. Keep the distinction readable through the existing timing and keep the body, shadow, falling coal and ground impact in separate layers. The source sheets are enlarged pose studies. Claude owns slicing, native pixel density, transparent edge cleanup, consistent anchors, timing and playback. Align the cinder tip to the contact point and scale the burst for readability against the authoritative warning radius. The supplied illustrations do not define runtime bounds.
+
+## Map to the existing encounter
+
+- Current C# stages are takeoff, overhead, land and recover. The inspected baseline is 1.4 s takeoff, 4.8 s overhead in normal and 6 s in phase 2, then 1.4 s land and 1.2 s recover. These are source values, separate from the owner-requested presentation timing. Preserve C# targetability, including untargetable overhead flight. Coordinate the fast vertical exit and three braking strokes with the actual phase progress. [Flight state](https://github.com/pjotrcasteel/Wyrmforge/blob/b83e9b458a1eded44ebc6d6bef229e090362caa4/src/Wyrmforge.Domain/Combat/Dragons/AshfangFlightState.cs)
+- Overhead emits two locked hazards per volley, one at the observed hunter position and one at an arena scatter point. Current spacing is 0.85 s normal and 0.65 s phase 2, with 1.05 s and 1.15 s warnings respectively. Use the hazard snapshot coordinates and radius for each warning. The simulation locks the landing point before entering land and schedules a separate landing hazard. Preserve that separate cue, checking that the chosen landing animation places visible contact at its resolved impact. [Flight simulation](https://github.com/pjotrcasteel/Wyrmforge/blob/b83e9b458a1eded44ebc6d6bef229e090362caa4/src/Wyrmforge.Application/Runs/Simulation/Dragons/RunSimulation.AshfangFlight.cs)
+- The existing renderer holds the warning rim at the damage radius and uses the inner ring to show progress. Keep that exact boundary and use armed FromAbove hazard snapshots for descent. Time visual descent to the same hazard progress. When the hazard resolves, retire the falling sprite and play the meteor impact effect once at the resolved world point. Cool the effect to dark ash so it reads as spent. Preserve cancellation and cleanup on phase break, pause and encounter end according to the live snapshots. [Effect renderer](https://github.com/pjotrcasteel/Wyrmforge/blob/b83e9b458a1eded44ebc6d6bef229e090362caa4/src/Wyrmforge.Presentation.Web/wwwroot/js/ashfang-vfx.js)
+- The current overhead branch draws the flight frame as a flattened dark silhouette and omits mouth sockets in that state. Keep that ground-shadow representation or a dedicated ground proxy independent of the upward body offset. Source the cinder from the hazard projection, since Ashfang's mouth is offscreen. [Sprite renderer](https://github.com/pjotrcasteel/Wyrmforge/blob/b83e9b458a1eded44ebc6d6bef229e090362caa4/src/Wyrmforge.Presentation.Web/wwwroot/js/ashfang-sprites.js)
+
+The separate air_breath clip listed in the animation catalog is a source action. This pack's aerial attack art targets the existing overhead fire-rain path. The in-game integration and validation pass belongs to Claude. Confirm in mobile gameplay that the warning stays readable while Ashfang is overhead, each coal hits its fixed marker once, phase 2 cadence stays legible and the final approach decelerates before the hind and fore contacts.
+
+The two VFX sheets were generated as coarse pixel art using the existing Ashfang fire palette. The falling sheet shows compact hot coals trailing ember tongues. The impact sheet uses separate contact, burst and cooling poses.

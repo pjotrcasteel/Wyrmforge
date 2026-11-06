@@ -646,6 +646,70 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task ArenaTerrain_DamagePreservesOriginalPixelsOutsideExcavatedMicrocolumns()
+    {
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const { TerrainCanvasCache, mergeTerrainFrame, TERRAIN_PAD_UNITS } =
+                await import('/js/arena-terrain-canvas.js');
+            const columns = 8, rows = 8, hit = 3 * columns + 3, scale = 2;
+            const surface = new Array(columns * rows).fill(0);
+            const material = new Array(columns * rows).fill(0);
+            material[3 * columns + 4] = 1; // Ash beside the impact makes the original splat visibly nonuniform.
+            const incoming = { revision: 1, columns, rows, visualSeed: 1204, surface, material, fine: [] };
+            const original = mergeTerrainFrame(null, incoming);
+            const cache = new TerrainCanvasCache(undefined, true);
+            cache.update(original, 0);
+
+            const read = (canvas, c, r, offsetX, offsetY, size) => {
+                const x = c * 32 * scale + offsetX;
+                const y = (r * 32 + TERRAIN_PAD_UNITS) * scale + offsetY;
+                return canvas.getContext('2d').getImageData(x, y, size, size).data;
+            };
+            const record = () => ({
+                neighbor: read(cache.canvas, 2, 3, 0, 0, 64),
+                undamaged: read(cache.canvas, 3, 3, 0, 0, 16),
+                normalNeighbor: read(cache.normalCanvas, 2, 3, 0, 0, 64),
+                normalUndamaged: read(cache.normalCanvas, 3, 3, 0, 0, 16),
+            });
+            const before = record();
+            const heights = new Array(64).fill(0);
+            let previous = original;
+            const applyHit = (revision, depth) => {
+                const changedSurface = [...surface];
+                changedSurface[hit] = -revision + 1;
+                heights[4 * 8 + 4] = depth;
+                previous = mergeTerrainFrame(previous, {
+                    ...incoming, revision, surface: changedSurface,
+                    fine: [{ index: hit, heights: [...heights], topsoil: 0, stoneTop: -8 }],
+                });
+                cache.update(previous, 0);
+                return record();
+            };
+            const afterFirst = applyHit(2, -3);
+            const afterSecond = applyHit(3, -6);
+            const differences = (oldPixels, newPixels) =>
+                oldPixels.reduce((count, pixel, index) => count + (pixel !== newPixels[index] ? 1 : 0), 0);
+            const report = {};
+            for (const name of Object.keys(before)) {
+                report[name + 'First'] = differences(before[name], afterFirst[name]);
+                report[name + 'Second'] = differences(before[name], afterSecond[name]);
+            }
+            return report;
+        }");
+
+        foreach (var name in new[]
+        {
+            "neighborFirst", "neighborSecond", "undamagedFirst", "undamagedSecond",
+            "normalNeighborFirst", "normalNeighborSecond", "normalUndamagedFirst", "normalUndamagedSecond"
+        })
+        {
+            Assert.AreEqual(0, pixels.GetProperty(name).GetInt32(),
+                $"Undamaged terrain pixels shifted after a hit: {name}.");
+        }
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GroundFoundationHasNoLegacyAssetsOrCollision(int width, int height)
@@ -3562,7 +3626,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync("""
             async () => {
-                const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+                const arena = await import(new URL('js/arena.js?v=20261106-default-hunt1-gate-v1', document.baseURI).href);
                 window.__g5Read = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }
             """);
@@ -3604,7 +3668,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await EnterFirstTrailAsync("BEGIN FIRST HUNT");
             await Page.EvaluateAsync(@"async () => {
-                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261106-default-hunt1-gate-v1', document.baseURI).href);
                 window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }");
             await Page.WaitForFunctionAsync(@"() => {
@@ -3747,7 +3811,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 .find(url => url.includes('/js/arena-performance.js?v='));
             if (!resource) throw new Error('Active Arena performance module was not loaded');
             const performanceArena = await import(resource);
-            const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+            const arena = await import(new URL('js/arena.js?v=20261106-default-hunt1-gate-v1', document.baseURI).href);
             window.__huntGpuArena = arena;
             window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");

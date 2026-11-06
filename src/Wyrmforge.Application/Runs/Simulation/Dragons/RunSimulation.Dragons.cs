@@ -178,7 +178,10 @@ public sealed partial class RunSimulation
         if (dragon?.Definition.Id == DragonId.Ashfang)
             RegisterAshfangEffect(hazard.EffectKind ?? (hazard.FromAbove ? "meteor" : "cinder"), hazard.Position, hazard.Radius);
         else RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
-        EnemyTerrainBlast(hazard.Position, hazard.FromAbove ? 3 : 2);
+        // Touchdown digs the real crater: the landing hazard resolves as the claws meet the ground and splits the earth around it.
+        var landing = hazard.EffectKind == "landing";
+        EnemyTerrainBlast(hazard.Position, landing ? 5 : hazard.FromAbove ? 3 : 2);
+        if (landing) ApplyTerrainFissure(hazard.Position, 18);
         if (Vector2D.Distance(player.Position, hazard.Position) <= hazard.Radius) DamagePlayer(hazard.Damage);
     }
 
@@ -202,6 +205,7 @@ public sealed partial class RunSimulation
         ashfangAgent = adaptiveAshfangEnabled && definition.Id == DragonId.Ashfang ? new(agentFoundationSeed) : null;
         ashfangFlight.Reset();
         ashfangBehavior.Reset();
+        ashfangPoise = 0; ashfangStaggerLockout = 0;
         ashfangEffects.Clear();
         dragonAttackSequence = 0;
         dragonLastAttackAt = -1;
@@ -251,7 +255,8 @@ public sealed partial class RunSimulation
         var towardPlayer = Vector2D.DirectionTo(activeDragon.Position, player.Position);
         var direction = MovementDirection(profile, distance, towardPlayer);
         var speed = activeDragon.Speed * profile.SpeedMultiplier.For(activeDragon.Phase);
-        activeDragon.Position += direction * speed * delta;
+        var proposed = activeDragon.Position + direction * speed * delta;
+        activeDragon.Position = arenaEnvironment is null ? proposed : arenaEnvironment.RestrictMovement(activeDragon.Position, proposed, arenaWidth, arenaHeight, activeDragon.Radius);
     }
 
     private static Vector2D MovementDirection(DragonMovementProfile profile, double distance, Vector2D towardPlayer)
@@ -423,7 +428,7 @@ public sealed partial class RunSimulation
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon || !dragonHuntState.CanDragonAct) return null;
-        var releasing = activeDragon.Definition.Id == DragonId.Ashfang && ashfangBehavior.Action == "breath" && ashfangBehavior.Phase == "strike";
+        var releasing = activeDragon.Definition.Id == DragonId.Ashfang && ashfangBehavior.IsBreath && ashfangBehavior.Phase == "strike";
         if (!activeDragon.IsTelegraphing && !releasing) return null;
         var attack = activeDragon.Definition.Combat.Attack;
         if (attack.Pattern != DragonAttackPattern.Cone) return null;

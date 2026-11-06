@@ -67,8 +67,10 @@ public sealed partial class RunSimulation
             case GlassReliquaryEvent.ShatterStarted:
                 ReliquaryShifts++;
                 ShatterFalseForms();
+                TransformationBurst(enemy.Position, 3, 12, SpellId.FrostShard);
                 break;
             case GlassReliquaryEvent.ShatterCompleted:
+                TransformationBurst(enemy.Position, 4, 16, SpellId.FrostShard);
                 for (var pylon = 0; pylon < GlassMaxLiveWards && CanRaiseCrystalWard; pylon++) RaiseCrystalWard(enemy);
                 break;
         }

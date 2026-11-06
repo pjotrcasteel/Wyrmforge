@@ -22,7 +22,13 @@ public sealed partial class RunSimulation
             var distance = Vector2D.Distance(player.Position, enemy.Position);
             var push = 100 * Math.Max(0, 1 - distance / UpgradeKnockbackRadius);
             var direction = distance < 0.001 ? new Vector2D(1, 0) : Vector2D.DirectionTo(player.Position, enemy.Position);
-            enemy.Position += direction * push;
+            // The shove respects the arena: an enemy pushed through the world edge or into rock could never be reached or targeted again.
+            var previous = enemy.Position;
+            var proposed = previous + direction * push;
+            proposed = new Vector2D(Math.Clamp(proposed.X, enemy.Radius, Math.Max(enemy.Radius, arenaWidth - enemy.Radius)),
+                Math.Clamp(proposed.Y, enemy.Radius, Math.Max(enemy.Radius, arenaHeight - enemy.Radius)));
+            enemy.Position = mapState.EncounterActive && arenaEnvironment is not null
+                ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius) : proposed;
         }
         if (dragon is { Health: > 0 }) ApplyFreeze(dragon, UpgradeFreezeSeconds);
         RebuildCombatSpatialIndex();

@@ -1,15 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    DEBUG_BRIGHT_AMBIENT, DEBUG_BRIGHT_COLOR, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory, readArenaDebugFlags,
+    DEBUG_BRIGHT_AMBIENT, DEBUG_BRIGHT_COLOR, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory,
+    readArenaDebugFlags, roadWalkDirection, walkableSegment,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
 const world = { width: 1024, height: 1920 };
 const at = (x, y, extra = {}) => ({ player: { x, y }, world, enemies: [], paused: false, ended: false, exit: null, ...extra });
 
 test('debug flags are off by default and clamp the speed', () => {
-    assert.deepEqual(readArenaDebugFlags(''), { speed: 1, god: false, bot: false, bright: false, shear: false, ambient: null, band: null, moonShadows: false, renderScale: null });
-    assert.deepEqual(readArenaDebugFlags('?speed=8&god=1&bot=1'), { speed: 8, god: true, bot: true, bright: false, shear: false, ambient: null, band: null, moonShadows: false, renderScale: null });
+    assert.deepEqual(readArenaDebugFlags(''), { speed: 1, god: false, bot: false, botRoad: false, bright: false, shear: false, ambient: null, band: null, moonShadows: false, renderScale: null });
+    assert.deepEqual(readArenaDebugFlags('?speed=8&god=1&bot=1'), { speed: 8, god: true, bot: true, botRoad: false, bright: false, shear: false, ambient: null, band: null, moonShadows: false, renderScale: null });
     assert.equal(readArenaDebugFlags('?speed=500').speed, MAX_DEBUG_SPEED);
     assert.equal(readArenaDebugFlags('?speed=0').speed, 1);
     assert.equal(readArenaDebugFlags('?speed=abc').speed, 1);
@@ -82,6 +83,36 @@ test('with only a few foes left the bot closes to firing range and holds there',
     assert.deepEqual(botMovement(at(512, 960, { enemies: [{ x: 512, y: 300 }] }), createBotMemory(), 0), { x: 0, y: -1 });
 });
 
+test('after a dry spell the review bot closes on a stranded small pack instead of kiting forever', () => {
+    const memory = createBotMemory();
+    const foes = Array.from({ length: 5 }, (_, index) => ({ x: 512 + index * 10, y: 100 }));
+    const snapshot = at(512, 960, { enemies: foes, hud: { kills: 6 } });
+    assert.deepEqual(botMovement(snapshot, memory, 1000), botKiteDirection(snapshot), 'initially kite a pack');
+    assert.deepEqual(botMovement(snapshot, memory, 10000), { x: 0, y: -1 }, 'pursue after no progress');
+    snapshot.hud.kills = 7;
+    assert.deepEqual(botMovement(snapshot, memory, 11000), botKiteDirection(snapshot), 'a kill resumes normal kiting');
+});
+
+test('an ambush-size crowd cannot pin the invulnerable review bot against the arena edge indefinitely', () => {
+    const memory = createBotMemory();
+    const enemies = Array.from({ length: 15 }, (_, index) => ({ x: 500 + index * 3, y: 800 }));
+    const snapshot = at(512, 1700, { enemies, hud: { kills: 0 } });
+    assert.deepEqual(botMovement(snapshot, memory, 0), botKiteDirection(snapshot), 'briefly kite while fighting the wave');
+    assert.ok(botMovement(snapshot, memory, 9000).y < -.9, 'after no kills, walk back toward the pack');
+});
+
+test('after holding in firing range of five stalled foes the bot keeps closing without losing its pursuit target', () => {
+    const memory = createBotMemory();
+    const enemies = Array.from({ length: 5 }, (_, index) => ({ x: 512 + index * 4, y: 860 }));
+    const snapshot = at(512, 960, { enemies, hud: { kills: 6 } });
+    botMovement(snapshot, memory, 0);
+    assert.deepEqual(botMovement(snapshot, memory, 9000), { x: 0, y: 0 }, 'hold the first moments inside firing range');
+    const pursuit = botMovement(snapshot, memory, 14000);
+    assert.ok(pursuit.y < -.9, 'after the hold, pursue a foe even if more than three enemies remain');
+    assert.equal(memory.huntClosing, true);
+    assert.ok(botMovement(snapshot, memory, 15000).y < -.9, 'the next frame still has a valid pursuit direction');
+});
+
 const grid = (columns, rows, height = () => 0, material = () => 0) => ({
     columns, rows,
     surface: Array.from({ length: columns * rows }, (_, i) => height(i % columns, Math.floor(i / columns))),
@@ -100,6 +131,78 @@ test('flow direction routes around a rock wall through its gap', () => {
     assert.ok(first.x > 0.9, 'the straight line is blocked, so it first walks sideways toward the gap');
     const atGap = flowDirection(terrain, { x: 4 * 32 + 16, y: 5 * 32 + 16 }, { x: 16, y: 16 });
     assert.ok(atGap.y < -0.9, 'under the gap it walks north');
+});
+
+test('flow direction respects the full physical heights of visually lowered trees and boulders', () => {
+    const terrain = grid(5, 7);
+    terrain.trunks = new Map([1, 2, 3].map(column => [3 * 5 + column, 16]));
+    terrain.boulders = new Map([[3 * 5, 16]]);
+    const first = flowDirection(terrain, { x: 16, y: 5 * 32 + 16 }, { x: 16, y: 16 });
+    assert.ok(first.x > 0.9, 'the bot walks around the physical trunks instead of crossing the renderer-only lowered ground');
+});
+
+test('a short road segment checks the full hunter footprint near cliff columns', () => {
+    const terrain = grid(5, 7, (column, row) => (row === 3 && column === 3 ? 16 : 0));
+    assert.equal(walkableSegment(terrain, { x: 2 * 32 + 25, y: 5 * 32 + 16 }, { x: 2 * 32 + 25, y: 16 }), false,
+        'the hunter would clip the cliff in the adjacent column');
+    assert.equal(walkableSegment(terrain, { x: 2 * 32 + 16, y: 5 * 32 + 16 }, { x: 2 * 32 + 16, y: 16 }), true,
+        'walking down the protected centreline clears the same cliff');
+});
+
+test('the road review bot navigates around terrain instead of repeatedly walking into a wall', () => {
+    const terrain = grid(7, 7, (column, row) => (row === 3 && column !== 6 ? 16 : 0));
+    terrain.road = Array.from({ length: 7 }, (_, row) => [8, (6 - row) * 16 + 8]).flat();
+    const snapshot = at(16, 5 * 32 + 16);
+    const heading = roadWalkDirection(snapshot, terrain);
+    assert.ok(heading.y < -0.9, 'follow the short protected road segment while it is clear');
+    const detour = roadWalkDirection(at(16, 4 * 32 + 16), terrain);
+    assert.ok(detour.x > 0.9, 'at the ridge, route sideways toward the gap instead of pressing against the wall');
+    assert.deepEqual(roadWalkDirection(snapshot, { ...grid(7, 7), road: terrain.road }), { x: 0, y: -1 },
+        'on open ground the same road keeps its northbound heading');
+});
+
+test('road review bot looks far enough ahead to avoid bouncing around spline samples', () => {
+    const terrain = grid(20, 20);
+    terrain.road = [[8, 15], [8, 14], [8, 13], [9, 12], [10, 11]]
+        .flatMap(([column, row]) => [(column + .5) * 16, (row + .5) * 16]);
+    const heading = roadWalkDirection(at(8 * 32 + 16, 15 * 32 + 16), terrain);
+    assert.ok(heading.x > .2 && heading.y < -.8, 'use a reachable forward point through the bend, not the first tiny spline step');
+});
+
+test('road review bot sidesteps after sustained collision and then resumes its route', () => {
+    const terrain = grid(20, 20);
+    terrain.road = Array.from({ length: 15 }, (_, row) => [8 * 16 + 8, (19 - row) * 16 + 8]).flat();
+    const snapshot = at(8 * 32 + 16, 15 * 32 + 16);
+    const memory = createBotMemory();
+    assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 0), { x: 0, y: -1 });
+    const detour = roadWalkDirection(snapshot, terrain, memory, 1300);
+    assert.equal(Math.abs(detour.x), 1, 'after no movement, try crossing the obstruction');
+    assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 1800), detour, 'keep the detour long enough to clear cover');
+    assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 2400), { x: 0, y: -1 }, 'then resume the C# road');
+});
+
+test('road review bot navigates past several prop obstacles without returning into a blocked centreline', () => {
+    const terrain = grid(30, 60);
+    terrain.road = Array.from({ length: 830 }, (_, index) => [232, Math.round((57.5 - index / 16) * 16)]).flat();
+    const props = [{ x: 464, y: 1400, radius: 20 }, { x: 464, y: 1000, radius: 22 }, { x: 464, y: 600, radius: 18 }];
+    const normalizedProps = props.map(prop => ({ ...prop, x: prop.x / (30 * 32), y: prop.y / (60 * 32) }));
+    const memory = createBotMemory();
+    let player = { x: 464, y: 1840 };
+    for (let tick = 0; tick < 1000 && player.y > 250; tick++) {
+        const snapshot = at(player.x, player.y, { world: { width: 30 * 32, height: 60 * 32 }, environment: { props: normalizedProps } });
+        const heading = roadWalkDirection(snapshot, terrain, memory, tick * 50);
+        const next = { x: player.x + heading.x * 5, y: player.y + heading.y * 5 };
+        if (walkableSegment(terrain, player, next, props)) player = next;
+    }
+    assert.ok(player.y < 250, 'the hunter must pass all three obstacles and keep moving north');
+});
+
+test('a hunter far outside the road corridor first returns to the accessible centreline', () => {
+    const terrain = grid(20, 60);
+    terrain.road = Array.from({ length: 50 }, (_, row) => [10 * 16 + 8, (59 - row) * 16 + 8]).flat();
+    const displaced = at(19 * 32 - 16, 58 * 32 + 16);
+    const heading = roadWalkDirection(displaced, terrain);
+    assert.ok(heading.x < -.9, 'return toward the road before attempting the next northern segment');
 });
 
 test('flow direction refuses lava and steep steps and reports an unreachable target', () => {

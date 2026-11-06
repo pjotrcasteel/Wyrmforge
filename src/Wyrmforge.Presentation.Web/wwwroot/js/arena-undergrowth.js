@@ -12,7 +12,10 @@ const ROCK_REACH_CELLS = 3;
 /** How densely a cell grows undergrowth, 0 (bare) to 1 (thick), cached on the frame. */
 export function undergrowthField(frame) {
     if (frame.coverField) return frame.coverField;
-    const { columns, rows, material, surface } = frame;
+    const { columns, rows } = frame;
+    // Ground cover belongs to the authored map, not to its changing collision surface after excavation.
+    const material = frame.baseMaterial ?? frame.material;
+    const surface = frame.baseSurface ?? frame.surface;
     const count = columns * rows;
     const nearTree = new Float32Array(count).fill(99), nearRock = new Float32Array(count).fill(99), nearRoad = new Float32Array(count).fill(99);
     const spread = (target, cx, cy, reach, accept) => {

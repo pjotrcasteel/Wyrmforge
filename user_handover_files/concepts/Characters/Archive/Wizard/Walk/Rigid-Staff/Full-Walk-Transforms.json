@@ -1,0 +1,115 @@
+{
+  "cellWidth": 543,
+  "cellHeight": 724,
+  "groundY": 623,
+  "staffPivotInSvg": [
+    0,
+    0
+  ],
+  "keys": [
+    {
+      "name": "plant",
+      "x": 371,
+      "y": 346,
+      "contact": true,
+      "angle": -4.8612225343032875,
+      "tip": [
+        394.5584379787794,
+        623
+      ],
+      "source": "Body-Only-Keys.png",
+      "column": 0
+    },
+    {
+      "name": "pass",
+      "x": 337,
+      "y": 354,
+      "contact": true,
+      "angle": 14.618915694140949,
+      "tip": [
+        266.83590661884097,
+        623
+      ],
+      "source": "Body-Only-Keys.png",
+      "column": 1
+    },
+    {
+      "name": "step-past",
+      "x": 320,
+      "y": 366,
+      "contact": true,
+      "angle": 22.412867164271148,
+      "tip": [
+        214.00471708608916,
+        623
+      ],
+      "source": "Body-Only-Keys.png",
+      "column": 2
+    },
+    {
+      "name": "lift",
+      "x": 317,
+      "y": 350,
+      "angle": 38,
+      "contact": false,
+      "tip": [
+        145.84610985946702,
+        569.0669895026688
+      ],
+      "source": "Body-Only-Keys.png",
+      "column": 3
+    },
+    {
+      "name": "recovery-pass",
+      "x": 330,
+      "y": 376,
+      "angle": 31,
+      "contact": false,
+      "tip": [
+        186.81941517500493,
+        614.2925095951872
+      ],
+      "source": "Recovery-Body-Keys.png",
+      "column": 0
+    },
+    {
+      "name": "swing",
+      "x": 350,
+      "y": 348,
+      "angle": 12,
+      "contact": false,
+      "tip": [
+        292.2005499526629,
+        619.925033003998
+      ],
+      "source": "Recovery-Body-Keys.png",
+      "column": 1
+    },
+    {
+      "name": "reach",
+      "x": 365,
+      "y": 335,
+      "angle": -8,
+      "contact": false,
+      "tip": [
+        403.6901220668982,
+        610.2945231101565
+      ],
+      "source": "Recovery-Body-Keys.png",
+      "column": 2
+    },
+    {
+      "name": "pre-plant",
+      "x": 373,
+      "y": 319,
+      "angle": -10,
+      "contact": false,
+      "tip": [
+        421.27419339140664,
+        592.7765553373938
+      ],
+      "source": "Recovery-Body-Keys.png",
+      "column": 3
+    }
+  ]
+}

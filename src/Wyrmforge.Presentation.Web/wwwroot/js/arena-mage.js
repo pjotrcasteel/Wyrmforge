@@ -86,8 +86,9 @@ function paintPixelShaft(ctx, from, to, thickness, pigment) {
     }
 }
 
-export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0, facing = 'S') {
+export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0, facing = 'S', authored = null) {
     if (!player) return;
+    if (authored?.(ctx)) return;
     const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
 
     ctx.save();
