@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
@@ -65,12 +66,18 @@ public sealed class FireTierOneFullLoopTests
         Assert.AreEqual(1, core.SocketCapacity);
         Assert.IsTrue(core.Equip(0, core.Discovered.Single()));
 
-        var second = PlayFullHunt(1204, core.Level, core.Equipped);
+        // Round-trip the same versioned Fireball save contract that the Nexus persists.
+        var reloadedCore = new FireballCoreState();
+        reloadedCore.Restore(JsonSerializer.Deserialize<FireballCoreSave>(JsonSerializer.Serialize(core.ToSave())));
+        Assert.AreEqual(2, reloadedCore.Level);
+        CollectionAssert.AreEquivalent(core.Equipped.ToArray(), reloadedCore.Equipped.ToArray());
+
+        var second = PlayFullHunt(1204, reloadedCore.Level, reloadedCore.Equipped);
         var summary = second.Simulation.CreateEvaluationSummary();
         Assert.AreEqual(RunOutcome.Extracted, summary.Outcome);
         Assert.AreEqual(SpellId.FireBolt, summary.ActiveSpell);
         Assert.AreEqual(2, summary.PreparedFireballLevel);
-        CollectionAssert.AreEquivalent(core.Equipped.ToArray(), summary.PreparedFireballMutations.ToArray());
+        CollectionAssert.AreEquivalent(reloadedCore.Equipped.ToArray(), summary.PreparedFireballMutations.ToArray());
 
         var mastery = new SpellMasteryState();
         var evidence = new MasteryRunEvidence(summary.CompletedRouteNodes, summary.Depth,
@@ -90,6 +97,13 @@ public sealed class FireTierOneFullLoopTests
             "One meaningful Hunt must not bypass the four-extraction mastery requirement.");
         Assert.AreEqual(0, mastery.RecordRun(evidence with { Extracted = false }).Progressed.Count,
             "An unextracted Fireball run cannot be credited as a meaningful hunt.");
+
+        // A subsequent application launch must restore progress, not restart the Mastery counter.
+        var reloadedMastery = new SpellMasteryState();
+        var savedProgress = JsonSerializer.Serialize(mastery.Snapshot());
+        reloadedMastery.Restore(JsonSerializer.Deserialize<SpellMasteryEntry[]>(savedProgress)!);
+        Assert.AreEqual(1, reloadedMastery.Get(SpellId.FireBolt).MeaningfulRuns);
+        Assert.IsFalse(reloadedMastery.Get(SpellId.FireBolt).WyrmFeat);
     }
 
     [TestMethod]
