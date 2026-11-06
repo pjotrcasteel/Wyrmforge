@@ -122,9 +122,15 @@ public partial class ArenaView : IAsyncDisposable
             ?.Split('=', 2).Last();
         previewMountainMonastery = geographyPreview && requestedSite == "mountain-monastery";
         var seedKind = previewMountainMonastery ? "mountain-pass" : requestedSite;
+        // Repeatable CI walks use a fixed terrain layout; normal Hunts retain their generated seed.
+        var testSeed = query.Any(value => string.Equals(value, "bot=road", StringComparison.OrdinalIgnoreCase)) &&
+            query.Any(value => string.Equals(value, "god=1", StringComparison.OrdinalIgnoreCase))
+            ? query.Select(value => value.StartsWith("testSeed=", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(value[9..], out var parsed) ? (int?)parsed : null).FirstOrDefault(value => value is not null)
+            : null;
         var previewSeed = geographyPreview && seedKind is "forest-fork" or "mountain-pass"
             ? FindWorldSiteReviewSeed(seedKind)
-            : RunSeed;
+            : RunSeed ?? testSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();

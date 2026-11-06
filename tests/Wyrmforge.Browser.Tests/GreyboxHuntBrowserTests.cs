@@ -565,7 +565,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=42&speed=2", new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
         await start.ClickAsync();
