@@ -803,17 +803,37 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
     const baseMap = baseKind ? terrainBaseKindMap(frame, band, column, row) : null;
     const microArt = TILE / MICRO_PER_COLUMN;
     let painted = 0;
+    if (atlas && baseKind) {
+        // Keep the exact original 64x64 splat and decals; quantizing the blend to 8x8 microcell centres
+        // changed undamaged pixels whenever a whole block became subdivided by a hit.
+        const originalTop = blockTopRect(column, row, coarseHeight);
+        if (baseMap) painted += drawSplat(ctx, atlas, baseMap, column, row, originalTop.x, originalTop.y);
+        else {
+            ctx.drawImage(atlas[baseKind][0], texX(column), texY(row), TILE, TILE,
+                originalTop.x, originalTop.y, originalTop.width, originalTop.height);
+            painted++;
+        }
+        const tint = heightTint(coarseHeight);
+        if (tint) { ctx.fillStyle = tint; ctx.fillRect(originalTop.x, originalTop.y, originalTop.width, originalTop.height); painted++; }
+        if (baseKind !== 'lavaTop') {
+            painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, originalTop);
+            painted += paintShadow(ctx, cellShadow(frame, column, row, coarseHeight), originalTop.x, originalTop.y);
+        }
+        if (baseMaterial === TERRAIN_MATERIAL.Wood) painted += drawTrunkFoot(ctx, column, row, originalTop);
+        painted += wholeDepthCues(ctx, frame, column, row, coarseHeight, originalTop);
+    }
     for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
             const height = block.heights[microY * MICRO_PER_COLUMN + microX];
             const material = microMaterial(block, height);
             const x = column * FACE_PIXELS + microX * MICRO_UNITS;
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
-            // Undisturbed ground keeps the whole block's kind; rock cut below its turf cap, and soil dug below ground level, show bare material.
-            const undisturbed = baseKind && (material === TERRAIN_MATERIAL.Stone ? block.topsoil === TERRAIN_MATERIAL.Stone && height >= coarseHeight - 1 : material === block.topsoil && height >= 0);
-            const tileKind = !atlas ? null : undisturbed ? (baseMap ? TOP_KINDS[baseMap[(microY * microArt + microArt / 2) * TILE + microX * microArt + microArt / 2]] : baseKind)
-                : topTileKind(band, material, height, frame, column, row, false);
-            if (tileKind) {
+            // Preserve every original art pixel unless this individual microcolumn lost height or changed material.
+            const unchangedTop = atlas && baseKind && height === coarseHeight && material === baseMaterial;
+            const tileKind = !atlas ? null : topTileKind(band, material, height, frame, column, row, false);
+            if (unchangedTop) {
+                // The exact original pixel mask is already on the canvas, including decals and normal maps.
+            } else if (tileKind) {
                 ctx.drawImage(atlas[tileKind][0], texX(column) + microX * microArt, texY(row) + microY * microArt, microArt, microArt,
                     x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
                 const tint = heightTint(height);
@@ -823,8 +843,8 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                     : scaleHex(heightShade(topFaceColor(band, material, height), height), 1);
                 ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
-            painted++;
-            if (shade && material !== TERRAIN_MATERIAL.Lava) {
+            if (!unchangedTop) painted++;
+            if (shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
                 for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
                     const level = shade[(microY * 2 + j) * SHADOW_SAMPLES + microX * 2 + i];
                     if (!level) continue;
