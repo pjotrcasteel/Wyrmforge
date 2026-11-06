@@ -163,7 +163,8 @@ public sealed class DamageableAshfangExtractionTests
             {
                 var hx = player.X - hazard.X;
                 var hy = player.Y - hazard.Y;
-                return Length(hx, hy) > .001 ? Move(hx, hy) : Move(player.Y - wyrm.Y, wyrm.X - player.X);
+                var escape = Length(hx, hy) > .001 ? Move(hx, hy) : Move(player.Y - wyrm.Y, wyrm.X - player.X);
+                return AimAtBoss(escape, player.X, player.Y, wyrm.X, wyrm.Y);
             }
 
             // Ashfang commits to the direction of a warned attack. Running along
@@ -193,7 +194,7 @@ public sealed class DamageableAshfangExtractionTests
                         if (Clearance(side > 0 ? leftX : rightX, side > 0 ? leftY : rightY) < 50 &&
                             Clearance(side > 0 ? rightX : leftX, side > 0 ? rightY : leftY) > 50) side = -side;
                     }
-                    return Move(-axisY * side, axisX * side);
+                    return AimAtBoss(Move(-axisY * side, axisX * side), player.X, player.Y, wyrm.X, wyrm.Y);
                 }
             }
 
@@ -203,7 +204,8 @@ public sealed class DamageableAshfangExtractionTests
             // Stay close enough for legitimate Fire Bolt casts without walking
             // into Ashfang's 125-unit tail and 175-unit bite ranges.
             var radial = distance < 205 ? 1.6 : distance > 255 ? -0.9 : 0;
-            return Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial);
+            return AimAtBoss(Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial),
+                player.X, player.Y, wyrm.X, wyrm.Y);
         }
 
         private MovementInput ChooseExitMovement(RunAgentObservation observation)
@@ -235,6 +237,16 @@ public sealed class DamageableAshfangExtractionTests
                 ExitSidesteps++;
             }
             return movement;
+        }
+
+        // Manual aiming uses the same right-stick/touch input a player has. This only
+        // changes the choice of aim direction, not how the simulation fires or hits.
+        private static MovementInput AimAtBoss(MovementInput movement, double px, double py, double bx, double by)
+        {
+            var dx = bx - px;
+            var dy = by - py;
+            var distance = Length(dx, dy);
+            return distance < .001 ? movement : new MovementInput(movement.X, movement.Y, dx / distance, dy / distance);
         }
 
         private static double Length(double x, double y) => Math.Sqrt(x * x + y * y);
