@@ -12,6 +12,7 @@ permissions:
 jobs:
   mobile:
     strategy:
+      fail-fast: false
       matrix:
         browser: [chromium, webkit]
     runs-on: ubuntu-latest
@@ -43,7 +44,7 @@ jobs:
           done
           cat ./artifacts/webkit-server.log
           exit 1
-      - name: Check phone touch and reset in WebKit
+      - name: Check phone progression and combat
         env:
           WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
           WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/progression-v13-${{ matrix.browser }}

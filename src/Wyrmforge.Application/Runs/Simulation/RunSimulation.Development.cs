@@ -33,6 +33,12 @@ public sealed partial class RunSimulation
         build.Spells.TryFocus(setup.Spell);
         var evolution = SpellEvolutionCatalog.All.First(choice => choice.Spell == setup.Spell && !choice.RequiresForgeUnlock && !choice.RequiresMasteryUnlock);
         if (setup.BossReadySpell) build.Evolutions.Select(evolution.Id, build.Spells);
+        if (setup.ReviewFireEvolution)
+        {
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.Emberbrand);
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.CinderCascade);
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.SolarWake);
+        }
         RefreshBuildModifiers(true);
         RefreshBuildHud();
 

@@ -364,3 +364,6 @@
 }
 .menu-nexus .web-amplifier-socket select:disabled { opacity:.65; }
 .menu-nexus .web-amplifier-socket > small { color:#bda993; font:.76rem/1.45 Georgia,serif; }
+
+/* Nodes retain tap priority when overview school labels overlap a route. */
+.menu-nexus .school-wheel-view .overview .web-node { z-index:6; }

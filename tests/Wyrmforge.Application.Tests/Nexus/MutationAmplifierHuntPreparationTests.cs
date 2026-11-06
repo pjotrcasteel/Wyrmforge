@@ -15,7 +15,7 @@ public sealed class MutationAmplifierHuntPreparationTests
     {
         var nodes = new HashSet<string> { "fire-spread-crown" };
         var bindings = new[] { new MutationAmplifierAssignment("fire-spread-crown", "FireBolt", "Detonation") };
-        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(nodes, seed: 2911,
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(nodes, seed: 2911, fireballLevel: 2,
             fireballMutations: [FireballMutationId.Detonation], amplifierAssignments: bindings);
 
         Assert.AreEqual(1, simulation.PreparedMutationAmplifiers.Count);
@@ -29,7 +29,7 @@ public sealed class MutationAmplifierHuntPreparationTests
     {
         var initial = new MutationAmplifierAssignment("fire-spread-crown", "FireBolt", "Detonation");
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string> { "fire-spread-crown" },
-            seed: 2912, fireballMutations: [FireballMutationId.Detonation], amplifierAssignments: [initial]);
+            seed: 2912, fireballLevel: 2, fireballMutations: [FireballMutationId.Detonation], amplifierAssignments: [initial]);
 
         Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
         simulation.PrepareMutationAmplifiers([new("fire-ember-altar", "FireBolt", "ScorchedEarth")]);

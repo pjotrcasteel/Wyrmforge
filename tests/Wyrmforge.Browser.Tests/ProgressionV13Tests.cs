@@ -55,6 +55,38 @@ public sealed class ProgressionV13Tests : BrowserTest
         Assert.AreEqual(after, await page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.arcaneBuild.v1')"));
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task RealCombat_FireEvolutionFixture_RendersWithoutSavingProgress(int width, int height)
+    {
+        var folder = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.GetTempPath();
+        Directory.CreateDirectory(folder);
+        await using var context = await Browser.NewContextAsync(new()
+        {
+            ViewportSize = new() { Width = width, Height = height }, HasTouch = true, IsMobile = true,
+            RecordVideoDir = folder, RecordVideoSize = new() { Width = width, Height = height },
+        });
+        var page = await context.NewPageAsync();
+        var errors = new List<string>();
+        page.PageError += (_, error) => errors.Add(error);
+        var url = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await page.GotoAsync(url.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ascendant=false&loadout=fire-evolution&invulnerable=false&seed=1337");
+        await Expect(page.Locator(".hunt-lab-canvas")).ToBeVisibleAsync();
+        await Expect(page.GetByText("DEVELOPER FIXTURE", new() { Exact = false })).ToBeVisibleAsync();
+        await page.WaitForFunctionAsync(@"async () => {
+            const canvas = document.querySelector('.hunt-lab-canvas');
+            const path = canvas?.dataset.arenaModule;
+            if (!path) return false;
+            const runtime = await import(path);
+            return runtime.readArenaDiagnostics(canvas)?.hud?.seconds >= 8;
+        }", null, new() { Timeout = 45000 });
+        await page.GetByRole(AriaRole.Button, new() { Name = "Ⅱ Pause", Exact = true }).ClickAsync();
+        await Capture(page, $"combat-{width}-solar-wake-fixture");
+        Assert.AreEqual(0, errors.Count, string.Join("\n", errors));
+        Assert.IsNull(await page.EvaluateAsync<string?>("localStorage.getItem('wyrmforge.arcaneBuild.v1')"));
+    }
+
     private static async Task Capture(IPage page, string name)
     {
         var folder = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.GetTempPath();

@@ -23,6 +23,7 @@ public sealed partial class RunSimulation
         if (build.Spells.IsPrimaryCommitted || elapsed > 0) return;
         preparedFireballLevel = Math.Clamp(level, 1, 5);
         build.PreparedFireballLevel = preparedFireballLevel;
+        PrepareFireballMutations(preparedFireballMutations);
     }
 
     public void PrepareFireballMutations(IEnumerable<FireballMutationId> mutations)
@@ -31,7 +32,7 @@ public sealed partial class RunSimulation
         if (build.Spells.IsPrimaryCommitted || elapsed > 0) return;
         // One recipe owns one Fireball. This never creates independent automatically firing spells.
         preparedFireballMutations = mutations.Where(id => FireballCoreCatalog.Mutations.Any(known => known.Id == id && known.Playable))
-            .Distinct().Take(5).ToHashSet();
+            .Distinct().Take(FireballCoreCatalog.SocketCapacityForLevel(preparedFireballLevel)).ToHashSet();
         build.PreparedFireballMutations = preparedFireballMutations;
         RebuildFireballAmplification();
     }

@@ -39,7 +39,7 @@
             <input type="number" @bind="seed" />
         </label>
         <label>Hunter loadout
-            <select @bind="loadout"><option value="tier1">Tier I hunter</option><option value="stress">Overpowered stress build</option></select>
+            <select @bind="loadout"><option value="tier1">Tier I hunter</option><option value="stress">Overpowered stress build</option><option value="fire-evolution">Fire progression · Solar Wake (review)</option></select>
         </label>
         <label>Agent
             <select @bind="personality">
@@ -58,6 +58,10 @@
             <span>@(paused ? "PAUSED" : ManualControl ? invulnerable ? "LIVE CONTROLS • INVULNERABLE PRACTICE" : "LIVE CONTROLS • FULL DAMAGE" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
         </div>
     </section>
+    @if (loadout == "fire-evolution")
+    {
+        <p class="hunt-lab-note">DEVELOPER FIXTURE · Nexus Lv5 + Detonation · Ember Covenant → Long Pyre · Emberbrand → Cinder Cascade → Solar Wake. No earned progression is claimed or saved.</p>
+    }
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
 </main>
 
@@ -116,7 +120,7 @@
     {
         Casting = CastingQuery ?? true;
         invulnerable = InvulnerableQuery ?? !ManualControl;
-        loadout = LoadoutQuery == "stress" ? "stress" : "tier1";
+        loadout = LoadoutQuery is "stress" or "fire-evolution" ? LoadoutQuery : "tier1";
         if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
         if (AscendantQuery is { } a) variant = a ? "ascendant" : "ordinary";
         if (PhaseQuery is 1 or 2) phase = PhaseQuery.Value;
@@ -153,7 +157,8 @@
 
     private void CreateEncounter(double width, double height)
     {
-        var wyrm = selectedWyrm;
+        var reviewFire = loadout == "fire-evolution";
+        var wyrm = reviewFire ? DragonId.Ashfang : selectedWyrm;
         var spell = wyrm switch
         {
             DragonId.Ashfang => SpellId.FireBolt,
@@ -163,8 +168,16 @@
         };
         var build = SelfPlayBuildCatalog.All.First();
         var nodes = loadout == "stress" ? build.SelectedNodes : new HashSet<string>();
+        if (reviewFire)
+        {
+            var selection = new Wyrmforge.Domain.Progression.PassiveTree.PassiveTreeSelection();
+            selection.SetActiveSchool(Wyrmforge.Domain.Progression.PassiveTree.PassiveSchool.Fire);
+            var route = Wyrmforge.Domain.Progression.PassiveTree.PassiveTreePlanner.Plan(selection, "fire-long-pyre")!;
+            selection.SelectPath(route.NodeIds);
+            nodes = selection.Selected;
+        }
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable) { AdaptiveAgents = AdaptiveAgents, Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { ReviewFireEvolution = reviewFire, AdaptiveAgents = AdaptiveAgents, Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
         simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(nodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";

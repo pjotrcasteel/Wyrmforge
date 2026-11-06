@@ -276,7 +276,7 @@ public sealed class LevelChoiceService(
     {
         var choices = new List<LevelChoice>();
         choices.AddRange(RunUpgradeCatalog.All
-            .Where(upgrade => build.RunUpgrades[upgrade.Id] < upgrade.MaxRank)
+            .Where(upgrade => !FireHuntBreakthroughs.IsBreakthrough(upgrade.Id) && build.RunUpgrades[upgrade.Id] < upgrade.MaxRank)
             .Select(upgrade => new LevelChoice(
                 $"rune:{upgrade.Id}",
                 LevelChoiceKind.Rune,
