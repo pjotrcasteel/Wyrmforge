@@ -263,19 +263,17 @@ export function roadWalkDirection(snapshot, frame, memory = null, now = 0) {
     }
     if (best > CELL * 2) {
         const nearestPoint = at(nearest);
-        const flow = flowDirection(frame, player, nearestPoint, snapshot.environment?.props);
-        if (flow && (flow.x !== 0 || flow.y !== 0)) return steer(flow);
-        if (walkableSegment(frame, player, nearestPoint, snapshot.environment?.props))
+        const ahead = at(Math.min(road.length - 2, nearest + 96));
+        const props = snapshot.environment?.props;
+        // Only snap back to the road when the next stretch is genuinely clear. Otherwise an obstacle
+        // on the centreline makes the hunter oscillate forever between an off-road detour and that obstacle.
+        if (walkableSegment(frame, player, nearestPoint, props) && walkableSegment(frame, nearestPoint, ahead, props))
             return steer(normalized(nearestPoint.x - player.x, nearestPoint.y - player.y, 0));
-        // A displaced hunter should at least head back into the interior instead of following the end of the road
-        // through an unreachable cliff. Once it is back in range, the short centreline segments take over.
-        return steer(normalized((snapshot.world?.width ?? frame.columns * CELL) / 2 - player.x,
-            (snapshot.world?.height ?? frame.rows * CELL) / 2 - player.y, 0));
     }
     // The bot can move farther than two spline samples per rendered frame (especially at ?speed=3).
     // Aim ahead first, so it cannot oscillate around a near point. Sight-check each candidate against the
     // actual hunter footprint; only when no centreline segment is clear ask the terrain flow for a detour.
-    const lookahead = [32, 24, 16, 8, 4, 2];
+    const lookahead = [96, 64, 48, 32, 24, 16, 8, 4, 2];
     for (const step of lookahead) {
         const target = at(Math.min(road.length - 2, nearest + step));
         if (Math.hypot(target.x - player.x, target.y - player.y) < 6) continue;

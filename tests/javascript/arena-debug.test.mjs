@@ -181,6 +181,20 @@ test('road review bot sidesteps after sustained collision and then resumes its r
     assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 2400), { x: 0, y: -1 }, 'then resume the C# road');
 });
 
+test('road review bot navigates past several prop obstacles without returning into a blocked centreline', () => {
+    const terrain = grid(30, 60);
+    terrain.road = Array.from({ length: 830 }, (_, index) => [232, Math.round((57.5 - index / 16) * 16)]).flat();
+    const props = [{ x: 464, y: 1400, radius: 20 }, { x: 464, y: 1000, radius: 22 }, { x: 464, y: 600, radius: 18 }];
+    const memory = createBotMemory();
+    let player = { x: 464, y: 1840 };
+    for (let tick = 0; tick < 1000 && player.y > 250; tick++) {
+        const heading = roadWalkDirection(at(player.x, player.y, { environment: { props } }), terrain, memory, tick * 50);
+        const next = { x: player.x + heading.x * 5, y: player.y + heading.y * 5 };
+        if (walkableSegment(terrain, player, next, props)) player = next;
+    }
+    assert.ok(player.y < 250, 'the hunter must pass all three obstacles and keep moving north');
+});
+
 test('a hunter far outside the road corridor first returns to the accessible centreline', () => {
     const terrain = grid(20, 60);
     terrain.road = Array.from({ length: 50 }, (_, row) => [10 * 16 + 8, (59 - row) * 16 + 8]).flat();
