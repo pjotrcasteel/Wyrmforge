@@ -106,6 +106,7 @@ public sealed class ProgressionV13Tests : BrowserTest
     {
         var folder = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.GetTempPath();
         Directory.CreateDirectory(folder);
-        await page.ScreenshotAsync(new() { Path = Path.Combine(folder, name + ".png"), FullPage = true });
+        await page.ScreenshotAsync(new() { Path = Path.Combine(folder, name + ".png"), FullPage = false });
+        await page.ScreenshotAsync(new() { Path = Path.Combine(folder, name + "-page.png"), FullPage = true });
     }
 }

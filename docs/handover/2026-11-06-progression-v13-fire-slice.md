@@ -9,6 +9,7 @@ Authority: owner design v1.3, Library libfile_24b6faecc30081918a63b181f0744045, 
 - PassiveTreeSelection refunds into shared availability without reserving inactive-school points. Switching preserves allocations; graph dependency checks remain. Legacy reserved totals are ignored without minting points.
 - PassiveDormancy supplies school-specific alternative stats. Choosing the primary rebuilds active/dormant combat profiles and limits active proc/amplifier behavior to the active school.
 - FireballCoreCatalog exposes socket capacity 0/1/2/3/5. Sealed legacy equipment remains saved but inactive. Simulation preparation enforces the same capacity.
+- School atmosphere uses static world-anchored gradients and bounded brightness from saved investment. Catalog indexes remove whole-graph scans during routing.
 - Five functional Fire route nodes extend the existing graph: Cinder Thread, Ember Memory, Crucible, Ember Covenant, Long Pyre. Explicit Minor/Medium/Major/Grand/Keystone tiers preserve legacy IDs and costs. Long Pyre exchanges direct damage for field duration.
 - Cinder Cascade is a temporary, Emberbrand-gated major Hunt upgrade; Solar Wake is its later gated evolution, requiring a prepared upgraded core and equipped mutation. The permanent recipe remains unchanged.
 - SynergyResolver composes tagged sources with stable ordering, source ancestry, shared reaction budgets, diminishing contributions and an aggregate root-damage ceiling. Conflicting duplicate source definitions are rejected. Fire runtime uses existing impact and burning-ground rendering, limits concurrent fields, and inherits mutation area/duration.
@@ -17,11 +18,12 @@ Authority: owner design v1.3, Library libfile_24b6faecc30081918a63b181f0744045, 
 
 ## Verification and evidence
 
-- Local full Domain suite: 417 passed.
+- Local full Domain suite: 417 passed, including after graph indexing.
+- Full JavaScript suite: 779 passed; Solar Wake glyph mapping and reward-pool signature regressions fixed.
 - Local focused Application suite: 60 passed (Nexus, temporary breakthroughs, milestones, cohorts, development encounter isolation/determinism).
 - Web and browser-test builds passed. Full Application suite is not claimed locally; use CI.
 - Both Chromium and WebKit passed all four mobile tests at e7124e42a463bd9bf07b474b35ad86c3e48cafeb: https://github.com/pjotrcasteel/Wyrmforge/actions/runs/42225593129
-- That run contains actual Web screenshots and actual Ashfang encounter videos. Initial 8-second combat captures are too early to prove a visible Solar Wake trigger. A follow-up capture waits longer and records runtime projectiles, fields and performance diagnostics. Desktop-emulated mobile results are not physical iOS/Android GPU measurements.
+- That run contains actual Web screenshots. Its combat wait was later found to accept an asynchronous result at simulation time zero: the initial combat captures are INVALID as gameplay evidence. The corrected capture imports the diagnostics module first, then synchronously polls simulation time, requires an actual projectile, and records fields/performance. Inspect the later run before claiming combat proof. Desktop-emulated mobile results are not physical iOS/Android GPU measurements.
 - Local browser execution is unavailable due sandbox Unix-socket restrictions. Evidence is produced by the real published game in Actions, not generated artwork.
 
 ## Next acceptance work (not complete)
