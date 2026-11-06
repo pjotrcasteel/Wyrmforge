@@ -47,6 +47,9 @@ public sealed class DamageableAshfangExtractionTests
         // Preserve earned Web power across a real JSON serialization boundary before combat.
         var savedWeb = JsonSerializer.Serialize(new WebSave(progress.CompletedRuns, web.PointBudget, web.Selected.ToArray()));
         var state = JsonSerializer.Deserialize<WebSave>(savedWeb)!;
+        var restoredProgress = new FirstHuntProgress();
+        restoredProgress.Restore(state.Runs);
+        Assert.IsFalse(restoredProgress.TutorialRun, "Reloaded hunter must not restart the first Hunt.");
         var restored = new PassiveTreeSelection(1);
         restored.SetActiveSchool(PassiveSchool.Fire);
         restored.RestoreBudget(state.Budget);
@@ -62,7 +65,7 @@ public sealed class DamageableAshfangExtractionTests
         {
             var simulation = new RunSimulationFactory(new SeededRandomSource(seed)).Create(
                 restored.Selected, seed: seed, progression: new ForgeProgressionState(),
-                hunt: HuntSelection.FireTierOne, firstHunt: false);
+                hunt: HuntSelection.FireTierOne, firstHunt: restoredProgress.TutorialRun);
             var build = new SelfPlayBuildDefinition("Earned Fire Web", SelfPlayBuildCohort.KeystoneRoute,
                 SpellSchool.Fire, restored.Selected, [], restored.SpentPoints);
             var agent = new AshfangTelegraphAgent(new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, SpellSchool.Fire));
