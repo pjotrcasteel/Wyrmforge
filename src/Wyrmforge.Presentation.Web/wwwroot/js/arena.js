@@ -47,7 +47,7 @@ import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithE
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
-import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
+import { drawEliteGround, drawEliteCrest, enemyGroundDecorationVisible } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
 import { drawDamageNumbers, loadDamageNumberMode, normalizeDamageNumberMode, saveDamageNumberMode } from './arena-damage-numbers.js';
 import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, drawRimeHusk, drawRimeArmor } from './arena-frost-vfx.js';
@@ -530,6 +530,7 @@ function draw(state, snapshot, width, height) {
     drawGlassReliquaryGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
     for (const enemy of snapshot.enemies) {
+        if (!enemyGroundDecorationVisible(enemy, lightViewport)) continue;
         drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         drawShieldGuard(ctx, enemy);
     }
@@ -738,7 +739,8 @@ function draw(state, snapshot, width, height) {
         if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
         else drawHuntHazard(ctx,hazard);
     }
-    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    // Offscreen casters can telegraph an onscreen target: do not frustum-cull these attack marks.
+    for (const enemy of snapshot.enemies) if (enemy.telegraph) drawEnemyTelegraph(ctx, enemy);
     drawTransformations(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawFieldAmbushTell(ctx, snapshot.fieldAmbush, visualSeconds, state.reducedMotion.matches);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
