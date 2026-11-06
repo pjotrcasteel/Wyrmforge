@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, emissionIntensity } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
+import { injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, enemyHasEmissivePose, emissionIntensity } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 
 const recorder = () => {
     const calls = [];
@@ -46,6 +46,30 @@ test('the GPU passes split the sprite from its glow: albedo paints shadows and s
     assert.deepEqual(light.slice(2), sprite.slice(2), 'the glow is registered with the sprite pixel for pixel');
     assert.equal(drawGrounded(recorder(), 'Test-Gpu', 'walk', 'S', 0, 100, 100, { radius: 12 }), false, 'an action without a glow paints nothing in the emissive tile');
     setAuthoredRenderMode('overlay');
+});
+
+test('the enemy emissive fast path skips unlit poses without suppressing authored action glow', () => {
+    injectAuthoredSet('Test-Pose-Glow', set());
+    const state = { enemies: new Map([[42, { name: 'Test-Pose-Glow', action: 'walk', emerge: false }]]) };
+    assert.equal(enemyHasEmissivePose(state, 42), false, 'unlit walking never needs an emissive scratch canvas');
+    state.enemies.get(42).action = 'idle';
+    assert.equal(enemyHasEmissivePose(state, 42), true, 'loaded glowing actions still render');
+    state.enemies.get(42).emerge = true;
+    assert.equal(enemyHasEmissivePose(state, 42), false, 'emergence never draws an emissive pose');
+    state.enemies.get(42).emerge = false;
+    assert.equal(enemyHasEmissivePose(state, 999), false, 'missing pose does not allocate a canvas');
+    assert.equal(enemyHasEmissivePose(null, 42), false);
+});
+
+test('the first seven Fire enemy sets currently have no glow strips: avoid seven empty captures per enemy', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { ENEMY_CHARACTERS } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js');
+    for (const [kind, name] of ENEMY_CHARACTERS) {
+        if (kind > 6) continue;
+        const manifest = JSON.parse(readFileSync(new URL(
+            `../../src/Wyrmforge.Presentation.Web/wwwroot/art/characters/${name}/manifest.json`, import.meta.url), 'utf8'));
+        assert.deepEqual(manifest.emissive ?? [], [], `${name}: when authored glow is added later, revisit the benchmark`);
+    }
 });
 
 test('the second forms burn harder and a transformation swells the glow to its peak', () => {
