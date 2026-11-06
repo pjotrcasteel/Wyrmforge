@@ -141,6 +141,13 @@ test('distant destruction events retain separate local repaint clips', () => {
     ]);
 });
 
+test('staggered ambush craters do not transitively merge their repaint clips across the map', () => {
+    const changed = [4, 12, 20, 28, 36, 44].map(row => row * 32 + 10);
+    const regions = terrainDirtyRegions(32, 60, changed);
+    assert.equal(regions.length, changed.length, 'distant damage stays in separate small repaint clips');
+    assert.ok(regions.every(region => region.r1 - region.r0 <= 5), 'overdraw overlap cannot grow a whole-map region');
+});
+
 test('more than 40 impacted blocks never force an unconditional full terrain repaint', () => {
     const clips = [], clears = [];
     const ctx = { ...recorder(), beginPath() {}, clip() {}, rect(...rect) { clips.push(rect); },
