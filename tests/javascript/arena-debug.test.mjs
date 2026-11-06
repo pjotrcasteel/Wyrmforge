@@ -185,10 +185,12 @@ test('road review bot navigates past several prop obstacles without returning in
     const terrain = grid(30, 60);
     terrain.road = Array.from({ length: 830 }, (_, index) => [232, Math.round((57.5 - index / 16) * 16)]).flat();
     const props = [{ x: 464, y: 1400, radius: 20 }, { x: 464, y: 1000, radius: 22 }, { x: 464, y: 600, radius: 18 }];
+    const normalizedProps = props.map(prop => ({ ...prop, x: prop.x / (30 * 32), y: prop.y / (60 * 32) }));
     const memory = createBotMemory();
     let player = { x: 464, y: 1840 };
     for (let tick = 0; tick < 1000 && player.y > 250; tick++) {
-        const heading = roadWalkDirection(at(player.x, player.y, { environment: { props } }), terrain, memory, tick * 50);
+        const snapshot = at(player.x, player.y, { world: { width: 30 * 32, height: 60 * 32 }, environment: { props: normalizedProps } });
+        const heading = roadWalkDirection(snapshot, terrain, memory, tick * 50);
         const next = { x: player.x + heading.x * 5, y: player.y + heading.y * 5 };
         if (walkableSegment(terrain, player, next, props)) player = next;
     }

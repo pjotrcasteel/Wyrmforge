@@ -95,6 +95,15 @@ function canStep(frame, from, to) {
     return frame.material[to] !== LAVA && Math.abs(height(from) - height(to)) <= MAX_STEP_MICROCELLS;
 }
 
+/** C# prop snapshots carry normalized site coordinates; navigation operates in world units. */
+function navigationProps(snapshot, frame) {
+    const width = snapshot?.world?.width ?? (frame ? frame.columns * CELL : 1024);
+    const height = snapshot?.world?.height ?? (frame ? frame.rows * CELL : 1920);
+    return (snapshot?.environment?.props ?? []).map(prop => ({ ...prop,
+        x: prop.x >= 0 && prop.x <= 1 ? prop.x * width : prop.x,
+        y: prop.y >= 0 && prop.y <= 1 ? prop.y * height : prop.y }));
+}
+
 const PLAYER_CLEARANCE = 20;
 
 /** Solid salvage props the terrain grid cannot see: cells they cover (plus hunter clearance) are blocked for the walk. */
@@ -188,7 +197,7 @@ export function botHuntDirection(snapshot, frame = null, range = HUNT_RANGE, max
         if (distance < best) { best = distance; nearest = foe; }
     }
     if (best <= range) return { x: 0, y: 0 };
-    return flowDirection(frame, player, nearest, snapshot.environment?.props) ?? normalized(nearest.x - player.x, nearest.y - player.y, 0);
+    return flowDirection(frame, player, nearest, navigationProps(snapshot, frame)) ?? normalized(nearest.x - player.x, nearest.y - player.y, 0);
 }
 
 export function createBotMemory() {
@@ -243,7 +252,7 @@ function roadUnstuckDirection(snapshot, frame, heading, memory, now) {
     memory.roadDetourSide = -side;
     const across = { x: -heading.y * side, y: heading.x * side };
     const alternatives = [across, { x: -across.x, y: -across.y }, { x: -heading.x, y: -heading.y }];
-    const props = snapshot.environment?.props ?? [];
+    const props = navigationProps(snapshot, frame) ?? [];
     memory.roadDetour = alternatives.find(direction => walkableSegment(frame, player,
         { x: player.x + direction.x * 36, y: player.y + direction.y * 36 }, props)) ?? alternatives[0];
     memory.roadDetourUntil = now + 900;
@@ -264,7 +273,7 @@ export function roadWalkDirection(snapshot, frame, memory = null, now = 0) {
     if (best > CELL * 2) {
         const nearestPoint = at(nearest);
         const ahead = at(Math.min(road.length - 2, nearest + 96));
-        const props = snapshot.environment?.props;
+        const props = navigationProps(snapshot, frame);
         // Only snap back to the road when the next stretch is genuinely clear. Otherwise an obstacle
         // on the centreline makes the hunter oscillate forever between an off-road detour and that obstacle.
         if (walkableSegment(frame, player, nearestPoint, props) && walkableSegment(frame, nearestPoint, ahead, props))
@@ -277,12 +286,12 @@ export function roadWalkDirection(snapshot, frame, memory = null, now = 0) {
     for (const step of lookahead) {
         const target = at(Math.min(road.length - 2, nearest + step));
         if (Math.hypot(target.x - player.x, target.y - player.y) < 6) continue;
-        if (walkableSegment(frame, player, target, snapshot.environment?.props))
+        if (walkableSegment(frame, player, target, navigationProps(snapshot, frame)))
             return steer(normalized(target.x - player.x, target.y - player.y, 0));
     }
     for (const step of lookahead) {
         const target = at(Math.min(road.length - 2, nearest + step));
-        const heading = flowDirection(frame, player, target, snapshot.environment?.props);
+        const heading = flowDirection(frame, player, target, navigationProps(snapshot, frame));
         if (heading && (heading.x !== 0 || heading.y !== 0)) return steer(heading);
     }
     const ahead = at(Math.min(road.length - 2, nearest + 32));
@@ -340,7 +349,7 @@ export function botMovement(snapshot, memory, now, frame = null) {
         const road = roadWalkDirection(snapshot, frame, memory, now);
         if (road && (road.x !== 0 || road.y !== 0)) return road;
     }
-    const flow = frame ? flowDirection(frame, player, exit, snapshot.environment?.props) : null;
+    const flow = frame ? flowDirection(frame, player, exit, navigationProps(snapshot, frame)) : null;
     const heading = flow && distance >= 40 ? flow : normalized(dx, dy, 6);
     if (distance < memory.bestDistance - 2) { memory.bestDistance = distance; memory.progressAt = now; }
     else if (now - memory.progressAt > 1200 && (heading.x !== 0 || heading.y !== 0)) {
