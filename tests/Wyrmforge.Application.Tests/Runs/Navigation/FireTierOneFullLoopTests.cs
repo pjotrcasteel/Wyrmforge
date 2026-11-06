@@ -14,6 +14,8 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Progression.Onboarding;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
@@ -24,6 +26,8 @@ public sealed class FireTierOneFullLoopTests
 {
     private const int PhoneWidth = 390;
     private const int PhoneHeight = 700;
+
+    public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
     [DataRow(42)]
@@ -119,24 +123,87 @@ public sealed class FireTierOneFullLoopTests
         CollectionAssert.AreEqual(first.Decisions.ToArray(), second.Decisions.ToArray());
     }
 
-    private static (RunSelfPlayMetrics Metrics, RunSimulation Simulation) PlayFullHunt(int seed,
-        int fireballLevel = 1, IReadOnlyCollection<FireballMutationId>? fireballMutations = null)
+    [TestMethod]
+    public void TwoDamageableHunts_SaveAndReloadWebGrowthBetweenAttempts()
     {
+        // Both trials run the real selected Fire Tier-I map with normal damage and no health restoration.
+        var progress = new FirstHuntProgress();
+        var web = new PassiveTreeSelection(1);
+        web.SetActiveSchool(PassiveSchool.Fire);
+
+        var first = PlayFullHunt(42, damageable: true, firstHunt: true);
+        AssertDamageableOutcome(first.Metrics, 1, 42);
+        Assert.IsTrue(progress.TutorialRun);
+        Assert.IsTrue(progress.CompleteRun(first.Metrics.Outcome == RunOutcome.Abandoned));
+        Assert.IsTrue(progress.AtlasUnlocked, "Even a genuine first-Hunt defeat unlocks the Arcane Web.");
+        Assert.IsFalse(progress.AwardsArcanePoint(tutorialRunAtStart: true, abandoned: false),
+            "The tutorial already starts with its first point; never credit it twice.");
+        Assert.AreEqual(1, web.AvailablePoints);
+        Assert.IsTrue(web.Select("fire-start"), "The new hunter must be able to learn the first Fire node.");
+
+        var saved = JsonSerializer.Serialize(new { Runs = progress.CompletedRuns, Budget = web.PointBudget, Nodes = web.Selected.ToArray() });
+        using var document = JsonDocument.Parse(saved);
+        var restoredProgress = new FirstHuntProgress();
+        restoredProgress.Restore(document.RootElement.GetProperty("Runs").GetInt32());
+        var restoredWeb = new PassiveTreeSelection(1);
+        restoredWeb.SetActiveSchool(PassiveSchool.Fire);
+        restoredWeb.RestoreBudget(document.RootElement.GetProperty("Budget").GetInt32());
+        restoredWeb.RestoreNodes(document.RootElement.GetProperty("Nodes").EnumerateArray()
+            .Select(node => node.GetString()!).ToArray());
+        Assert.IsFalse(restoredProgress.TutorialRun, "The next Hunt must not restart the tutorial.");
+        CollectionAssert.AreEquivalent(new[] { "fire-start" }, restoredWeb.Selected.ToArray());
+
+        var second = PlayFullHunt(1204, damageable: true, firstHunt: restoredProgress.TutorialRun,
+            selectedNodes: restoredWeb.Selected);
+        AssertDamageableOutcome(second.Metrics, 2, 1204);
+        Assert.IsTrue(restoredProgress.CompleteRun(second.Metrics.Outcome == RunOutcome.Abandoned));
+        Assert.IsTrue(restoredProgress.AwardsArcanePoint(tutorialRunAtStart: false, abandoned: false));
+        restoredWeb.GrantPoints(1);
+        Assert.AreEqual(2, restoredWeb.PointBudget, "A subsequent completed attempt earns one more point.");
+        CollectionAssert.AreEquivalent(new[] { "fire-start" }, restoredWeb.Selected.ToArray());
+    }
+
+    private void AssertDamageableOutcome(RunSelfPlayMetrics metrics, int attempt, int seed)
+    {
+        TestContext.WriteLine($"attempt={attempt} seed={seed} outcome={metrics.Outcome} stop={metrics.StopReason} " +
+            $"healthMin={metrics.MinimumHealthRatio:F3} damageTaken={metrics.DamageTaken:F1} " +
+            $"routes={metrics.CompletedRouteNodes} boss={metrics.WyrmsReached} victories={metrics.DragonsSlain} " +
+            $"essenceSecured={metrics.EssenceSecured} rituals={metrics.ExtractionRitualsCompleted} " +
+            $"seconds={metrics.SimulatedSeconds:F1} evolutions={string.Join(",", metrics.EvolutionIds)}");
+
+        Assert.AreEqual(RunSelfPlayStopReason.NaturalEnd, metrics.StopReason,
+            "A damageable agent must reach a natural death or extraction rather than time out.");
+        Assert.IsTrue(metrics.Outcome is RunOutcome.Defeated or RunOutcome.Extracted,
+            "An honest defeat is evidence, not a successful extraction.");
+        Assert.IsGreaterThan(0, metrics.DamageTaken, "The hunter must actually take combat damage.");
+        Assert.IsLessThan(1, metrics.MinimumHealthRatio, "Agent health cannot be secretly restored.");
+    }
+
+    private static (RunSelfPlayMetrics Metrics, RunSimulation Simulation) PlayFullHunt(int seed,
+        int fireballLevel = 1, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, bool damageable = false,
+        bool firstHunt = false, IReadOnlySet<string>? selectedNodes = null)
+    {
+        var nodes = selectedNodes ?? new HashSet<string>();
         var simulation = new RunSimulationFactory(new SeededRandomSource(seed))
-            .Create(new HashSet<string>(), seed: seed, hunt: HuntSelection.FireTierOne,
+            .Create(nodes, seed: seed, hunt: HuntSelection.FireTierOne, firstHunt: firstHunt,
                 fireballLevel: fireballLevel, fireballMutations: fireballMutations);
-        var build = SelfPlayBuildCatalog.Get("Fire • Inferno");
-        var agent = new InvulnerableAgent(new HeuristicRunAgent(RunAgentPersonality.BuildFocused, seed, build.PreferredSchool), simulation);
+        var build = damageable
+            ? new SelfPlayBuildDefinition("Fire • Fresh damageable", SelfPlayBuildCohort.KeystoneRoute, SpellSchool.Fire,
+                nodes, [], nodes.Sum(node => PassiveTreeCatalog.Get(node).Cost))
+            : SelfPlayBuildCatalog.Get("Fire • Inferno");
+        var heuristic = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, seed, build.PreferredSchool);
+        IRunAgent agent = damageable ? new ExitPathAssistAgent(heuristic) : new InvulnerableAgent(heuristic, simulation);
         var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
-            new RunSelfPlayOptions(ArenaWidth: PhoneWidth, ArenaHeight: PhoneHeight, MaximumSimulatedSeconds: 3600));
+            new RunSelfPlayOptions(ArenaWidth: PhoneWidth, ArenaHeight: PhoneHeight,
+                MaximumSimulatedSeconds: damageable ? 900 : 3600,
+                MaximumWallClockSeconds: damageable ? 60 : double.PositiveInfinity));
         return (metrics, simulation);
     }
 
-    // Combat skill is not under test; the loop is. Health is restored so a balance-dependent death cannot hide a loop regression.
-    // Spells pause during the walk to the exit, so a pinned agent sidesteps the blocking prop as a player would.
-    private sealed class InvulnerableAgent(IRunAgent inner, RunSimulation simulation) : IRunAgent
+    // Spells pause during the walk to the exit, so both agents sidestep a blocking prop as a player would.
+    // This adapter only returns controller input. It never changes player health, position, damage or rewards.
+    private class ExitPathAssistAgent(IRunAgent inner) : IRunAgent
     {
-        private static readonly FieldInfo PlayerField = typeof(RunSimulation).GetField("player", BindingFlags.Instance | BindingFlags.NonPublic)!;
         private (double X, double Y) anchor;
         private int stalledTicks;
         private int sidestepTicksLeft;
@@ -145,10 +212,8 @@ public sealed class FireTierOneFullLoopTests
 
         public string Name => inner.Name;
 
-        public MovementInput ChooseMovement(RunAgentObservation observation)
+        public virtual MovementInput ChooseMovement(RunAgentObservation observation)
         {
-            var player = (PlayerState)PlayerField.GetValue(simulation)!;
-            player.Health = simulation.MaxHealth;
             var movement = inner.ChooseMovement(observation);
             var position = observation.Snapshot.Player is { } snapshotPlayer ? (snapshotPlayer.X, snapshotPlayer.Y) : anchor;
             var moved = Math.Abs(position.Item1 - anchor.X) + Math.Abs(position.Item2 - anchor.Y) > 4;
@@ -183,5 +248,19 @@ public sealed class FireTierOneFullLoopTests
         public RelicId ChooseRelic(RunAgentObservation observation) => inner.ChooseRelic(observation);
         public DragonEssenceId ChooseEssence(RunAgentObservation observation) => inner.ChooseEssence(observation);
         public RunCheckpointActionId ChooseCheckpointAction(RunAgentObservation observation) => inner.ChooseCheckpointAction(observation);
+    }
+
+    // Structural smoke only: health is restored so balance-dependent death cannot hide a navigation regression.
+    // The separate damageable-agent test above must never use this subclass.
+    private sealed class InvulnerableAgent(IRunAgent inner, RunSimulation simulation) : ExitPathAssistAgent(inner)
+    {
+        private static readonly FieldInfo PlayerField = typeof(RunSimulation).GetField("player", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        public override MovementInput ChooseMovement(RunAgentObservation observation)
+        {
+            var player = (PlayerState)PlayerField.GetValue(simulation)!;
+            player.Health = simulation.MaxHealth;
+            return base.ChooseMovement(observation);
+        }
     }
 }
