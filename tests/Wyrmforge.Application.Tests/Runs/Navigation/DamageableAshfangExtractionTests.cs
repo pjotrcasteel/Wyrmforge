@@ -86,7 +86,8 @@ public sealed class DamageableAshfangExtractionTests
                 $"damage={metrics.DamageTaken:F0} healthMin={metrics.MinimumHealthRatio:F2} " +
                 $"routes={metrics.CompletedRouteNodes} wyrmReached={metrics.WyrmsReached} " +
                 $"bossMinHP={agent.LowestBossHealthRatio:F2} bossFrames={agent.BossFrames} " +
-                $"bossWindups={agent.BossWindups} stalledExits={agent.ExitSidesteps} " +
+                $"bossWindups={agent.BossWindups} contactEscapes={agent.ContactEscapes} " +
+                $"stalledExits={agent.ExitSidesteps} " +
                 $"hitByAttack={agent.DamageByAttack} " +
                 $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
                 $"rituals={metrics.ExtractionRitualsCompleted} deathsInRitual={metrics.DeathsDuringExtraction} " +
@@ -163,6 +164,7 @@ public sealed class DamageableAshfangExtractionTests
         public double LowestBossHealthRatio { get; private set; } = 1;
         public int BossFrames { get; private set; }
         public int BossWindups { get; private set; }
+        public int ContactEscapes { get; private set; }
         public int ExitSidesteps { get; private set; }
         public int ExtractionFrames { get; private set; }
         public double ExtractionStartHealth { get; private set; } = -1;
@@ -189,6 +191,18 @@ public sealed class DamageableAshfangExtractionTests
             LowestBossHealthRatio = Math.Min(LowestBossHealthRatio, wyrm.Health / Math.Max(1, wyrm.MaxHealth));
             if (wyrm.ActionPhase == "windup") BossWindups++;
             var player = frame.Player;
+            var contactX = player.X - wyrm.X;
+            var contactY = player.Y - wyrm.Y;
+            // Contact damage keeps ticking while Ashfang stands on the mage.
+            // Escaping immediately is a legal player response, not invulnerability.
+            if (Length(contactX, contactY) < wyrm.Radius + player.Radius + 40)
+            {
+                ContactEscapes++;
+                var retreat = Length(contactX, contactY) > .001
+                    ? Move(contactX, contactY) : Move(wyrm.DirectionY, -wyrm.DirectionX);
+                return AimAtBoss(retreat, player.X, player.Y, wyrm.X, wyrm.Y);
+            }
+
             var hazard = (frame.HuntHazards ?? []).OrderBy(h =>
                 Length(player.X - h.X, player.Y - h.Y) - h.Radius).FirstOrDefault();
             if (hazard is not null && Length(player.X - hazard.X, player.Y - hazard.Y) < hazard.Radius + 85)
