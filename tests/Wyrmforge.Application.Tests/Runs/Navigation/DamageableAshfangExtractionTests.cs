@@ -137,13 +137,18 @@ public sealed class DamageableAshfangExtractionTests
             var hazard = (frame.HuntHazards ?? []).OrderBy(h =>
                 Math.Hypot(player.X - h.X, player.Y - h.Y) - h.Radius).FirstOrDefault();
             if (hazard is not null && Math.Hypot(player.X - hazard.X, player.Y - hazard.Y) < hazard.Radius + 85)
-                return Move(player.X - hazard.X, player.Y - hazard.Y);
+            {
+                var hx = player.X - hazard.X;
+                var hy = player.Y - hazard.Y;
+                return Math.Hypot(hx, hy) > .001 ? Move(hx, hy) : Move(player.Y - wyrm.Y, wyrm.X - player.X);
+            }
 
             if (wyrm.ActionPhase == "windup")
             {
                 var x = player.X - wyrm.AttackTargetX;
                 var y = player.Y - wyrm.AttackTargetY;
-                if (Math.Hypot(x, y) < 180) return Move(x, y);
+                if (Math.Hypot(x, y) < 180)
+                    return Math.Hypot(x, y) > .001 ? Move(x, y) : Move(wyrm.Y - player.Y, player.X - wyrm.X);
             }
 
             // Strafe around the Wyrm rather than walking into its melee/cone telegraphs.
@@ -165,6 +170,12 @@ public sealed class DamageableAshfangExtractionTests
         public LevelChoice ChooseLevelChoice(RunAgentObservation observation) => inner.ChooseLevelChoice(observation);
         public RelicId ChooseRelic(RunAgentObservation observation) => inner.ChooseRelic(observation);
         public DragonEssenceId ChooseEssence(RunAgentObservation observation) => inner.ChooseEssence(observation);
-        public RunCheckpointActionId ChooseCheckpointAction(RunAgentObservation observation) => inner.ChooseCheckpointAction(observation);
+        public RunCheckpointActionId ChooseCheckpointAction(RunAgentObservation observation)
+        {
+            if (observation.SecuredEssenceCount > 0 && observation.CheckpointActions.Any(action =>
+                    action.Id == RunCheckpointActionId.LeaveRealm && action.Enabled))
+                return RunCheckpointActionId.LeaveRealm;
+            return inner.ChooseCheckpointAction(observation);
+        }
     }
 }
