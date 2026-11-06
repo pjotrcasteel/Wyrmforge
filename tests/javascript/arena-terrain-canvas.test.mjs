@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainCaptureWindow, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -21,6 +21,24 @@ function recorder() {
 function frame(columns, rows, surface, material = null, revision = 1) {
     return { revision, columns, rows, surface, material: material ?? surface.map(() => TERRAIN_MATERIAL.Soil) };
 }
+
+test('buffered terrain capture remains stable during movement and covers the full viewport', () => {
+    const camera = { x: 31.25, y: 73.5 }, width = 320, height = 568;
+    const first = terrainCaptureWindow(camera, width, height);
+    assert.deepEqual(first, { x: -16, y: 48, width: 416, height: 664 });
+    const moved = terrainCaptureWindow({ x: 63.99, y: 127.99 }, width, height);
+    assert.deepEqual(moved, first, 'all sub-grid camera movement reuses the same terrain texture');
+    const next = terrainCaptureWindow({ x: 64, y: 128 }, width, height);
+    assert.deepEqual(next, { x: 48, y: 112, width: 416, height: 664 }, 'crossing a grid edge refreshes the capture');
+    const negative = terrainCaptureWindow({ x: -0.01, y: -64.01 }, width, height);
+    assert.deepEqual(negative, { x: -80, y: -144, width: 416, height: 664 });
+    for (const [x, y] of [[31.25, 73.5], [63.99, 127.99], [64, 128], [-0.01, -64.01]]) {
+        const capture = terrainCaptureWindow({ x, y }, width, height);
+        assert.ok(capture.x <= x && capture.y <= y, 'ground starts before the viewport');
+        assert.ok(capture.x + capture.width >= x + width &&
+            capture.y + capture.height >= y + height, 'ground always covers the viewport');
+    }
+});
 
 test('influence bands follow the C# Fire profile bounds', () => {
     assert.equal(influenceBandIndex(0), 0);
