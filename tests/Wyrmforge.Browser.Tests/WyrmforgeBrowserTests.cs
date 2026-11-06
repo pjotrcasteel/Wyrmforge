@@ -3398,13 +3398,25 @@ public sealed class WyrmforgeBrowserTests : PageTest
             overlay.className = 'trail-clear-transition';
             overlay.innerHTML = '<div class=""trail-power-burst"" aria-hidden=""true""></div><strong>TRAIL CLEARED</strong><p>XP collected</p><button>CONTINUE</button>';
             for (const element of [overlay, ...overlay.querySelectorAll('*')]) element.setAttribute(scope, '');
-            overlay.querySelector('button').addEventListener('click', () => overlay.remove());
+            window.__trailClearTestClicked = false;
+            overlay.querySelector('button').addEventListener('click', () => {
+                window.__trailClearTestClicked = true;
+                overlay.remove();
+            });
             screen.appendChild(overlay);
             overlay.querySelector('.trail-power-burst').getAnimations().forEach(animation => animation.finish());
         }");
         var burst = Page.Locator(".trail-power-burst");
         await Expect(burst).ToHaveCSSAsync("opacity", "0");
-        await Page.Locator(".trail-clear-transition button").ClickAsync(new() { Timeout = 5000 });
+        // A real pointer click must reach the Continue button, not merely observe its disappearance.
+        // Direct mouse input avoids Playwright waiting for a detached synthetic element to finish its own click action.
+        var continueButton = Page.Locator(".trail-clear-transition button");
+        await Expect(continueButton).ToBeVisibleAsync();
+        var bounds = await continueButton.BoundingBoxAsync();
+        Assert.IsNotNull(bounds);
+        await Page.Mouse.ClickAsync(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => window.__trailClearTestClicked === true"),
+            "The visible Continue button must receive the pointer event.");
         await Expect(Page.Locator(".trail-clear-transition")).ToHaveCountAsync(0);
     }
 
