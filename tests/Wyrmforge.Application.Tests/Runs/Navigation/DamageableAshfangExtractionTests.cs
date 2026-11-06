@@ -61,19 +61,25 @@ public sealed class DamageableAshfangExtractionTests
         var evidence = new List<string>();
         RunSimulation? extractedSimulation = null;
         RunSelfPlayMetrics? extractedMetrics = null;
-        foreach (var seed in new[] { 42, 1204, 9100, 9101 })
+        // Exercise several legitimate card-drafting strategies rather than relying
+        // on one personality or assuming the boss must die on a particular seed.
+        var trials = new[] { 9100, 9101, 1204, 42 }.SelectMany(seed =>
+            new[] { RunAgentPersonality.Kiter, RunAgentPersonality.BuildFocused,
+                RunAgentPersonality.Greedy, RunAgentPersonality.Casual }
+                .Select(personality => (seed, personality)));
+        foreach (var (seed, personality) in trials)
         {
             var simulation = new RunSimulationFactory(new SeededRandomSource(seed)).Create(
                 restored.Selected, seed: seed, progression: new ForgeProgressionState(),
                 hunt: HuntSelection.FireTierOne, firstHunt: restoredProgress.TutorialRun);
             var build = new SelfPlayBuildDefinition("Earned Fire Web", SelfPlayBuildCohort.KeystoneRoute,
                 SpellSchool.Fire, restored.Selected, [], restored.SpentPoints);
-            var agent = new AshfangTelegraphAgent(new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, SpellSchool.Fire));
+            var agent = new AshfangTelegraphAgent(new HeuristicRunAgent(personality, seed, SpellSchool.Fire));
             var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
                 new RunSelfPlayOptions(ArenaWidth: width, ArenaHeight: height,
                     MaximumSimulatedSeconds: 900, MaximumWallClockSeconds: 60));
 
-            var row = $"seed={seed} outcome={metrics.Outcome} stop={metrics.StopReason} " +
+            var row = $"seed={seed} strategy={personality} outcome={metrics.Outcome} stop={metrics.StopReason} " +
                 $"damage={metrics.DamageTaken:F0} healthMin={metrics.MinimumHealthRatio:F2} " +
                 $"routes={metrics.CompletedRouteNodes} wyrmReached={metrics.WyrmsReached} " +
                 $"bossMinHP={agent.LowestBossHealthRatio:F2} bossFrames={agent.BossFrames} " +
