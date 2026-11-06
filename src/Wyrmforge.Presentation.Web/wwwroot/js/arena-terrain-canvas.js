@@ -231,7 +231,10 @@ export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
  */
 export function mergeTerrainFrame(previous, incoming) {
     if (!incoming) return previous ?? null;
-    const fine = new Map(previous?.fine ?? []);
+    const visualSeed = incoming.visualSeed ?? previous?.visualSeed ?? 0;
+    const sameSite = previous && previous.columns === incoming.columns && previous.rows === incoming.rows &&
+        previous.visualSeed === visualSeed && incoming.revision >= previous.revision;
+    const fine = new Map(sameSite ? previous.fine : []);
     for (const block of incoming.fine ?? []) {
         if (!block.heights?.length) fine.delete(block.index);
         else if (isUprightProp(incoming.material?.[block.index]))
@@ -255,7 +258,10 @@ export function mergeTerrainFrame(previous, incoming) {
     }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface, material, fine, trunks, boulders,
-        visualSeed: incoming.visualSeed ?? previous?.visualSeed ?? 0,
+        // Damage changes physical heights, not the authored ground's splat/blend pattern. Capture it once for this site.
+        baseSurface: sameSite ? (previous.baseSurface ?? Array.from(previous.surface)) : Array.from(surface),
+        baseMaterial: sameSite ? (previous.baseMaterial ?? Array.from(previous.material)) : Array.from(material),
+        visualSeed,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
         changed: (incoming.fine ?? []).map(block => block.index),
         // The generated crack network travels once, with the first full load; so do the road (1/16 cell polyline) and the torches.
@@ -525,6 +531,8 @@ const ROAD_HALF_WIDTH = 76;
  * Returns null when nothing varies (lava, dug soil), otherwise one kind index per art pixel.
  */
 function kindMap(frame, band, column, row, ownKind, height) {
+    const baseSurface = frame.baseSurface ?? frame.surface;
+    const baseMaterial = frame.baseMaterial ?? frame.material;
     const cache = frame.kindMaps ??= new Map();
     const key = row * frame.columns + column;
     if (cache.has(key)) return cache.get(key);
@@ -535,13 +543,13 @@ function kindMap(frame, band, column, row, ownKind, height) {
         around[slot] = own;
         if (c < 0 || r < 0 || c >= frame.columns || r >= frame.rows) continue;
         const index = r * frame.columns + c;
-        if (frame.fine?.has(index)) continue;
-        const kind = topTileKind(band, frame.material[index], frame.surface[index], frame, c, r);
-        // Ground at a similar level blends; a lava column also shows the shore of any land around it, however high, as a beach on its own level.
-        if (kind && (Math.abs(frame.surface[index] - height) <= 3 || (ownKind === 'lavaTop' && kind !== 'lavaTop'))) around[slot] = KIND_INDEX[kind];
+        // Even a subdivided neighbour retains its original ground identity; only its excavated microcells look different.
+        const kind = topTileKind(band, baseMaterial[index], baseSurface[index], frame, c, r);
+        if (kind && (Math.abs(baseSurface[index] - height) <= 3 || (ownKind === 'lavaTop' && kind !== 'lavaTop')))
+            around[slot] = KIND_INDEX[kind];
         if (around[slot] !== own) uniform = false;
     }
-    const rockCap = ownKind === 'grassTop' && frame.material[key] === TERRAIN_MATERIAL.Stone;
+    const rockCap = ownKind === 'grassTop' && baseMaterial[key] === TERRAIN_MATERIAL.Stone;
     const patchy = ownKind === 'grassTop' || ownKind === 'ashTop' || ownKind === 'slabTop';
     const segments = ownKind === 'lavaTop' || ownKind === 'dirtTop' ? null : roadSegmentsFor(frame, column, row);
     if (uniform && !patchy && !segments) { cache.set(key, null); return null; }
@@ -592,6 +600,15 @@ function kindMap(frame, band, column, row, ownKind, height) {
     }
     cache.set(key, map);
     return map;
+}
+
+/** The immutable site texture for one block, independent of subsequent terrain excavation. */
+export function terrainBaseKindMap(frame, band, column, row) {
+    const index = row * frame.columns + column;
+    const baseSurface = frame.baseSurface ?? frame.surface;
+    const baseMaterial = frame.baseMaterial ?? frame.material;
+    const kind = topTileKind(band, baseMaterial[index], baseSurface[index], frame, column, row);
+    return kind ? kindMap(frame, band, column, row, kind, baseSurface[index]) : null;
 }
 
 /** Paints a column's top face from its kind map: the most common ground whole, every other ground through its own pixel mask. */
@@ -779,9 +796,11 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
     const atlas = grain ? terrainAtlas(band) : null;
     const shade = atlas ? cellShadow(frame, column, row, block.heights) : null;
     // The column's whole-block ground (with its patches and road) is the reference for its undisturbed microcolumns, so chipped ground still matches its neighbours.
-    const coarseHeight = frame.surface[row * columns + column];
-    const baseKind = atlas ? topTileKind(band, frame.material[row * columns + column], coarseHeight, frame, column, row) : null;
-    const baseMap = baseKind ? kindMap(frame, band, column, row, baseKind, coarseHeight) : null;
+    const index = row * columns + column;
+    const coarseHeight = (frame.baseSurface ?? frame.surface)[index];
+    const baseMaterial = (frame.baseMaterial ?? frame.material)[index];
+    const baseKind = atlas ? topTileKind(band, baseMaterial, coarseHeight, frame, column, row) : null;
+    const baseMap = baseKind ? terrainBaseKindMap(frame, band, column, row) : null;
     const microArt = TILE / MICRO_PER_COLUMN;
     let painted = 0;
     for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
@@ -1091,8 +1110,7 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
     const { columns, rows } = frame;
     let painted = 0;
     for (const { c0, c1, r0, r1 } of regions) {
-        for (let r = Math.max(0, r0 - 1); r <= Math.min(rows - 1, r1 + 1); r++)
-            for (let c = Math.max(0, c0 - 1); c <= Math.min(columns - 1, c1 + 1); c++) frame.kindMaps?.delete(r * columns + c);
+        // Keep existing splat maps: they describe the site's original ground, not its excavated state.
         // Raised columns can overdraw four rows north and fronts reach south; include the source rows whose faces touch the clip.
         const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
         const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
