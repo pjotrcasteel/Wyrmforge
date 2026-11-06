@@ -1,0 +1,156 @@
+@using Microsoft.Extensions.Configuration
+@using Microsoft.JSInterop
+@using Wyrmforge.Application.Persistence
+@inject IConfiguration Configuration
+@inject IJSRuntime JavaScript
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+@if (config is not null)
+{
+    <section class="settings-support" aria-label="Hunter backup">
+        <h3>Hunter backup</h3>
+        @if (module is null)
+        {
+            <p>Keep a copy of your Hunter for another device. You can keep playing as a guest.</p>
+            <button type="button" disabled="@busy" @onclick="ConnectAsync">Set up cloud backup</button>
+        }
+        else if (!signedIn)
+        {
+            <button type="button" disabled="@busy" @onclick="SignInAsync">Continue with Google</button>
+        }
+        else
+        {
+            <button type="button" disabled="@(busy || SaveUnavailable)" @onclick="BackupAsync">Back up my Hunter</button>
+            <button type="button" disabled="@(busy || SaveUnavailable)" @onclick="RestoreAsync">Restore from cloud</button>
+            @if (conflict is not null)
+            {
+                <button type="button" disabled="@(busy || SaveUnavailable)" @onclick="ReplaceAsync">Replace cloud backup with this Hunter</button>
+            }
+            <button type="button" disabled="@busy" @onclick="SignOutAsync">Sign out</button>
+        }
+        @if (busy)
+        {
+            <p role="status">Working on Hunter backup…</p>
+        }
+        else if (notice is not null)
+        {
+            <p role="status">@notice</p>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public bool SaveUnavailable { get; set; }
+
+    private Dictionary<string, string>? config;
+    private IJSObjectReference? module;
+    private BackupRevision? conflict;
+    private bool signedIn;
+    private bool busy;
+    private string? notice;
+
+    protected override void OnInitialized()
+    {
+        var fields = new[] { "apiKey", "authDomain", "projectId", "appId" };
+        var values = fields.ToDictionary(field => field, field => Configuration[$"HunterBackup:{field}"] ?? string.Empty);
+        if (values.Values.All(value => !string.IsNullOrWhiteSpace(value))) config = values;
+    }
+
+    private Task ConnectAsync() => RunAsync(async () =>
+    {
+        var imported = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/hunter-cloud.js");
+        try
+        {
+            signedIn = await imported.InvokeAsync<bool>("connect", config);
+            module = imported;
+        }
+        catch
+        {
+            await imported.DisposeAsync();
+            throw;
+        }
+    });
+
+    private Task SignInAsync() => RunAsync(async () =>
+    {
+        await module!.InvokeVoidAsync("signIn");
+        signedIn = true;
+        notice = "Signed in. Choose whether to back up this Hunter or restore a cloud save.";
+    });
+
+    private Task SignOutAsync() => RunAsync(async () =>
+    {
+        await module!.InvokeVoidAsync("signOut");
+        signedIn = false;
+        conflict = null;
+        notice = "Signed out. Your Hunter is still on this device.";
+    });
+
+    private Task BackupAsync() => WriteBackupAsync(null);
+
+    private Task ReplaceAsync() => WriteBackupAsync(conflict);
+
+    private Task WriteBackupAsync(BackupRevision? replacement) => RunAsync(async () =>
+    {
+        if (SaveUnavailable) return;
+        if (replacement is not null && !await JavaScript.InvokeAsync<bool>("confirm", "Replace your cloud backup with the Hunter on this device?")) return;
+
+        var result = await module!.InvokeAsync<BackupResult>("backup", SaveLayout.HunterSave, SaveLayout.HunterKeys, replacement);
+        conflict = result.Backup;
+        notice = result.Status switch
+        {
+            "saved" => "Hunter backed up.",
+            "empty" => "Play first to create a Hunter save on this device.",
+            "conflict" => "This device and the cloud have different saves. Choose Restore from cloud or replace the cloud backup.",
+            "local-changed" => "This device changed while the backup was uploading. Review your saves before backing up again.",
+            "too-large" => "This Hunter save is too large for cloud backup.",
+            _ => "The Hunter backup could not be completed.",
+        };
+    });
+
+    private Task RestoreAsync() => RunAsync(async () =>
+    {
+        if (SaveUnavailable) return;
+        var result = await module!.InvokeAsync<string>("restore", SaveLayout.HunterSave, SaveLayout.HunterKeys);
+        if (result == "restored")
+        {
+            Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+            return;
+        }
+
+        notice = result switch
+        {
+            "missing" => "There is no cloud backup for this account yet.",
+            "local-changed" => "This device changed during restore. Try again when the Hunter is saved.",
+            _ => "Restore cancelled.",
+        };
+    });
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        if (busy) return;
+        busy = true;
+        notice = null;
+        try
+        {
+            await action();
+        }
+        catch (JSException)
+        {
+            notice = "Hunter backup is unavailable. Check your connection and sign-in, then try again.";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null) await module.DisposeAsync();
+    }
+
+    public sealed record BackupRevision(string Uid, string ProjectId, int Revision);
+    public sealed record BackupResult(string Status, BackupRevision? Backup);
+}
