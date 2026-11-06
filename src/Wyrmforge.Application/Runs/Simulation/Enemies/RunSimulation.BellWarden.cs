@@ -176,7 +176,12 @@ public sealed partial class RunSimulation
                 RallyBellWardenAdds(bell.Cracked ? BellCrackedRallyAdds : BellRallyAdds);
                 break;
             case BellWardenEvent.CrackStarted:
-                BellWardenCracks++;
+                BeginBellWardenCrack(enemy);
+                break;
+            case BellWardenEvent.CrackCompleted:
+                // The molten bell: a second, larger eruption and the reinforcements it calls on waking.
+                TransformationBurst(enemy.Position, 5, 20);
+                RallyBellWardenAdds(BellCrackedRallyAdds);
                 break;
         }
         return (direction, crossing ? speed : speed * bell.SpeedMultiplier);

@@ -1,7 +1,7 @@
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.DragonEssences
 
-<section class="fireball-ritual" aria-label="Fireball spellcraft">
+<section class="fireball-ritual @(firstSocketJustAwakened ? "awakened" : "")" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
         <h2>Fireball <span>Lv @Core.Level</span></h2>
         <div class="fireball-level-pips" role="img" aria-label="Fireball level @Core.Level of 5">
@@ -27,7 +27,7 @@
             @for (var i = 0; i < 5; i++)
             {
                 var slot = i;
-                var unlocked = slot < Core.Level;
+                var unlocked = slot < Core.SocketCapacity;
                 var mutation = Core.Slots[slot];
                 <button type="button" class="fireball-socket fireball-socket--@(slot + 1) @(selectedSlot == slot ? "selected" : "") @(inspectedLockedSlot == slot ? "inspected" : "") @(!unlocked ? "sealed" : mutation is null ? "empty" : "filled")"
                         aria-label="@SlotLabel(slot)"
@@ -61,13 +61,22 @@
     </div>
 
     <section class="fireball-context" aria-live="polite" aria-label="Fireball actions" tabindex="-1" @ref="contextElement">
+        @if (firstSocketJustAwakened && Core.Level >= 2)
+        {
+            <div class="fireball-awakening" role="status">
+                <span class="fireball-awakening-kicker">First awakening</span>
+                <strong>Your Fireball has changed.</strong>
+                <p>+8% base damage. Your first mutator socket is now open, ready for a researched mutation.</p>
+                <button type="button" class="fireball-awakening-action" @onclick="() => SelectSlot(0)">Choose your first mutator</button>
+            </div>
+        }
         @if (selectedSlot is null)
         {
             <div class="fireball-panel-heading">
                 <span class="fireball-school-icon" aria-hidden="true"></span>
                 <div>
                     <h3>Upgrade Fireball</h3>
-                    <p>Increase base damage and unlock another mutator socket.</p>
+                    <p>@CoreUpgradeDescription</p>
                     <p class="fireball-progression-help">Mutators are discovered in Research and equipped into unlocked sockets.</p>
                 </div>
             </div>
@@ -75,7 +84,10 @@
             {
                 <div class="fireball-locked-explainer" role="status">
                     <strong>Socket @(sealedSlot + 1) is sealed</strong>
-                    <span>Unlocks at Fireball Lv @(sealedSlot + 1). Upgrade the core one level at a time, then equip a researched mutator.</span>
+                    <span>
+                        Unlocks at Fireball Lv @FireballCoreCatalog.UnlockLevelForSocket(sealedSlot).
+                        Upgrade the core one level at a time, then equip a researched mutator.
+                    </span>
                 </div>
             }
             @if (Core.Level == 5)
@@ -93,17 +105,17 @@
                     Base damage: +@((int)Math.Round((FireballCoreCatalog.DamageMultiplier(Core.Level) - 1) * 100))%
                     → +@((int)Math.Round((FireballCoreCatalog.DamageMultiplier(Core.Level + 1) - 1) * 100))%
                 </p>
+                <p class="fireball-next-socket-help">@NextLevelSocketDescription</p>
                 <h4>Required Materials</h4>
                 <div class="fireball-materials" aria-label="Required materials">
-                    @foreach (var need in FireballCoreCatalog.UpgradeTo(Core.Level + 1))
-                    {
-                        var material = DragonEssenceCatalog.Get(need.Material);
-                        var owned = Vault.Count(need.Material);
-                        <div class="fireball-material @(owned >= need.Required ? "ready" : "missing")">
-                            <i class="px-icon px-lg @MaterialIcon(need.Material)" aria-hidden="true"></i>
-                            <span><b>@material.Name</b><small>@owned / @need.Required · @EssenceGradeText(need.Material)</small></span>
-                        </div>
-                    }
+                    <div class="fireball-material @(UpgradeEssenceAvailableCount >= UpgradeEssenceRequiredCount ? "ready" : "missing")">
+                        <i class="px-icon px-lg px-heart" aria-hidden="true"></i>
+                        <span>
+                            <b>Secured Ashfang Essences</b>
+                            <small>@UpgradeEssenceAvailableCount / @UpgradeEssenceRequiredCount · any combination of Cinder Heart, Molten Fang or Ashen Wing</small>
+                            <small class="fireball-material-source">@UpgradeEssenceSpending</small>
+                        </span>
+                    </div>
                     @foreach (var need in FireballCoreCatalog.UpgradeMaterialsTo(Core.Level + 1))
                     {
                         var owned = Materials.Count(need.Material);
@@ -246,17 +258,39 @@
     private int? selectedSlot;
     private int? inspectedLockedSlot;
     private string? notice;
+    private bool firstSocketJustAwakened;
     private ElementReference contextElement;
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
 
-    // e.g. "Rare ×2, Epic ×1"; the lowest grade is spent first.
-    private string EssenceGradeText(DragonEssenceId id)
+    private string CoreUpgradeDescription => Core.Level switch
     {
-        var grades = Enum.GetValues<LootRarity>().Where(rarity => Vault.Count(id, rarity) > 0)
-            .Select(rarity => $"{LootRarityPresentation.Label(rarity)} ×{Vault.Count(id, rarity)}").ToArray();
-        return grades.Length == 0 ? "none secured" : string.Join(", ", grades);
+        1 => "Your first core upgrade awakens Fireball's first mutator socket.",
+        4 => "The final upgrade strengthens Fireball and opens both capstone sockets.",
+        _ => "Increase base damage and unlock another mutator socket.",
+    };
+
+    private string NextLevelSocketDescription => Core.Level switch
+    {
+        1 => "First mutation socket unlocked at Lv 2. Discover a mutator separately to equip it.",
+        4 => "Lv 5 opens the final two sockets; each mutation must still be researched.",
+        _ => "One additional mutation socket opens at the next level.",
+    };
+
+    private int UpgradeEssenceAvailableCount => DragonEssenceCatalog.AshfangChoices.Sum(choice => Vault.Count(choice.Id));
+
+    private int UpgradeEssenceRequiredCount => FireballCoreCatalog.EssenceCountTo(Core.Level + 1);
+
+    private string UpgradeEssenceSpending
+    {
+        get
+        {
+            var selected = FireballCoreCatalog.SelectUpgradeEssences(Vault, Core.Level + 1);
+            return selected.Count == 0
+                ? "Secure Essences from Ashfang Hunts; extract safely to keep them."
+                : $"Will consume: {string.Join(", ", selected.Select(item => DragonEssenceCatalog.Get(item.Id).Name))}. Lowest-rarity copies first.";
+        }
     }
 
     private enum MutationStatus { Planned, Unknown, Uncrafted, Craftable, Owned, Equipped }
@@ -288,14 +322,6 @@
         _ => "Planned, not available in the game yet",
     };
 
-    private static string MaterialIcon(DragonEssenceId material) => material switch
-    {
-        DragonEssenceId.CinderHeart => "px-heart",
-        DragonEssenceId.MoltenFang => "px-fang",
-        DragonEssenceId.AshenWing => "px-wing",
-        _ => "px-crystal",
-    };
-
     private static string? MutationArtwork(FireballMutationId mutation) => mutation switch
     {
         FireballMutationId.MeteorHeart => "art/arcane-nexus/meteor-heart.svg",
@@ -318,10 +344,10 @@
         FireballMutationId.EmberRecall => "px-cycle",
         _ => "px-fire",
     };
-    private string SlotCaption(int slot) => slot >= Core.Level ? $"Lv {slot + 1}"
+    private string SlotCaption(int slot) => slot >= Core.SocketCapacity ? $"Lv {FireballCoreCatalog.UnlockLevelForSocket(slot)}"
         : Core.Slots[slot] is { } mutation ? FireballCoreCatalog.Get(mutation).Name : "Empty";
 
-    private string SlotLabel(int slot) => slot >= Core.Level ? $"Slot {slot + 1}: locked until Fireball level {slot + 1}"
+    private string SlotLabel(int slot) => slot >= Core.SocketCapacity ? $"Slot {slot + 1}: locked until Fireball level {FireballCoreCatalog.UnlockLevelForSocket(slot)}"
         : Core.Slots[slot] is { } mutation ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(mutation).Name}"
         : $"Slot {slot + 1}: empty, choose mutator";
 
@@ -329,8 +355,9 @@
     private void SelectSlot(int slot)
     {
         notice = null;
+        firstSocketJustAwakened = false;
         focusContext = true;
-        if (slot < Core.Level) { selectedSlot = slot; inspectedLockedSlot = null; }
+        if (slot < Core.SocketCapacity) { selectedSlot = slot; inspectedLockedSlot = null; }
         else { selectedSlot = null; inspectedLockedSlot = slot; }
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -343,7 +370,14 @@
     private async Task UpgradeAsync()
     {
         if (OnUpgrade is null || !await OnUpgrade()) { notice = "Fireball cannot be upgraded yet."; return; }
-        notice = $"Fireball strengthened to level {Core.Level}. A new socket is open.";
+        firstSocketJustAwakened = Core.Level == 2;
+        focusContext = firstSocketJustAwakened;
+        notice = Core.Level switch
+        {
+            2 => null,
+            5 => "Fireball reached level 5! Both final mutation sockets are open.",
+            _ => $"Fireball strengthened to level {Core.Level}. A new socket is open.",
+        };
     }
     private async Task CraftCinderNeedleAsync()
     {

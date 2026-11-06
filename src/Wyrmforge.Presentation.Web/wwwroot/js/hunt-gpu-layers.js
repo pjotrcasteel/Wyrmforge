@@ -21,6 +21,11 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         actor = { x: layer.tree.x, y: layer.tree.footY, radius: 26 };
         id = `tree:${layer.tree.key}`;
         size = layer.tree.captureSize ?? 320;
+    } else if (layer.kind === 'exit') {
+        // The gate shares the actor depth pass, so the GPU terrain cannot paint over it.
+        actor = { x: layer.exit.x, y: layer.exit.y, radius: layer.exit.radius };
+        id = `exit:${layer.exit.x}:${layer.exit.y}`;
+        size = 192;
     } else {
         actor = layer.enemy ?? layer.dragon ?? (layer.kind === 'dragonDeath' ? dragonDeath : player);
         if (!actor) return null;
@@ -58,7 +63,7 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
     // creature-specific shadow or a moving-light-dependent impostor.
     // Explicit authored 2.5D meshes/heightfields always take precedence.
     const occluderHeightPx = layer.kind === 'masonry' ? undefined
-        : layer.kind === 'torch' ? 44 : layer.kind === 'torchFlame' ? 8
+        : layer.kind === 'torch' ? 40 : layer.kind === 'torchFlame' ? 8
         : layer.kind === 'tree' && layer.tree.spriteHeight ? Math.round(layer.tree.spriteHeight * .9 / 4) * 4
             : Math.max(4, Math.round(size * .6 / 4) * 4);
     const physicalVolume = layer.kind === 'masonry' && layer.barrier && layer.physicalHeightPx > 0
@@ -79,7 +84,7 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
 export function huntLayerRevision(layer, artAvailable = false, artRevision = 0) {
     // A canopy changes only when its trunk wears down or the band changes.
     if (layer.kind === 'tree') return JSON.stringify(['tree-v3', layer.tree.key, layer.tree.name, layer.tree.extra?.name, layer.tree.flip]);
-    if (layer.kind === 'torch') return JSON.stringify(['torch-post-v1', layer.torch.key]);
+    if (layer.kind === 'torch') return JSON.stringify(['torch-post-v2', layer.torch.key, layer.torch.variant, Boolean(layer.art)]);
     if (layer.kind !== 'masonry') return undefined;
     // Cloister walls are drawn solely from immutable world geometry and colors.
     // Avoid re-rasterizing and uploading four large, unchanged cutouts every frame.

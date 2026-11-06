@@ -42,7 +42,8 @@ test('missing environment has a safe fallback and game renders real arena scener
     assert.equal(drawArenaEnvironment({}, null, 390, 700), false);
     const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     assert.match(arena, /drawArenaEnvironment\(ctx, snapshot\.environment/);
-    assert.match(arena, /drawArenaExit\(ctx, snapshot\.exit/);
+    assert.match(arena, /drawArenaExit\(ctx, layer\.exit, visualSeconds, layer\.locked\)/);
+    assert.match(arena, /snapshot\.exit \?\? snapshot\.exitLandmark/);
     const markup = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor', import.meta.url), 'utf8');
     assert.match(markup, /TRAIL VANQUISHED/);
     assert.match(markup, /Follow the illuminated passage north/);

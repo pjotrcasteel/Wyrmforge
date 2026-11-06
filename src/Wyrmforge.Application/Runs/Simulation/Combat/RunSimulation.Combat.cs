@@ -138,6 +138,7 @@ public sealed partial class RunSimulation
             }
         }
 
+        if (target is EnemyState transforming && IsTransforming(transforming)) return false;
         if (target is EnemyState { Kind: EnemyKind.Reliquary } && reliquaryWards.Count > 0) damage *= ReliquaryWardedDamageMultiplier;
         if (target is EnemyState { Kind: EnemyKind.ReliquaryOfGlass } glassTarget)
         {
@@ -161,8 +162,9 @@ public sealed partial class RunSimulation
         target.Health -= damage;
         RegisterDamageNumber(target, Math.Min(healthBeforeHit, damage), source?.Spell ?? spellId,
             target.Health <= 0, source?.Surge == true || empowered, periodic, feedbackFlavor);
-        if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
+        if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BeginBellWardenCrack(cracking);
         if (target is EnemyState { WinterBell: { } winter } rimed && winter.TryBeginRime(rimed.Health, rimed.MaxHealth)) BeginWinterRime();
+        if (target is DragonState { Definition.Id: DragonId.Ashfang } hurtAshfang && hurtAshfang.Health > 0) AshfangTakesDamage(hurtAshfang, Math.Min(healthBeforeHit, damage));
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
 

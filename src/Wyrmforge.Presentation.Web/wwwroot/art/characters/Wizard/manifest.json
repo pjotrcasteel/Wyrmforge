@@ -1,0 +1,702 @@
+{
+  "name": "Wizard",
+  "aseprite": "Wizard/Animated/Fire-Mage-Eight-Directions.aseprite",
+  "manifest": "Wizard/Animated/animation-manifest.json",
+  "canvas": [
+    48,
+    48
+  ],
+  "root": [
+    24,
+    44
+  ],
+  "directions": [
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE"
+  ],
+  "actions": {
+    "idle": {
+      "image": "Runtime/Wizard/idle.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        330,
+        330,
+        330,
+        330
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 48,
+          "toFrame": 51,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 24,
+          "toFrame": 27,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 0,
+          "toFrame": 3,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 168,
+          "toFrame": 171,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 144,
+          "toFrame": 147,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 120,
+          "toFrame": 123,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 96,
+          "toFrame": 99,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 72,
+          "toFrame": 75,
+          "durationsMs": [
+            330,
+            330,
+            330,
+            330
+          ],
+          "durationMs": 1320,
+          "loop": true,
+          "events": []
+        }
+      }
+    },
+    "walk_start": {
+      "image": "Runtime/Wizard/walk_start.png",
+      "framesPerDirection": 3,
+      "durationsMs": [
+        100,
+        100,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 52,
+          "toFrame": 54,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 28,
+          "toFrame": 30,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 4,
+          "toFrame": 6,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 172,
+          "toFrame": 174,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 148,
+          "toFrame": 150,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 124,
+          "toFrame": 126,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 100,
+          "toFrame": 102,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 76,
+          "toFrame": 78,
+          "durationsMs": [
+            100,
+            100,
+            100
+          ],
+          "durationMs": 300,
+          "loop": false,
+          "events": []
+        }
+      }
+    },
+    "walk": {
+      "image": "Runtime/Wizard/walk.png",
+      "framesPerDirection": 8,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 55,
+          "toFrame": 62,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 31,
+          "toFrame": 38,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 7,
+          "toFrame": 14,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 175,
+          "toFrame": 182,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 151,
+          "toFrame": 158,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 127,
+          "toFrame": 134,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 103,
+          "toFrame": 110,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 79,
+          "toFrame": 86,
+          "durationsMs": [
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130,
+            130
+          ],
+          "durationMs": 1040,
+          "loop": true,
+          "events": []
+        }
+      }
+    },
+    "walk_stop": {
+      "image": "Runtime/Wizard/walk_stop.png",
+      "framesPerDirection": 3,
+      "durationsMs": [
+        100,
+        100,
+        120
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 63,
+          "toFrame": 65,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 39,
+          "toFrame": 41,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 15,
+          "toFrame": 17,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 183,
+          "toFrame": 185,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 159,
+          "toFrame": 161,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 135,
+          "toFrame": 137,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 111,
+          "toFrame": 113,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 87,
+          "toFrame": 89,
+          "durationsMs": [
+            100,
+            100,
+            120
+          ],
+          "durationMs": 320,
+          "loop": false,
+          "events": []
+        }
+      }
+    },
+    "cast": {
+      "image": "Runtime/Wizard/cast.png",
+      "framesPerDirection": 6,
+      "durationsMs": [
+        180,
+        140,
+        100,
+        120,
+        160,
+        160
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 66,
+          "toFrame": 71,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "SE": {
+          "fromFrame": 42,
+          "toFrame": 47,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "S": {
+          "fromFrame": 18,
+          "toFrame": 23,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "SW": {
+          "fromFrame": 186,
+          "toFrame": 191,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "W": {
+          "fromFrame": 162,
+          "toFrame": 167,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "NW": {
+          "fromFrame": 138,
+          "toFrame": 143,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "N": {
+          "fromFrame": 114,
+          "toFrame": 119,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "NE": {
+          "fromFrame": 90,
+          "toFrame": 95,
+          "durationsMs": [
+            180,
+            140,
+            100,
+            120,
+            160,
+            160
+          ],
+          "durationMs": 860,
+          "loop": false,
+          "events": [
+            {
+              "name": "spell_release",
+              "localFrame": 3,
+              "timeMs": 420,
+              "oncePerPlayback": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

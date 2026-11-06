@@ -1,0 +1,8 @@
+# Reliquary editable source study
+
+## Reliquary both-form source project and material drafts
+Reliquary/aseprite/Reliquary-both-forms-source-study.aseprite contains 14 named layers in ONE timeline frame: normal and awakened colour turnarounds, four material drafts, all six casts, exposed-core transformation draft and hidden superseded subtle shift. Toggle one source sheet at a time. These enlarged concept sheets vary in size/layout and do not share production registration. They are NOT native 32x32 sprites or sliced/tagged animations. No runtime integration or moving-light/playback verification has been done.
+
+Height and emissive drafts cover the turnarounds only; author materials for every final animation frame. Generated masks have contour drift, noise/fringes and residual albedo influence. Awakened emission also contains lit chain-like details near censers: remove these unless actual luminous geometry is explicitly intended. Nonemitting chains, metal, robes and cage ribs must be black. Back view must not grow facial emission. Height describes relief, never flame brightness; the inner relic core sits behind raised cage ribs. Do not use these maps directly as production textures.
+
+Normal emits from eyes and both censer cores; awakened adds exposed gold-white core, lit crown tips and jaw. Keep this silhouette and source distinction readable at mobile scale without relying solely on bloom. Follow CLAUDE-AWAKENED.md for cast timing, sockets, phase transition and provisional lighting values. Preserve the known continuity issues and correct them on locked final frames. Ashfang remains uncreated. Nine mobs now have source studies; production slicing, native-resolution cleanup, frame-aligned materials, tags and playback remain outstanding.

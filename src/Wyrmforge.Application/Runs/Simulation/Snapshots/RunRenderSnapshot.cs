@@ -35,6 +35,8 @@ public sealed record RunRenderSnapshot(
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }
     public ArenaExitRenderSnapshot? Exit { get; init; }
+    /// <summary>The sealed north-road landmark in terrain arenas; only Exit authorizes passage after clearance.</summary>
+    public ArenaExitRenderSnapshot? ExitLandmark { get; init; }
     /// <summary>Multiple real world-graph exits after clearing an AR1 geographic site.</summary>
     public IReadOnlyList<ArenaExitRenderSnapshot> ExitPorts { get; init; } = [];
     public ArenaWorldRenderSnapshot? World { get; init; }
@@ -45,6 +47,9 @@ public sealed record RunRenderSnapshot(
     public IReadOnlyList<AshRemainsRenderSnapshot> AshRemains { get; init; } = [];
 
     public IReadOnlyList<WraithRippleRenderSnapshot> WraithRipples { get; init; } = [];
+
+    /// <summary>The tell of a Hunt 1.0 field ambush while it runs (marks on all sides), else null.</summary>
+    public FieldAmbushRenderSnapshot? FieldAmbush { get; init; }
 
     public ReliquaryRenderSnapshot? Reliquary { get; init; }
 

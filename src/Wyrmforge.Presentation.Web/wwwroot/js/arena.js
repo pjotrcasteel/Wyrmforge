@@ -1,24 +1,30 @@
 import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
-    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js';
+    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261106-default-hunt1-gate-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
+import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
+import { torchSprites } from './arena-torch-sprites.js';
+import {
+    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
+    drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
+    setAuthoredRenderMode, emissionIntensity,
+} from './authored-characters.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -29,6 +35,8 @@ import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureL
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
+import { drawFieldAmbushTell } from './arena-field-ambush-vfx.js';
+import { drawTransformations } from './arena-transformation-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
@@ -66,6 +74,8 @@ export function initializeArena(canvas, dotNetReference) {
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
+    for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
+    preloadCrawlOut();
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
@@ -150,6 +160,7 @@ export function readArenaDiagnostics(canvas) {
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        exitLandmark: state.latestSnapshot?.exitLandmark ?? null,
         exitPorts: state.latestSnapshot?.exitPorts ?? [],
         extraction: state.latestSnapshot?.extraction ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
@@ -158,6 +169,7 @@ export function readArenaDiagnostics(canvas) {
         damageNumberMode: state.damageNumberMode,
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
+        authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
         ashfangVfx: ashfangVfxDiagnostics(state.latestSnapshot??{},ashfangSockets(state.ashfang)),
         ashfangEffects: state.latestSnapshot?.ashfangEffects??[],
@@ -189,6 +201,7 @@ export function readArenaDiagnostics(canvas) {
         debug: state.debug,
         perfReport: arenaPerfReport(state),
         veinSeams: state.veinSeams ?? null,
+        fieldAmbush: state.latestSnapshot?.fieldAmbush ?? null,
         destructionFx: state.destructionFx
             ? { craters: state.destructionFx.craters, heat: state.destructionFx.heat.length, chips: state.destructionFx.chips.length } : null,
         gpuScene: state.debug.shear ? state.gpuWorld?.sceneReport?.() ?? null : null,
@@ -196,7 +209,8 @@ export function readArenaDiagnostics(canvas) {
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
                 paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0,
-                dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length }
+                dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length,
+                torches: collectTorches(state.terrainFrame).map(torch => ({ x: torch.x, y: torch.y, variant: torch.variant, art: torchSprites(torch.variant) !== null })) }
             : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
@@ -251,6 +265,9 @@ function createState(canvas, dotNetReference) {
         paintedCorpses: {},
         hollow: createHollowState(),
         ashling: ashlingSprites.createState(),
+        // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
+        authored: createAuthoredState(),
+        authoredCharacters: new URLSearchParams(location.search).get('authored') !== '0',
         ashfang: createAshfangState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
@@ -315,7 +332,8 @@ function startSimulationFrame(state, timestamp, rect) {
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
+    const movement = state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
+        : state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
@@ -424,6 +442,17 @@ function draw(state, snapshot, width, height) {
     const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
     const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
         visualSeconds, state.reducedMotion.matches);
+    // The authored characters play in every Hunt; a set that is still downloading draws nothing rather than the old art.
+    const authoredOn = state.authoredCharacters;
+    // GPU: sprites paint their albedo and a separate emissive tile; Canvas: the glow is added over the sprite.
+    setAuthoredRenderMode(gpu ? 'albedo' : 'overlay');
+    const authoredManifests = authoredOn ? loadedManifests() : new Map();
+    if (authoredOn) {
+        updateAuthoredEnemies(state.authored, snapshot, authoredManifests, visualSeconds, state.reducedMotion.matches);
+        updateAuthoredWizard(state.authored, snapshot, authoredManifests.get('Wizard'), state.authored.clock, state.reducedMotion.matches);
+        // Their corpses replace the old ones, including the old Hollowed's 3D fracture and its light.
+        if (authoredManifests.has('Hollowed')) state.hollow.corpses.clear();
+    }
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
@@ -478,9 +507,13 @@ function draw(state, snapshot, width, height) {
         drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
             spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     }
-    drawArenaExit(ctx, snapshot.exit, visualSeconds);
-    // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
-    for (const port of snapshot.exitPorts ?? []) drawArenaExit(ctx, port, visualSeconds);
+    const exitLayers = [
+        ...(snapshot.exit ?? snapshot.exitLandmark
+            ? [{ kind: 'exit', exit: snapshot.exit ?? snapshot.exitLandmark, locked: !snapshot.exit }] : []),
+        // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
+        ...(snapshot.exitPorts ?? []).map(exit => ({ kind: 'exit', exit, locked: false })),
+    ];
+    if (!gpu) for (const layer of exitLayers) drawArenaExit(ctx, layer.exit, visualSeconds, layer.locked);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
@@ -517,19 +550,23 @@ function draw(state, snapshot, width, height) {
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
     updateAshfang(state.ashfang,snapshot,visualSeconds,state.reducedMotion.matches);
-    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
+    // Kinds with a loaded authored set draw their own corpses, so the old ones are skipped.
+    const authoredKinds = new Set([...ENEMY_CHARACTERS].filter(([, name]) => authoredManifests.has(name)).map(([kind]) => kind));
+    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready(), authoredKinds);
     drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
-    ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
+    if (!authoredKinds.has(2)) ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
+    if (authoredOn) drawAuthoredCorpses(ctx, state.authored);
     // The Mire Hound now uses authored pixel poses, including a real collapse.
     // Only C# identity-bearing death bursts create these bodies.
     for (const corpse of state.paintedCorpses.corpses?.values() ?? [])
-        if (Number(corpse.kind) === 1 && mireHoundPixelPreviewEnabled())
+        if (Number(corpse.kind) === 1 && mireHoundPixelPreviewEnabled() && !authoredKinds.has(1))
             drawEnemyPixelArt(ctx, { ...corpse, opacity: Math.max(0, 1 - (visualSeconds - corpse.at) / .8) },
                 null, 7, corpse.facing);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     const depthLayers = [
+        ...exitLayers.map(layer => ({ ...layer, depth: layer.exit.y + layer.exit.radius })),
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
@@ -550,7 +587,8 @@ function draw(state, snapshot, width, height) {
             view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
     if (emissive) state.veinSeams = emissive.seams;
     const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
-    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal, groundAlbedo ? { source: groundAlbedo, scale: artScale } : null);
+    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
+        groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
@@ -577,21 +615,23 @@ function draw(state, snapshot, width, height) {
             if (layer.kind === 'masonry') {
                 drawArenaCloisterElevation(ctx, layer);
             } else if (layer.kind === 'dragon') {
-                drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+                drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang, authoredOn);
+            } else if (layer.kind === 'exit') {
+                drawArenaExit(ctx, layer.exit, visualSeconds, layer.locked);
             } else if (layer.kind === 'tree') {
                 drawTree(ctx, layer.tree);
             } else if (layer.kind === 'torch' || layer.kind === 'torchFlame') {
                 drawTorch(ctx, layer.torch, visualSeconds, layer.kind === 'torch' ? 'post' : 'flame');
             } else if (layer.kind === 'dragonDeath') {
-                drawAshfangDeath(ctx,state.ashfang);
+                if (!(authoredOn && drawAuthoredAshfangDeath(ctx, state.ashfang))) drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
                 const enemy = layer.enemy;
                 if (gpu) {
                     drawEnemy(ctx, enemy, null,
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
                 } else {
                     const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
                     drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
                 }
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
@@ -599,7 +639,10 @@ function draw(state, snapshot, width, height) {
                 drawMage(ctx, layer.player ?? snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                     gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                     updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
-                    state.mageWalk.facing);
+                    state.mageWalk.facing,
+                    // The authored wizard replaces the old art once its set has loaded.
+                    authoredOn && authoredCharacter('Wizard')
+                        ? surface => drawAuthoredWizard(surface, layer.player ?? snapshot.player, state.authored, danger.hit) : null);
             }
             if (state.terrainFrame && (layer.kind === 'enemy' || layer.kind === 'mage')) {
                 // Raised rock in front of the actor hides it: the covered pixels fall away (GPU) or the rock is repainted (Canvas).
@@ -610,6 +653,9 @@ function draw(state, snapshot, width, height) {
             }
         }
         if (gpu) {
+            // The glowing pixels of an authored actor go up as its emissive map, so they stay bright in the dark and light the ground around them.
+            const emissiveMaterial = !reuse && authoredOn && (layer.kind === 'enemy' || layer.kind === 'mage' || layer.kind === 'dragon')
+                ? paintAuthoredEmissive(state, gpu, layer, snapshot, capture.id, tileX, tileY, tileSize, pixelScale) : null;
             if (!reuse) ctx.restore();
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
@@ -619,6 +665,8 @@ function draw(state, snapshot, width, height) {
                     physicalVolume: capture.physicalVolume,
                     // Only the flame glows (its light is the C# emitter, not this); the post is an ordinary lit surface.
                     ...(layer.kind === 'torchFlame' ? { material: { roughness: .85, emission: '#ff8a30', emissionIntensity: .35 } } : {}),
+                    ...(layer.kind === 'exit' ? { material: { roughness: .8, emission: '#b18ae1', emissionIntensity: layer.locked ? .12 : .45 } } : {}),
+                    ...(emissiveMaterial ? { material: { roughness: .85, ...emissiveMaterial } } : {}),
                     ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
         }
@@ -684,6 +732,8 @@ function draw(state, snapshot, width, height) {
         else drawHuntHazard(ctx,hazard);
     }
     for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    drawTransformations(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    drawFieldAmbushTell(ctx, snapshot.fieldAmbush, visualSeconds, state.reducedMotion.matches);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
@@ -1213,7 +1263,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     });
     ctx.restore();
 }
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null) {
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null, authored = null) {
+    if (authored && drawAuthoredEnemy(ctx, enemy, authored)) return;
     if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
@@ -1434,7 +1485,42 @@ function drawDragonBreath(ctx, breath, school, dragon = null) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null) {
+/**
+ * Paints the glowing pixels of one authored actor on a transparent tile the size of its capture and uploads it as that capture's emissive texture.
+ * Returns the material for the capture, or null when the actor has nothing that glows this frame.
+ */
+function paintAuthoredEmissive(state, gpu, layer, snapshot, captureId, tileX, tileY, tileSize, pixelScale) {
+    const tile = (state.gpuEmissivePool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
+    const surface = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
+    let drawn = false, set = null, change = null;
+    setAuthoredRenderMode('emissive');
+    try {
+        if (layer.kind === 'enemy') {
+            drawn = drawAuthoredEnemy(surface, layer.enemy, state.authored);
+            set = state.authored.enemies.get(layer.enemy.entityId)?.name;
+            if (layer.enemy.invulnerable) change = layer.enemy.telegraph?.progress ?? .5;
+        } else if (layer.kind === 'dragon') {
+            drawn = drawAuthoredAshfang(surface, state.ashfang, layer.dragon);
+            set = state.ashfang.authoredForm;
+        } else {
+            drawn = drawAuthoredWizard(surface, layer.player ?? snapshot.player, state.authored);
+            set = 'Wizard';
+        }
+        const body = layer.enemy ?? layer.player;
+        if (drawn && body && state.terrainFrame && layer.kind !== 'dragon')
+            eraseTerrainOcclusion(surface, state.terrainFrame, occludingTerrainCells(state.terrainFrame, body.x, body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25));
+    } finally {
+        setAuthoredRenderMode('albedo');
+        surface.restore();
+    }
+    if (!drawn) return null;
+    const id = `${captureId}:emissive`;
+    gpu.uploadLayer(id, tile, tileSize, tileSize, undefined, true, pixelScale);
+    return { emissiveMap: id, emission: '#ffffff', emissionIntensity: emissionIntensity(set, change) };
+}
+
+function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null, authored = false) {
+    if (authored && ashfang && drawAuthoredAshfang(ctx, ashfang, dragon)) return;
     if (ashfang && drawAshfang(ctx,ashfang)) return;
     const palette = schoolPalette(dragon.school);
     ctx.save();
@@ -1710,12 +1796,20 @@ function drawAimRune(ctx, player) {
     ctx.restore();
 }
 
+/** An immutable terrain capture only changes when its painted revision, camera window or output resolution changes. */
+function terrainViewRevision(state, camera, width, height, scale) {
+    return state.terrainCache.viewportRevision(camera, width, height, scale);
+}
+
 /** The visible window of the terrain normal map, flat where nothing is painted, for the ground's lit material. */
 function groundNormalView(state, camera, width, height, scale = 1) {
     const canvas = state.normalViewCanvas ??= document.createElement('canvas');
     const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
     if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
     if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const revision = terrainViewRevision(state, camera, width, height, scale);
+    if (state.normalViewRevision === revision) return canvas;
+    state.normalViewRevision = revision;
     const g = canvas.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.imageSmoothingEnabled = false;
@@ -1732,6 +1826,9 @@ function groundAlbedoView(state, camera, width, height, scale) {
     const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
     if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
     if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const revision = terrainViewRevision(state, camera, width, height, scale);
+    if (state.groundViewRevision === revision) return canvas;
+    state.groundViewRevision = revision;
     const g = canvas.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.imageSmoothingEnabled = false;

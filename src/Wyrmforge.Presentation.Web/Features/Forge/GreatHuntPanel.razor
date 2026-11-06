@@ -36,7 +36,9 @@
             <div class="hunt-altar-steps">
                 <div class="@(Entry.Slain ? "fulfilled" : string.Empty)"><b>@(Entry.Slain ? "✦" : "◇")</b><span>Slay @Wyrm.Name</span></div>
                 <div class="@(Entry.EssenceSecured ? "fulfilled" : string.Empty)"><b>@(Entry.EssenceSecured ? "✦" : "◇")</b><span>Secure @Wyrm.Name Essence</span></div>
-                <div class="@(Entry.DeepEvolvedDuel ? "fulfilled" : string.Empty)"><b>@(Entry.DeepEvolvedDuel ? "✦" : "◇")</b><span>Defeat at Depth II+ with evolved @Wyrm.School magic</span></div>
+                <div class="@(Entry.DeepEvolvedDuel ? "fulfilled" : string.Empty)"><b>@(Entry.DeepEvolvedDuel ? "✦" : "◇")</b><span>@(ActiveOath.Wyrm == DragonId.Ashfang
+                    ? "Defeat Ascendant/Elder Ashfang with Fireball Lv.3+ and two mutators"
+                    : $"Defeat at Depth II+ with evolved {Wyrm.School} magic")</span></div>
                 <div class="@(LineageAwakened ? "fulfilled" : string.Empty)"><b>@(LineageAwakened ? "✦" : "◇")</b><span>Awaken @SpellCatalog.Get(ActiveOath.LineageSpell).Name's Wyrmforged lineage</span></div>
             </div>
             @if (Hunt.IsSealed(ActiveOath.Wyrm, Masteries))
