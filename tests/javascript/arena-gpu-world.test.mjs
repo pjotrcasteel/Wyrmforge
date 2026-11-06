@@ -2,6 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { huntLightFrame, HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 
+test('terrain albedo and normal maps share a stable capture revision; animated emissive remains live', () => {
+    const uploads = [], captures = [];
+    const world = { used: new Set(), dirtyTextures: new Set(), engine: {},
+        uploadLayer(...args) { uploads.push(args); }, capture(...args) { captures.push(args); } };
+    const terrain = { source: {}, scale: 2, revision: 'painted-3:camera-10:20' };
+    const ctx = { canvas: {} };
+    HuntGpuWorld.prototype.begin.call(world, ctx, { x: 10, y: 20 }, 320, 390, {}, {}, terrain);
+    assert.equal(uploads[0][4], undefined, 'animated emissive has no reuse token');
+    assert.equal(uploads[1][4], terrain.revision, 'normal map uses the fixed camera-window token');
+    assert.equal(captures[0][8].revision, terrain.revision, 'albedo uses exactly the same token');
+    assert.equal(captures[0][8].pixelScale, 2);
+
+    uploads.length = 0;
+    captures.length = 0;
+    HuntGpuWorld.prototype.begin.call(world, ctx, { x: 10, y: 20 }, 320, 390, {}, {}, null);
+    assert.equal(uploads[1][4], undefined, 'legacy dynamic ground remains uncached');
+    assert.equal(captures[0][8].revision, undefined);
+});
+
 test('Hunt lights track camera with the same world scale and handedness as receivers', () => {
     const frame = { version: 1, time: 2, environment: { ambient: 0 }, lights: [{
         id: 'source', position: [144, 240, 24], direction: [1, 2, -1], range: 144,

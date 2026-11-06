@@ -1059,34 +1059,54 @@ class DualContext {
 }
 
 /**
- * Repaints only what a delta touched: the changed blocks and their neighbours, clipped to a rectangle that also covers the rows below
- * that raised columns can overdraw, so painter's order is preserved. Everything else in the cached canvas stays as it was.
+ * Make independent dirty regions from impacted columns. A single bounding box around distant hits would redraw everything between them.
+ * The margins preserve neighbouring material blends and the moon shadows cast east/south of raised terrain.
  */
-export function paintTerrainRegion(ctx, frame, band, changed, offsetY = TERRAIN_PAD_UNITS) {
-    const { columns, rows } = frame;
-    let [minC, maxC, minR, maxR] = [columns, -1, rows, -1];
-    for (const index of changed) {
+export function terrainDirtyRegions(columns, rows, changed) {
+    const regions = [];
+    for (const index of new Set(changed)) {
+        if (!Number.isInteger(index) || index < 0 || index >= columns * rows) continue;
         const c = index % columns, r = Math.floor(index / columns);
-        minC = Math.min(minC, c); maxC = Math.max(maxC, c); minR = Math.min(minR, r); maxR = Math.max(maxR, r);
+        let region = { c0: Math.max(0, c - 1), c1: Math.min(columns - 1, c + 4),
+            r0: Math.max(0, r - 1), r1: Math.min(rows - 1, r + 4) };
+        // Merge overlapping paint clips, including the height overdraw (four rows north and south), to avoid painting a shared area twice.
+        for (let i = 0; i < regions.length;) {
+            const other = regions[i];
+            if (region.c0 > other.c1 || other.c0 > region.c1 || region.r0 > other.r1 + 9 || other.r0 > region.r1 + 9) {
+                i++;
+                continue;
+            }
+            region = { c0: Math.min(region.c0, other.c0), c1: Math.max(region.c1, other.c1),
+                r0: Math.min(region.r0, other.r0), r1: Math.max(region.r1, other.r1) };
+            regions.splice(i, 1);
+            i = 0;
+        }
+        regions.push(region);
     }
-    if (maxC < 0) return 0;
-    // Moon shadows fall up to three columns east and south of what stands, so the repaint reaches that far that way.
-    const [c0, c1, r0, r1] = [Math.max(0, minC - 1), Math.min(columns - 1, maxC + 4), Math.max(0, minR - 1), Math.min(rows - 1, maxR + 4)];
-    for (let r = r0 - 1; r <= r1 + 1; r++) for (let c = c0 - 1; c <= c1 + 1; c++) frame.kindMaps?.delete(r * columns + c);
-    // Raised columns draw up to four rows above their cell and walls reach four rows below it, so the clip spans four rows beyond the
-    // changed blocks each way and every cell that can touch the clip is repainted (four rows further again).
-    const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
-    const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(clipX, clipY, clipW, clipH);
-    ctx.clip();
-    ctx.clearRect(clipX, clipY, clipW, clipH);
-    ctx.translate(0, offsetY);
+    return regions;
+}
+
+/** Repaint only the dirty clips, in back-to-front painter order; outside pixels remain exactly as they were. */
+export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_PAD_UNITS) {
+    const { columns, rows } = frame;
     let painted = 0;
-    for (let row = Math.max(0, r0 - 8); row <= Math.min(rows - 1, r1 + 8); row++)
-        for (let column = Math.max(0, c0 - 1); column <= Math.min(columns - 1, c1 + 1); column++) painted += paintTerrainCell(ctx, frame, band, column, row);
-    ctx.restore();
+    for (const { c0, c1, r0, r1 } of regions) {
+        for (let r = Math.max(0, r0 - 1); r <= Math.min(rows - 1, r1 + 1); r++)
+            for (let c = Math.max(0, c0 - 1); c <= Math.min(columns - 1, c1 + 1); c++) frame.kindMaps?.delete(r * columns + c);
+        // Raised columns can overdraw four rows north and fronts reach south; include the source rows whose faces touch the clip.
+        const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
+        const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(clipX, clipY, clipW, clipH);
+        ctx.clip();
+        ctx.clearRect(clipX, clipY, clipW, clipH);
+        ctx.translate(0, offsetY);
+        for (let row = Math.max(0, r0 - 8); row <= Math.min(rows - 1, r1 + 8); row++)
+            for (let column = Math.max(0, c0 - 1); column <= Math.min(columns - 1, c1 + 1); column++)
+                painted += paintTerrainCell(ctx, frame, band, column, row);
+        ctx.restore();
+    }
     return painted;
 }
 
@@ -1107,6 +1127,11 @@ export class TerrainCanvasCache {
         this.maxRepaintMs = 0;
     }
 
+    /** Stable only while the painted terrain and its exact camera crop stay the same; used by the GPU texture cache. */
+    viewportRevision(camera, width, height, scale) {
+        return `${this.repaints}:${camera.x}:${camera.y}:${width}:${height}:${scale}`;
+    }
+
     update(frame, band) {
         if (!frame) return false;
         // The ground cover comes from the forest kit, which downloads after the first frame: one more full repaint once it is there.
@@ -1125,13 +1150,13 @@ export class TerrainCanvasCache {
         baseCtx.setTransform(ART, 0, 0, ART, 0, 0);
         if (this.withNormals) this.normalCanvas.getContext('2d').setTransform(ART, 0, 0, ART, 0, 0);
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
-        const changed = frame.changed;
-        const regional = full === false && Array.isArray(changed) && changed.length > 0 && changed.length <= 40;
+        const regions = !full && Array.isArray(frame.changed) ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
+        const regional = regions.length > 0;
         // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
         this.kindMaps = regional || kitOnly ? this.kindMaps : new Map();
         frame.kindMaps = this.kindMaps;
-        if (regional) paintTerrainRegion(ctx, frame, band, changed, TERRAIN_PAD_UNITS);
+        if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS);
         else {
             ctx.clearRect(0, 0, width / ART, height / ART);
             paintTerrain(ctx, frame, band, TERRAIN_PAD_UNITS);

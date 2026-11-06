@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -116,6 +116,51 @@ test('the cache repaints only when the revision or influence band changes', () =
     assert.equal(cache.repaints, 3);
     assert.equal(canvases.length, 1, 'the offscreen surface is reused while the grid size is unchanged');
     assert.equal(cache.update(null, 0), false);
+});
+
+test('GPU camera captures reuse terrain textures only while pixels and viewport are identical', () => {
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const terrain = frame(4, 4, new Array(16).fill(0));
+    cache.update(terrain, 0);
+    const view = { x: 4, y: 8 }, revision = cache.viewportRevision(view, 320, 390, 2);
+    assert.equal(cache.viewportRevision({ ...view }, 320, 390, 2), revision);
+    cache.update(terrain, 0);
+    assert.equal(cache.viewportRevision(view, 320, 390, 2), revision, 'unchanged terrain must not trigger a GPU upload');
+    assert.notEqual(cache.viewportRevision({ x: 5, y: 8 }, 320, 390, 2), revision, 'camera movement changes the crop');
+    assert.notEqual(cache.viewportRevision(view, 320, 390, 1), revision, 'different output resolution changes the texture');
+    cache.update({ ...terrain, revision: terrain.revision + 1, changed: [5] }, 0);
+    assert.notEqual(cache.viewportRevision(view, 320, 390, 2), revision, 'one damaged voxel invalidates the capture');
+});
+
+test('distant destruction events retain separate local repaint clips', () => {
+    const regions = terrainDirtyRegions(32, 60, [0, 32 * 60 - 1, 0, -1, 32 * 60]);
+    assert.deepEqual(regions, [
+        { c0: 0, c1: 4, r0: 0, r1: 4 },
+        { c0: 30, c1: 31, r0: 58, r1: 59 },
+    ]);
+});
+
+test('more than 40 impacted blocks never force an unconditional full terrain repaint', () => {
+    const clips = [], clears = [];
+    const ctx = { ...recorder(), beginPath() {}, clip() {}, rect(...rect) { clips.push(rect); },
+        clearRect(...rect) { clears.push(rect); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const base = frame(32, 60, new Array(32 * 60).fill(0));
+    cache.update(base, 0);
+    clips.length = 0;
+    clears.length = 0;
+    const changed = Array.from({ length: 41 }, (_, i) => 25 * 32 + i);
+    cache.update({ ...base, revision: 2, changed }, 0);
+    assert.equal(clips.length, 1, 'adjacent impacts share one clip');
+    assert.equal(clears.length, 1, 'the surrounding terrain should not be cleared');
+    assert.ok(clears[0][3] < 60 * 32, 'the dirty clip is shorter than the map');
+    clips.length = 0;
+    clears.length = 0;
+    cache.update({ ...base, revision: 3, changed: [0, 32 * 60 - 1] }, 0);
+    assert.equal(clips.length, 2, 'distant changes require two independent clips');
+    assert.equal(clears.length, 2);
+    assert.ok(clears.every(rect => rect[2] < 32 * 32), 'neither local clip spans the map width');
 });
 
 test('cache draw copies the visible window from the padded surface into world space', () => {
