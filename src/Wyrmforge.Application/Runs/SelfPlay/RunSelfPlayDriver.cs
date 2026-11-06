@@ -35,7 +35,8 @@ public sealed class RunSelfPlayDriver
         var stopReason = RunSelfPlayStopReason.NaturalEnd;
 
         while (!simulation.IsEnded && simulatedSeconds < options.MaximumSimulatedSeconds &&
-               Stopwatch.GetElapsedTime(wallClockStarted).TotalSeconds < options.MaximumWallClockSeconds)
+               (double.IsPositiveInfinity(options.MaximumWallClockSeconds) ||
+                Stopwatch.GetElapsedTime(wallClockStarted).TotalSeconds < options.MaximumWallClockSeconds))
         {
             var observation = CreateObservation(simulation, snapshot);
 
