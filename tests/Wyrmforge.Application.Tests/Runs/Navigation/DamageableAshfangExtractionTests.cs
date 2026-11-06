@@ -9,6 +9,7 @@ using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Onboarding;
 using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Progression.Relics;
@@ -60,7 +61,8 @@ public sealed class DamageableAshfangExtractionTests
         foreach (var seed in new[] { 42, 1204, 9100, 9101 })
         {
             var simulation = new RunSimulationFactory(new SeededRandomSource(seed)).Create(
-                restored.Selected, seed: seed, hunt: HuntSelection.FireTierOne, firstHunt: false);
+                restored.Selected, seed: seed, progression: new ForgeProgressionState(),
+                hunt: HuntSelection.FireTierOne, firstHunt: false);
             var build = new SelfPlayBuildDefinition("Earned Fire Web", SelfPlayBuildCohort.KeystoneRoute,
                 SpellSchool.Fire, restored.Selected, [], restored.SpentPoints);
             var agent = new AshfangTelegraphAgent(new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, SpellSchool.Fire));
@@ -112,8 +114,9 @@ public sealed class DamageableAshfangExtractionTests
         Assert.AreEqual(2, restoredCore.Level);
         CollectionAssert.AreEquivalent(core.Equipped.ToArray(), restoredCore.Equipped.ToArray());
         var nextHunt = new RunSimulationFactory(new SeededRandomSource(4321)).Create(
-            restored.Selected, seed: 4321, hunt: HuntSelection.FireTierOne,
-            fireballLevel: restoredCore.Level, fireballMutations: restoredCore.Equipped);
+            restored.Selected, seed: 4321, progression: new ForgeProgressionState(),
+            hunt: HuntSelection.FireTierOne, fireballLevel: restoredCore.Level,
+            fireballMutations: restoredCore.Equipped);
         var nextSummary = nextHunt.CreateEvaluationSummary();
         Assert.AreEqual(2, nextSummary.PreparedFireballLevel);
         CollectionAssert.AreEquivalent(restoredCore.Equipped.ToArray(), nextSummary.PreparedFireballMutations.ToArray());
