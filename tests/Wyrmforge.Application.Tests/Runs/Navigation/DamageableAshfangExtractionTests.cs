@@ -74,7 +74,15 @@ public sealed class DamageableAshfangExtractionTests
                 hunt: HuntSelection.FireTierOne, firstHunt: restoredProgress.TutorialRun);
             var build = new SelfPlayBuildDefinition("Earned Fire Web", SelfPlayBuildCohort.KeystoneRoute,
                 SpellSchool.Fire, restored.Selected, [], restored.SpentPoints);
-            var agent = new AshfangTelegraphAgent(new HeuristicRunAgent(personality, seed, SpellSchool.Fire));
+            var preferredRange = personality switch
+            {
+                RunAgentPersonality.Kiter => 310d,
+                RunAgentPersonality.BuildFocused => 270d,
+                RunAgentPersonality.Greedy => 230d,
+                _ => 290d,
+            };
+            var agent = new AshfangTelegraphAgent(
+                new HeuristicRunAgent(personality, seed, SpellSchool.Fire), preferredRange);
             var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
                 new RunSelfPlayOptions(ArenaWidth: width, ArenaHeight: height,
                     MaximumSimulatedSeconds: 900, MaximumWallClockSeconds: 60));
@@ -83,7 +91,7 @@ public sealed class DamageableAshfangExtractionTests
                 $"damage={metrics.DamageTaken:F0} healthMin={metrics.MinimumHealthRatio:F2} " +
                 $"routes={metrics.CompletedRouteNodes} wyrmReached={metrics.WyrmsReached} " +
                 $"bossMinHP={agent.LowestBossHealthRatio:F2} bossFrames={agent.BossFrames} " +
-                $"bossWindups={agent.BossWindups} stalledExits={agent.ExitSidesteps} " +
+                $"bossWindups={agent.BossWindups} range={preferredRange:F0} stalledExits={agent.ExitSidesteps} " +
                 $"hitByAttack={agent.DamageByAttack} " +
                 $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
                 $"rituals={metrics.ExtractionRitualsCompleted} seconds={metrics.SimulatedSeconds:F1} " +
@@ -139,7 +147,7 @@ public sealed class DamageableAshfangExtractionTests
 
     // Only returns legitimate player movement and menu decisions from public snapshots.
     // Does not modify HP, damage, timers, enemies, boss state, RNG, rewards or simulation fields.
-    private sealed class AshfangTelegraphAgent(IRunAgent inner) : IRunAgent
+    private sealed class AshfangTelegraphAgent(IRunAgent inner, double preferredRange) : IRunAgent
     {
         private (double X, double Y) exitAnchor;
         private int exitStalledTicks;
@@ -228,7 +236,8 @@ public sealed class DamageableAshfangExtractionTests
             var distance = Math.Max(1, Length(dx, dy));
             // Stay close enough for legitimate Fire Bolt casts without walking
             // into Ashfang's 125-unit tail and 175-unit bite ranges.
-            var radial = distance < 205 ? 1.6 : distance > 255 ? -0.9 : 0;
+            var radial = distance < preferredRange - 25 ? 1.6
+                : distance > preferredRange + 25 ? -0.9 : 0;
             return AimAtBoss(Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial),
                 player.X, player.Y, wyrm.X, wyrm.Y);
         }
