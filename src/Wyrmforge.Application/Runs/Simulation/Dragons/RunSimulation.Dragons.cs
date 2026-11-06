@@ -255,7 +255,8 @@ public sealed partial class RunSimulation
         var towardPlayer = Vector2D.DirectionTo(activeDragon.Position, player.Position);
         var direction = MovementDirection(profile, distance, towardPlayer);
         var speed = activeDragon.Speed * profile.SpeedMultiplier.For(activeDragon.Phase);
-        activeDragon.Position += direction * speed * delta;
+        var proposed = activeDragon.Position + direction * speed * delta;
+        activeDragon.Position = arenaEnvironment is null ? proposed : arenaEnvironment.RestrictMovement(activeDragon.Position, proposed, arenaWidth, arenaHeight, activeDragon.Radius);
     }
 
     private static Vector2D MovementDirection(DragonMovementProfile profile, double distance, Vector2D towardPlayer)
