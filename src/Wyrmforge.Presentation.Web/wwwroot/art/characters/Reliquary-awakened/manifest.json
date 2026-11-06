@@ -1,0 +1,901 @@
+{
+  "name": "Reliquary-awakened",
+  "aseprite": "Enemies/Animated/Reliquary-awakened/Reliquary-awakened.aseprite",
+  "manifest": "Enemies/Animated/Reliquary-awakened/manifest.json",
+  "canvas": [
+    80,
+    80
+  ],
+  "root": [
+    40,
+    76
+  ],
+  "directions": [
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE"
+  ],
+  "actions": {
+    "corruption": {
+      "image": "Runtime/Reliquary-awakened/corruption.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 144,
+          "toFrame": 148,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "SE": {
+          "fromFrame": 154,
+          "toFrame": 158,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "S": {
+          "fromFrame": 164,
+          "toFrame": 168,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "SW": {
+          "fromFrame": 174,
+          "toFrame": 178,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "W": {
+          "fromFrame": 184,
+          "toFrame": 188,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "NW": {
+          "fromFrame": 194,
+          "toFrame": 198,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "N": {
+          "fromFrame": 204,
+          "toFrame": 208,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "NE": {
+          "fromFrame": 214,
+          "toFrame": 218,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        }
+      }
+    },
+    "death": {
+      "image": "Runtime/Reliquary-awakened/death.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 32,
+          "toFrame": 35,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 86,
+          "toFrame": 89,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 14,
+          "toFrame": 17,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 140,
+          "toFrame": 143,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 68,
+          "toFrame": 71,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 122,
+          "toFrame": 125,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 50,
+          "toFrame": 53,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 104,
+          "toFrame": 107,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        }
+      }
+    },
+    "hit": {
+      "image": "Runtime/Reliquary-awakened/hit.png",
+      "framesPerDirection": 3,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 29,
+          "toFrame": 31,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 83,
+          "toFrame": 85,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 11,
+          "toFrame": 13,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 137,
+          "toFrame": 139,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 65,
+          "toFrame": 67,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 119,
+          "toFrame": 121,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 47,
+          "toFrame": 49,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 101,
+          "toFrame": 103,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        }
+      }
+    },
+    "idle": {
+      "image": "Runtime/Reliquary-awakened/idle.png",
+      "framesPerDirection": 2,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 18,
+          "toFrame": 19,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 72,
+          "toFrame": 73,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 0,
+          "toFrame": 1,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 126,
+          "toFrame": 127,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 54,
+          "toFrame": 55,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 108,
+          "toFrame": 109,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 36,
+          "toFrame": 37,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 90,
+          "toFrame": 91,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        }
+      }
+    },
+    "seal": {
+      "image": "Runtime/Reliquary-awakened/seal.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 149,
+          "toFrame": 153,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "SE": {
+          "fromFrame": 159,
+          "toFrame": 163,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "S": {
+          "fromFrame": 169,
+          "toFrame": 173,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "SW": {
+          "fromFrame": 179,
+          "toFrame": 183,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "W": {
+          "fromFrame": 189,
+          "toFrame": 193,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "NW": {
+          "fromFrame": 199,
+          "toFrame": 203,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "N": {
+          "fromFrame": 209,
+          "toFrame": 213,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        },
+        "NE": {
+          "fromFrame": 219,
+          "toFrame": 223,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/corruption_seal.png"
+        }
+      }
+    },
+    "walk": {
+      "image": "Runtime/Reliquary-awakened/walk.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 20,
+          "toFrame": 23,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 74,
+          "toFrame": 77,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 2,
+          "toFrame": 5,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 128,
+          "toFrame": 131,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 56,
+          "toFrame": 59,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 110,
+          "toFrame": 113,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 38,
+          "toFrame": 41,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 92,
+          "toFrame": 95,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        }
+      }
+    },
+    "ward": {
+      "image": "Runtime/Reliquary-awakened/ward.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 24,
+          "toFrame": 28,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "SE": {
+          "fromFrame": 78,
+          "toFrame": 82,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "S": {
+          "fromFrame": 6,
+          "toFrame": 10,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "SW": {
+          "fromFrame": 132,
+          "toFrame": 136,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "W": {
+          "fromFrame": 60,
+          "toFrame": 64,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "NW": {
+          "fromFrame": 114,
+          "toFrame": 118,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "N": {
+          "fromFrame": 42,
+          "toFrame": 46,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "NE": {
+          "fromFrame": 96,
+          "toFrame": 100,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        }
+      }
+    }
+  },
+  "emissive": [
+    "corruption",
+    "death",
+    "hit",
+    "idle",
+    "seal",
+    "walk",
+    "ward"
+  ]
+}

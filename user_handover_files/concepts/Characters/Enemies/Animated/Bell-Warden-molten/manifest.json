@@ -1,0 +1,3509 @@
+{
+  "schemaVersion": 1,
+  "source": "Bell-Warden-molten.aseprite",
+  "canvas": [
+    80,
+    80
+  ],
+  "root": [
+    40,
+    76
+  ],
+  "atlas": "diffuse.png",
+  "frameIndexBase": 0,
+  "clips": {
+    "idle_S": {
+      "fromFrame": 0,
+      "toFrame": 1,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_S": {
+      "fromFrame": 2,
+      "toFrame": 5,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_S": {
+      "fromFrame": 11,
+      "toFrame": 13,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_S": {
+      "fromFrame": 14,
+      "toFrame": 17,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_E": {
+      "fromFrame": 18,
+      "toFrame": 19,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_E": {
+      "fromFrame": 20,
+      "toFrame": 23,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_E": {
+      "fromFrame": 29,
+      "toFrame": 31,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_E": {
+      "fromFrame": 32,
+      "toFrame": 35,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_N": {
+      "fromFrame": 36,
+      "toFrame": 37,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_N": {
+      "fromFrame": 38,
+      "toFrame": 41,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_N": {
+      "fromFrame": 47,
+      "toFrame": 49,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_N": {
+      "fromFrame": 50,
+      "toFrame": 53,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_W": {
+      "fromFrame": 54,
+      "toFrame": 55,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_W": {
+      "fromFrame": 56,
+      "toFrame": 59,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_W": {
+      "fromFrame": 65,
+      "toFrame": 67,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_W": {
+      "fromFrame": 68,
+      "toFrame": 71,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_SE": {
+      "fromFrame": 72,
+      "toFrame": 73,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_SE": {
+      "fromFrame": 74,
+      "toFrame": 77,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_SE": {
+      "fromFrame": 83,
+      "toFrame": 85,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_SE": {
+      "fromFrame": 86,
+      "toFrame": 89,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_NE": {
+      "fromFrame": 90,
+      "toFrame": 91,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_NE": {
+      "fromFrame": 92,
+      "toFrame": 95,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_NE": {
+      "fromFrame": 101,
+      "toFrame": 103,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_NE": {
+      "fromFrame": 104,
+      "toFrame": 107,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_NW": {
+      "fromFrame": 108,
+      "toFrame": 109,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_NW": {
+      "fromFrame": 110,
+      "toFrame": 113,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_NW": {
+      "fromFrame": 119,
+      "toFrame": 121,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_NW": {
+      "fromFrame": 122,
+      "toFrame": 125,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "idle_SW": {
+      "fromFrame": 126,
+      "toFrame": 127,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "walk_SW": {
+      "fromFrame": 128,
+      "toFrame": 131,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "holdLast": false,
+      "events": []
+    },
+    "hit_SW": {
+      "fromFrame": 137,
+      "toFrame": 139,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "death_SW": {
+      "fromFrame": 140,
+      "toFrame": 143,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "holdLast": true,
+      "events": []
+    },
+    "toll_E": {
+      "fromFrame": 144,
+      "toFrame": 148,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_E": {
+      "fromFrame": 149,
+      "toFrame": 153,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_SE": {
+      "fromFrame": 154,
+      "toFrame": 158,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_SE": {
+      "fromFrame": 159,
+      "toFrame": 163,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_S": {
+      "fromFrame": 164,
+      "toFrame": 168,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_S": {
+      "fromFrame": 169,
+      "toFrame": 173,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_SW": {
+      "fromFrame": 174,
+      "toFrame": 178,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_SW": {
+      "fromFrame": 179,
+      "toFrame": 183,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_W": {
+      "fromFrame": 184,
+      "toFrame": 188,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_W": {
+      "fromFrame": 189,
+      "toFrame": 193,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_NW": {
+      "fromFrame": 194,
+      "toFrame": 198,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_NW": {
+      "fromFrame": 199,
+      "toFrame": 203,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_N": {
+      "fromFrame": 204,
+      "toFrame": 208,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_N": {
+      "fromFrame": 209,
+      "toFrame": 213,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "toll_NE": {
+      "fromFrame": 214,
+      "toFrame": 218,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "rally_NE": {
+      "fromFrame": 219,
+      "toFrame": 223,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "events": [],
+      "source": "Sources/toll_rally.png"
+    },
+    "smash_E": {
+      "fromFrame": 24,
+      "toFrame": 28,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_SE": {
+      "fromFrame": 78,
+      "toFrame": 82,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_S": {
+      "fromFrame": 6,
+      "toFrame": 10,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_SW": {
+      "fromFrame": 132,
+      "toFrame": 136,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_W": {
+      "fromFrame": 60,
+      "toFrame": 64,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_NW": {
+      "fromFrame": 114,
+      "toFrame": 118,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_N": {
+      "fromFrame": 42,
+      "toFrame": 46,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    },
+    "smash_NE": {
+      "fromFrame": 96,
+      "toFrame": 100,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": [
+        {
+          "name": "contact_or_release",
+          "localFrame": 2,
+          "oncePerPlayback": true
+        }
+      ]
+    }
+  },
+  "frames": [
+    {
+      "rect": [
+        0,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 0,
+      "direction": "S",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 1,
+      "direction": "S",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 2,
+      "direction": "S",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 3,
+      "direction": "S",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 4,
+      "direction": "S",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 5,
+      "direction": "S",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 6,
+      "direction": "S",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 7,
+      "direction": "S",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 8,
+      "direction": "S",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 9,
+      "direction": "S",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 0,
+      "direction": "S",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 10,
+      "direction": "S",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 11,
+      "direction": "S",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 0,
+      "direction": "S",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 12,
+      "direction": "S",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 13,
+      "direction": "S",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 14,
+      "direction": "S",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        0,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 15,
+      "direction": "S",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 16,
+      "direction": "E",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 17,
+      "direction": "E",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 18,
+      "direction": "E",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 19,
+      "direction": "E",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 20,
+      "direction": "E",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 21,
+      "direction": "E",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 22,
+      "direction": "E",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 23,
+      "direction": "E",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 24,
+      "direction": "E",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 25,
+      "direction": "E",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 16,
+      "direction": "E",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 26,
+      "direction": "E",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 27,
+      "direction": "E",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 16,
+      "direction": "E",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 28,
+      "direction": "E",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 29,
+      "direction": "E",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 30,
+      "direction": "E",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        80,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 31,
+      "direction": "E",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 32,
+      "direction": "N",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 33,
+      "direction": "N",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 34,
+      "direction": "N",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 35,
+      "direction": "N",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 36,
+      "direction": "N",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 37,
+      "direction": "N",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 38,
+      "direction": "N",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 39,
+      "direction": "N",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 40,
+      "direction": "N",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 41,
+      "direction": "N",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 32,
+      "direction": "N",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 42,
+      "direction": "N",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 43,
+      "direction": "N",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 32,
+      "direction": "N",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 44,
+      "direction": "N",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 45,
+      "direction": "N",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 46,
+      "direction": "N",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        160,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 47,
+      "direction": "N",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 48,
+      "direction": "W",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 49,
+      "direction": "W",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 50,
+      "direction": "W",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 51,
+      "direction": "W",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 52,
+      "direction": "W",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 53,
+      "direction": "W",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 54,
+      "direction": "W",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 55,
+      "direction": "W",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 56,
+      "direction": "W",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 57,
+      "direction": "W",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 48,
+      "direction": "W",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 58,
+      "direction": "W",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 59,
+      "direction": "W",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 48,
+      "direction": "W",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 60,
+      "direction": "W",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 61,
+      "direction": "W",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 62,
+      "direction": "W",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        240,
+        80,
+        80
+      ],
+      "source": "Sources/cardinal.png",
+      "sourceCell": 63,
+      "direction": "W",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 0,
+      "direction": "SE",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 1,
+      "direction": "SE",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 2,
+      "direction": "SE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 3,
+      "direction": "SE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 4,
+      "direction": "SE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 5,
+      "direction": "SE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 6,
+      "direction": "SE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 7,
+      "direction": "SE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 8,
+      "direction": "SE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 9,
+      "direction": "SE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 0,
+      "direction": "SE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 10,
+      "direction": "SE",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 11,
+      "direction": "SE",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 0,
+      "direction": "SE",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 12,
+      "direction": "SE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 13,
+      "direction": "SE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 14,
+      "direction": "SE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        320,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 15,
+      "direction": "SE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 16,
+      "direction": "NE",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 17,
+      "direction": "NE",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 18,
+      "direction": "NE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 19,
+      "direction": "NE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 20,
+      "direction": "NE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 21,
+      "direction": "NE",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 22,
+      "direction": "NE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 23,
+      "direction": "NE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 24,
+      "direction": "NE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 25,
+      "direction": "NE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 16,
+      "direction": "NE",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 26,
+      "direction": "NE",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 27,
+      "direction": "NE",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 16,
+      "direction": "NE",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 28,
+      "direction": "NE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 29,
+      "direction": "NE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 30,
+      "direction": "NE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        400,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 31,
+      "direction": "NE",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 32,
+      "direction": "NW",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 33,
+      "direction": "NW",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 34,
+      "direction": "NW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 35,
+      "direction": "NW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 36,
+      "direction": "NW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 37,
+      "direction": "NW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 38,
+      "direction": "NW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 39,
+      "direction": "NW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 40,
+      "direction": "NW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 41,
+      "direction": "NW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 32,
+      "direction": "NW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 42,
+      "direction": "NW",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 43,
+      "direction": "NW",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 32,
+      "direction": "NW",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 44,
+      "direction": "NW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 45,
+      "direction": "NW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 46,
+      "direction": "NW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        480,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 47,
+      "direction": "NW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        0,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 48,
+      "direction": "SW",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        80,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 49,
+      "direction": "SW",
+      "action": "idle"
+    },
+    {
+      "rect": [
+        160,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 50,
+      "direction": "SW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        240,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 51,
+      "direction": "SW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        320,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 52,
+      "direction": "SW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        400,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 53,
+      "direction": "SW",
+      "action": "walk"
+    },
+    {
+      "rect": [
+        480,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 54,
+      "direction": "SW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        560,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 55,
+      "direction": "SW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        640,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 56,
+      "direction": "SW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        720,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 57,
+      "direction": "SW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        800,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 48,
+      "direction": "SW",
+      "action": "attack"
+    },
+    {
+      "rect": [
+        880,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 58,
+      "direction": "SW",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        960,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 59,
+      "direction": "SW",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1040,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 48,
+      "direction": "SW",
+      "action": "hit"
+    },
+    {
+      "rect": [
+        1120,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 60,
+      "direction": "SW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1200,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 61,
+      "direction": "SW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1280,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 62,
+      "direction": "SW",
+      "action": "death"
+    },
+    {
+      "rect": [
+        1360,
+        560,
+        80,
+        80
+      ],
+      "source": "Sources/diagonal.png",
+      "sourceCell": 63,
+      "direction": "SW",
+      "action": "death"
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 0,
+      "direction": "E",
+      "action": "toll",
+      "rect": [
+        0,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 1,
+      "direction": "E",
+      "action": "toll",
+      "rect": [
+        80,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 2,
+      "direction": "E",
+      "action": "toll",
+      "rect": [
+        160,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 3,
+      "direction": "E",
+      "action": "toll",
+      "rect": [
+        240,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 18,
+      "direction": "E",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        320,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 4,
+      "direction": "E",
+      "action": "rally",
+      "rect": [
+        400,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 5,
+      "direction": "E",
+      "action": "rally",
+      "rect": [
+        480,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 6,
+      "direction": "E",
+      "action": "rally",
+      "rect": [
+        560,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 7,
+      "direction": "E",
+      "action": "rally",
+      "rect": [
+        640,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 18,
+      "direction": "E",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        720,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 8,
+      "direction": "SE",
+      "action": "toll",
+      "rect": [
+        800,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 9,
+      "direction": "SE",
+      "action": "toll",
+      "rect": [
+        880,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 10,
+      "direction": "SE",
+      "action": "toll",
+      "rect": [
+        960,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 11,
+      "direction": "SE",
+      "action": "toll",
+      "rect": [
+        1040,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 72,
+      "direction": "SE",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        1120,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 12,
+      "direction": "SE",
+      "action": "rally",
+      "rect": [
+        1200,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 13,
+      "direction": "SE",
+      "action": "rally",
+      "rect": [
+        1280,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 14,
+      "direction": "SE",
+      "action": "rally",
+      "rect": [
+        1360,
+        640,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 15,
+      "direction": "SE",
+      "action": "rally",
+      "rect": [
+        0,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 72,
+      "direction": "SE",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        80,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 16,
+      "direction": "S",
+      "action": "toll",
+      "rect": [
+        160,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 17,
+      "direction": "S",
+      "action": "toll",
+      "rect": [
+        240,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 18,
+      "direction": "S",
+      "action": "toll",
+      "rect": [
+        320,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 19,
+      "direction": "S",
+      "action": "toll",
+      "rect": [
+        400,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 0,
+      "direction": "S",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        480,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 20,
+      "direction": "S",
+      "action": "rally",
+      "rect": [
+        560,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 21,
+      "direction": "S",
+      "action": "rally",
+      "rect": [
+        640,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 22,
+      "direction": "S",
+      "action": "rally",
+      "rect": [
+        720,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 23,
+      "direction": "S",
+      "action": "rally",
+      "rect": [
+        800,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 0,
+      "direction": "S",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        880,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 24,
+      "direction": "SW",
+      "action": "toll",
+      "rect": [
+        960,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 25,
+      "direction": "SW",
+      "action": "toll",
+      "rect": [
+        1040,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 26,
+      "direction": "SW",
+      "action": "toll",
+      "rect": [
+        1120,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 27,
+      "direction": "SW",
+      "action": "toll",
+      "rect": [
+        1200,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 126,
+      "direction": "SW",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        1280,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 28,
+      "direction": "SW",
+      "action": "rally",
+      "rect": [
+        1360,
+        720,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 29,
+      "direction": "SW",
+      "action": "rally",
+      "rect": [
+        0,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 30,
+      "direction": "SW",
+      "action": "rally",
+      "rect": [
+        80,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 31,
+      "direction": "SW",
+      "action": "rally",
+      "rect": [
+        160,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 126,
+      "direction": "SW",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        240,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 32,
+      "direction": "W",
+      "action": "toll",
+      "rect": [
+        320,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 33,
+      "direction": "W",
+      "action": "toll",
+      "rect": [
+        400,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 34,
+      "direction": "W",
+      "action": "toll",
+      "rect": [
+        480,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 35,
+      "direction": "W",
+      "action": "toll",
+      "rect": [
+        560,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 54,
+      "direction": "W",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        640,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 36,
+      "direction": "W",
+      "action": "rally",
+      "rect": [
+        720,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 37,
+      "direction": "W",
+      "action": "rally",
+      "rect": [
+        800,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 38,
+      "direction": "W",
+      "action": "rally",
+      "rect": [
+        880,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 39,
+      "direction": "W",
+      "action": "rally",
+      "rect": [
+        960,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 54,
+      "direction": "W",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        1040,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 40,
+      "direction": "NW",
+      "action": "toll",
+      "rect": [
+        1120,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 41,
+      "direction": "NW",
+      "action": "toll",
+      "rect": [
+        1200,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 42,
+      "direction": "NW",
+      "action": "toll",
+      "rect": [
+        1280,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 43,
+      "direction": "NW",
+      "action": "toll",
+      "rect": [
+        1360,
+        800,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 108,
+      "direction": "NW",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        0,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 44,
+      "direction": "NW",
+      "action": "rally",
+      "rect": [
+        80,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 45,
+      "direction": "NW",
+      "action": "rally",
+      "rect": [
+        160,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 46,
+      "direction": "NW",
+      "action": "rally",
+      "rect": [
+        240,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 47,
+      "direction": "NW",
+      "action": "rally",
+      "rect": [
+        320,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 108,
+      "direction": "NW",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        400,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 48,
+      "direction": "N",
+      "action": "toll",
+      "rect": [
+        480,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 49,
+      "direction": "N",
+      "action": "toll",
+      "rect": [
+        560,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 50,
+      "direction": "N",
+      "action": "toll",
+      "rect": [
+        640,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 51,
+      "direction": "N",
+      "action": "toll",
+      "rect": [
+        720,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 36,
+      "direction": "N",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        800,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 52,
+      "direction": "N",
+      "action": "rally",
+      "rect": [
+        880,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 53,
+      "direction": "N",
+      "action": "rally",
+      "rect": [
+        960,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 54,
+      "direction": "N",
+      "action": "rally",
+      "rect": [
+        1040,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 55,
+      "direction": "N",
+      "action": "rally",
+      "rect": [
+        1120,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 36,
+      "direction": "N",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        1200,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 56,
+      "direction": "NE",
+      "action": "toll",
+      "rect": [
+        1280,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 57,
+      "direction": "NE",
+      "action": "toll",
+      "rect": [
+        1360,
+        880,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 58,
+      "direction": "NE",
+      "action": "toll",
+      "rect": [
+        0,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 59,
+      "direction": "NE",
+      "action": "toll",
+      "rect": [
+        80,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 90,
+      "direction": "NE",
+      "action": "toll",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        160,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 60,
+      "direction": "NE",
+      "action": "rally",
+      "rect": [
+        240,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 61,
+      "direction": "NE",
+      "action": "rally",
+      "rect": [
+        320,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 62,
+      "direction": "NE",
+      "action": "rally",
+      "rect": [
+        400,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "source": "Sources/toll_rally.png",
+      "sourceCell": 63,
+      "direction": "NE",
+      "action": "rally",
+      "rect": [
+        480,
+        960,
+        80,
+        80
+      ]
+    },
+    {
+      "nativeSourceFrame": 90,
+      "direction": "NE",
+      "action": "rally",
+      "reason": "Exact idle endpoint",
+      "rect": [
+        560,
+        960,
+        80,
+        80
+      ]
+    }
+  ],
+  "rendering": {
+    "filter": "nearest",
+    "crossfade": false
+  },
+  "transitions": {
+    "attackToIdle": "final cel reuses idle 0",
+    "hitToIdle": "final cel reuses idle 0",
+    "death": "terminal, never loop",
+    "walk": "preserve normalized phase on direction switch"
+  },
+  "authoring": "Newly generated individual poses; no mirrored or translated substitutes for animation.",
+  "directions": [
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE"
+  ],
+  "atlasSize": [
+    1440,
+    1040
+  ],
+  "eventAuthority": "Simulation owns damage/healing/projectiles; visual events cannot trigger gameplay a second time.",
+  "aerial": null
+}

@@ -8,7 +8,7 @@ public sealed partial class RunSimulation
     private int ashfangEffectSequence;
     private void RegisterAshfangEffect(string kind, Vector2D position, double radius, Vector2D direction = default)
     {
-        var duration=kind switch { "meteor" or "cinder" => 3.2, "landing" or "pounce" => 1.1, "roar" => 1.05, _ => .36 };
+        var duration=kind switch { "meteor" or "cinder" => 3.2, "landing" or "pounce" or "takeoff" => 1.1, "roar" => 1.05, "stagger" => .9, "claw_combo" or "tail_left" or "tail_right" => .42, _ => .36 };
         ashfangEffects.Add(new(++ashfangEffectSequence,kind,position,direction,radius,duration));
         if(ashfangEffects.Count>48)ashfangEffects.RemoveAt(0);
     }

@@ -1,0 +1,2895 @@
+{
+  "name": "Ashfang-normal",
+  "aseprite": "Enemies/Animated/Ashfang-normal/Ashfang-normal.aseprite",
+  "manifest": "Enemies/Animated/Ashfang-normal/manifest.json",
+  "canvas": [
+    80,
+    80
+  ],
+  "root": [
+    40,
+    76
+  ],
+  "directions": [
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE"
+  ],
+  "actions": {
+    "alert": {
+      "image": "Runtime/Ashfang-normal/alert.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 756,
+          "toFrame": 759,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "SE": {
+          "fromFrame": 764,
+          "toFrame": 767,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "S": {
+          "fromFrame": 772,
+          "toFrame": 775,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "SW": {
+          "fromFrame": 780,
+          "toFrame": 783,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "W": {
+          "fromFrame": 788,
+          "toFrame": 791,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "NW": {
+          "fromFrame": 796,
+          "toFrame": 799,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "N": {
+          "fromFrame": 804,
+          "toFrame": 807,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "NE": {
+          "fromFrame": 812,
+          "toFrame": 815,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        }
+      }
+    },
+    "bite": {
+      "image": "Runtime/Ashfang-normal/bite.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        160,
+        180,
+        100,
+        160,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 24,
+          "toFrame": 28,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "SE": {
+          "fromFrame": 78,
+          "toFrame": 82,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "S": {
+          "fromFrame": 6,
+          "toFrame": 10,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "SW": {
+          "fromFrame": 132,
+          "toFrame": 136,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "W": {
+          "fromFrame": 60,
+          "toFrame": 64,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "NW": {
+          "fromFrame": 114,
+          "toFrame": 118,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "N": {
+          "fromFrame": 42,
+          "toFrame": 46,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        },
+        "NE": {
+          "fromFrame": 96,
+          "toFrame": 100,
+          "durationsMs": [
+            160,
+            180,
+            100,
+            160,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": [
+            {
+              "name": "contact_or_release",
+              "localFrame": 2,
+              "oncePerPlayback": true
+            }
+          ]
+        }
+      }
+    },
+    "breath_sweep": {
+      "image": "Runtime/Ashfang-normal/breath_sweep.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 149,
+          "toFrame": 153,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "SE": {
+          "fromFrame": 159,
+          "toFrame": 163,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "S": {
+          "fromFrame": 169,
+          "toFrame": 173,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "SW": {
+          "fromFrame": 179,
+          "toFrame": 183,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "W": {
+          "fromFrame": 189,
+          "toFrame": 193,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "NW": {
+          "fromFrame": 199,
+          "toFrame": 203,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "N": {
+          "fromFrame": 209,
+          "toFrame": 213,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "NE": {
+          "fromFrame": 219,
+          "toFrame": 223,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        }
+      }
+    },
+    "claw_combo": {
+      "image": "Runtime/Ashfang-normal/claw_combo.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 304,
+          "toFrame": 308,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "SE": {
+          "fromFrame": 314,
+          "toFrame": 318,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "S": {
+          "fromFrame": 324,
+          "toFrame": 328,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "SW": {
+          "fromFrame": 334,
+          "toFrame": 338,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "W": {
+          "fromFrame": 344,
+          "toFrame": 348,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "NW": {
+          "fromFrame": 354,
+          "toFrame": 358,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "N": {
+          "fromFrame": 364,
+          "toFrame": 368,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "NE": {
+          "fromFrame": 374,
+          "toFrame": 378,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        }
+      }
+    },
+    "claw_left": {
+      "image": "Runtime/Ashfang-normal/claw_left.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 224,
+          "toFrame": 228,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "SE": {
+          "fromFrame": 234,
+          "toFrame": 238,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "S": {
+          "fromFrame": 244,
+          "toFrame": 248,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "SW": {
+          "fromFrame": 254,
+          "toFrame": 258,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "W": {
+          "fromFrame": 264,
+          "toFrame": 268,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "NW": {
+          "fromFrame": 274,
+          "toFrame": 278,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "N": {
+          "fromFrame": 284,
+          "toFrame": 288,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "NE": {
+          "fromFrame": 294,
+          "toFrame": 298,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        }
+      }
+    },
+    "claw_right": {
+      "image": "Runtime/Ashfang-normal/claw_right.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 229,
+          "toFrame": 233,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "SE": {
+          "fromFrame": 239,
+          "toFrame": 243,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "S": {
+          "fromFrame": 249,
+          "toFrame": 253,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "SW": {
+          "fromFrame": 259,
+          "toFrame": 263,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "W": {
+          "fromFrame": 269,
+          "toFrame": 273,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "NW": {
+          "fromFrame": 279,
+          "toFrame": 283,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "N": {
+          "fromFrame": 289,
+          "toFrame": 293,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        },
+        "NE": {
+          "fromFrame": 299,
+          "toFrame": 303,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/claws.png"
+        }
+      }
+    },
+    "death": {
+      "image": "Runtime/Ashfang-normal/death.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        140,
+        180,
+        220,
+        500
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 32,
+          "toFrame": 35,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 86,
+          "toFrame": 89,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 14,
+          "toFrame": 17,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 140,
+          "toFrame": 143,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 68,
+          "toFrame": 71,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 122,
+          "toFrame": 125,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 50,
+          "toFrame": 53,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 104,
+          "toFrame": 107,
+          "durationsMs": [
+            140,
+            180,
+            220,
+            500
+          ],
+          "loop": false,
+          "holdLast": true,
+          "events": []
+        }
+      }
+    },
+    "fire_breath": {
+      "image": "Runtime/Ashfang-normal/fire_breath.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 144,
+          "toFrame": 148,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "SE": {
+          "fromFrame": 154,
+          "toFrame": 158,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "S": {
+          "fromFrame": 164,
+          "toFrame": 168,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "SW": {
+          "fromFrame": 174,
+          "toFrame": 178,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "W": {
+          "fromFrame": 184,
+          "toFrame": 188,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "NW": {
+          "fromFrame": 194,
+          "toFrame": 198,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "N": {
+          "fromFrame": 204,
+          "toFrame": 208,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        },
+        "NE": {
+          "fromFrame": 214,
+          "toFrame": 218,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/breath.png"
+        }
+      }
+    },
+    "hit": {
+      "image": "Runtime/Ashfang-normal/hit.png",
+      "framesPerDirection": 3,
+      "durationsMs": [
+        90,
+        120,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 29,
+          "toFrame": 31,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 83,
+          "toFrame": 85,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 11,
+          "toFrame": 13,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 137,
+          "toFrame": 139,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 65,
+          "toFrame": 67,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 119,
+          "toFrame": 121,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 47,
+          "toFrame": 49,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 101,
+          "toFrame": 103,
+          "durationsMs": [
+            90,
+            120,
+            100
+          ],
+          "loop": false,
+          "holdLast": false,
+          "events": []
+        }
+      }
+    },
+    "idle": {
+      "image": "Runtime/Ashfang-normal/idle.png",
+      "framesPerDirection": 2,
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 18,
+          "toFrame": 19,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 72,
+          "toFrame": 73,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 0,
+          "toFrame": 1,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 126,
+          "toFrame": 127,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 54,
+          "toFrame": 55,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 108,
+          "toFrame": 109,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 36,
+          "toFrame": 37,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 90,
+          "toFrame": 91,
+          "durationsMs": [
+            300,
+            300
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        }
+      }
+    },
+    "landing": {
+      "image": "Runtime/Ashfang-normal/landing.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 388,
+          "toFrame": 392,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "SE": {
+          "fromFrame": 397,
+          "toFrame": 401,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "S": {
+          "fromFrame": 406,
+          "toFrame": 410,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "SW": {
+          "fromFrame": 415,
+          "toFrame": 419,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "W": {
+          "fromFrame": 424,
+          "toFrame": 428,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "NW": {
+          "fromFrame": 433,
+          "toFrame": 437,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "N": {
+          "fromFrame": 442,
+          "toFrame": 446,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "NE": {
+          "fromFrame": 451,
+          "toFrame": 455,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        }
+      }
+    },
+    "phase_change": {
+      "image": "Runtime/Ashfang-normal/phase_change.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 456,
+          "toFrame": 459,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_E"
+        },
+        "SE": {
+          "fromFrame": 465,
+          "toFrame": 468,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_SE"
+        },
+        "S": {
+          "fromFrame": 474,
+          "toFrame": 477,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_S"
+        },
+        "SW": {
+          "fromFrame": 483,
+          "toFrame": 486,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_SW"
+        },
+        "W": {
+          "fromFrame": 492,
+          "toFrame": 495,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_W"
+        },
+        "NW": {
+          "fromFrame": 501,
+          "toFrame": 504,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_NW"
+        },
+        "N": {
+          "fromFrame": 510,
+          "toFrame": 513,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_N"
+        },
+        "NE": {
+          "fromFrame": 519,
+          "toFrame": 522,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png",
+          "nextEntity": "Ashfang-enraged",
+          "nextClip": "idle_NE"
+        }
+      }
+    },
+    "pounce": {
+      "image": "Runtime/Ashfang-normal/pounce.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 309,
+          "toFrame": 313,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "SE": {
+          "fromFrame": 319,
+          "toFrame": 323,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "S": {
+          "fromFrame": 329,
+          "toFrame": 333,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "SW": {
+          "fromFrame": 339,
+          "toFrame": 343,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "W": {
+          "fromFrame": 349,
+          "toFrame": 353,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "NW": {
+          "fromFrame": 359,
+          "toFrame": 363,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "N": {
+          "fromFrame": 369,
+          "toFrame": 373,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        },
+        "NE": {
+          "fromFrame": 379,
+          "toFrame": 383,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/combo_pounce.png"
+        }
+      }
+    },
+    "roar": {
+      "image": "Runtime/Ashfang-normal/roar.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 532,
+          "toFrame": 536,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "SE": {
+          "fromFrame": 541,
+          "toFrame": 545,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "S": {
+          "fromFrame": 550,
+          "toFrame": 554,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "SW": {
+          "fromFrame": 559,
+          "toFrame": 563,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "W": {
+          "fromFrame": 568,
+          "toFrame": 572,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "NW": {
+          "fromFrame": 577,
+          "toFrame": 581,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "N": {
+          "fromFrame": 586,
+          "toFrame": 590,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "NE": {
+          "fromFrame": 595,
+          "toFrame": 599,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        }
+      }
+    },
+    "run": {
+      "image": "Runtime/Ashfang-normal/run.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 528,
+          "toFrame": 531,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "SE": {
+          "fromFrame": 537,
+          "toFrame": 540,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "S": {
+          "fromFrame": 546,
+          "toFrame": 549,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "SW": {
+          "fromFrame": 555,
+          "toFrame": 558,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "W": {
+          "fromFrame": 564,
+          "toFrame": 567,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "NW": {
+          "fromFrame": 573,
+          "toFrame": 576,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "N": {
+          "fromFrame": 582,
+          "toFrame": 585,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        },
+        "NE": {
+          "fromFrame": 591,
+          "toFrame": 594,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": true,
+          "events": [],
+          "source": "Sources/run_roar.png"
+        }
+      }
+    },
+    "stagger": {
+      "image": "Runtime/Ashfang-normal/stagger.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 460,
+          "toFrame": 464,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "SE": {
+          "fromFrame": 469,
+          "toFrame": 473,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "S": {
+          "fromFrame": 478,
+          "toFrame": 482,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "SW": {
+          "fromFrame": 487,
+          "toFrame": 491,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "W": {
+          "fromFrame": 496,
+          "toFrame": 500,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "NW": {
+          "fromFrame": 505,
+          "toFrame": 509,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "N": {
+          "fromFrame": 514,
+          "toFrame": 518,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        },
+        "NE": {
+          "fromFrame": 523,
+          "toFrame": 527,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/phase_stagger.png"
+        }
+      }
+    },
+    "tail_left": {
+      "image": "Runtime/Ashfang-normal/tail_left.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 672,
+          "toFrame": 676,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "SE": {
+          "fromFrame": 682,
+          "toFrame": 686,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "S": {
+          "fromFrame": 692,
+          "toFrame": 696,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "SW": {
+          "fromFrame": 702,
+          "toFrame": 706,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "W": {
+          "fromFrame": 712,
+          "toFrame": 716,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "NW": {
+          "fromFrame": 722,
+          "toFrame": 726,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "N": {
+          "fromFrame": 732,
+          "toFrame": 736,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "NE": {
+          "fromFrame": 742,
+          "toFrame": 746,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        }
+      }
+    },
+    "tail_right": {
+      "image": "Runtime/Ashfang-normal/tail_right.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 677,
+          "toFrame": 681,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "SE": {
+          "fromFrame": 687,
+          "toFrame": 691,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "S": {
+          "fromFrame": 697,
+          "toFrame": 701,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "SW": {
+          "fromFrame": 707,
+          "toFrame": 711,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "W": {
+          "fromFrame": 717,
+          "toFrame": 721,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "NW": {
+          "fromFrame": 727,
+          "toFrame": 731,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "N": {
+          "fromFrame": 737,
+          "toFrame": 741,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        },
+        "NE": {
+          "fromFrame": 747,
+          "toFrame": 751,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/tails.png"
+        }
+      }
+    },
+    "takeoff": {
+      "image": "Runtime/Ashfang-normal/takeoff.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 384,
+          "toFrame": 387,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "SE": {
+          "fromFrame": 393,
+          "toFrame": 396,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "S": {
+          "fromFrame": 402,
+          "toFrame": 405,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "SW": {
+          "fromFrame": 411,
+          "toFrame": 414,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "W": {
+          "fromFrame": 420,
+          "toFrame": 423,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "NW": {
+          "fromFrame": 429,
+          "toFrame": 432,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "N": {
+          "fromFrame": 438,
+          "toFrame": 441,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        },
+        "NE": {
+          "fromFrame": 447,
+          "toFrame": 450,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/flight.png"
+        }
+      }
+    },
+    "turn": {
+      "image": "Runtime/Ashfang-normal/turn.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 752,
+          "toFrame": 755,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "SE": {
+          "fromFrame": 760,
+          "toFrame": 763,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "S": {
+          "fromFrame": 768,
+          "toFrame": 771,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "SW": {
+          "fromFrame": 776,
+          "toFrame": 779,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "W": {
+          "fromFrame": 784,
+          "toFrame": 787,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "NW": {
+          "fromFrame": 792,
+          "toFrame": 795,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "N": {
+          "fromFrame": 800,
+          "toFrame": 803,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        },
+        "NE": {
+          "fromFrame": 808,
+          "toFrame": 811,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/turn_alert.png"
+        }
+      }
+    },
+    "walk": {
+      "image": "Runtime/Ashfang-normal/walk.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140
+      ],
+      "loop": true,
+      "directions": {
+        "E": {
+          "fromFrame": 20,
+          "toFrame": 23,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SE": {
+          "fromFrame": 74,
+          "toFrame": 77,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "S": {
+          "fromFrame": 2,
+          "toFrame": 5,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "SW": {
+          "fromFrame": 128,
+          "toFrame": 131,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "W": {
+          "fromFrame": 56,
+          "toFrame": 59,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NW": {
+          "fromFrame": 110,
+          "toFrame": 113,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "N": {
+          "fromFrame": 38,
+          "toFrame": 41,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        },
+        "NE": {
+          "fromFrame": 92,
+          "toFrame": 95,
+          "durationsMs": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "loop": true,
+          "holdLast": false,
+          "events": []
+        }
+      }
+    },
+    "walk_start": {
+      "image": "Runtime/Ashfang-normal/walk_start.png",
+      "framesPerDirection": 4,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 600,
+          "toFrame": 603,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "SE": {
+          "fromFrame": 609,
+          "toFrame": 612,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "S": {
+          "fromFrame": 618,
+          "toFrame": 621,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "SW": {
+          "fromFrame": 627,
+          "toFrame": 630,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "W": {
+          "fromFrame": 636,
+          "toFrame": 639,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "NW": {
+          "fromFrame": 645,
+          "toFrame": 648,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "N": {
+          "fromFrame": 654,
+          "toFrame": 657,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "NE": {
+          "fromFrame": 663,
+          "toFrame": 666,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        }
+      }
+    },
+    "walk_stop": {
+      "image": "Runtime/Ashfang-normal/walk_stop.png",
+      "framesPerDirection": 5,
+      "durationsMs": [
+        150,
+        180,
+        100,
+        170,
+        100
+      ],
+      "loop": false,
+      "directions": {
+        "E": {
+          "fromFrame": 604,
+          "toFrame": 608,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "SE": {
+          "fromFrame": 613,
+          "toFrame": 617,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "S": {
+          "fromFrame": 622,
+          "toFrame": 626,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "SW": {
+          "fromFrame": 631,
+          "toFrame": 635,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "W": {
+          "fromFrame": 640,
+          "toFrame": 644,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "NW": {
+          "fromFrame": 649,
+          "toFrame": 653,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "N": {
+          "fromFrame": 658,
+          "toFrame": 662,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        },
+        "NE": {
+          "fromFrame": 667,
+          "toFrame": 671,
+          "durationsMs": [
+            150,
+            180,
+            100,
+            170,
+            100
+          ],
+          "loop": false,
+          "events": [],
+          "source": "Sources/start_stop.png"
+        }
+      }
+    }
+  },
+  "emissive": [
+    "alert",
+    "bite",
+    "breath_sweep",
+    "claw_combo",
+    "claw_left",
+    "claw_right",
+    "death",
+    "fire_breath",
+    "hit",
+    "idle",
+    "landing",
+    "phase_change",
+    "pounce",
+    "roar",
+    "run",
+    "stagger",
+    "tail_left",
+    "tail_right",
+    "takeoff",
+    "turn",
+    "walk",
+    "walk_start",
+    "walk_stop"
+  ]
+}

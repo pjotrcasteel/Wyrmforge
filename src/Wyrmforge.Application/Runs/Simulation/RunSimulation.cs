@@ -364,6 +364,10 @@ public sealed partial class RunSimulation
                 RimeArmor = RimeArmorRatio(enemy),
                 Elite = enemy.IsElite ? enemy.Elite.ToString() : null,
                 Empowered = IsWardEmpowered(enemy),
+                EmergeProgress = enemy.EmergeRemaining > 0 && enemy.EmergeTotal > 0 ? 1 - enemy.EmergeRemaining / enemy.EmergeTotal : null,
+                EmergeClip = enemy.EmergeTotal >= CrawlOutPullSeconds - .001 ? 0 : 1,
+                Invulnerable = IsTransforming(enemy),
+                Recovering = enemy is { BellWarden.Phase: BellWardenPhase.Recover } or { Reliquary.Phase: ReliquaryPhase.Recover },
             }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
@@ -406,6 +410,7 @@ public sealed partial class RunSimulation
             HostileProjectiles = CreateHostileProjectileSnapshots(),
             AshRemains = CreateAshRemainsSnapshots(),
             WraithRipples = CreateWraithRippleSnapshots(),
+            FieldAmbush = CreateFieldAmbushSnapshot(),
             Reliquary = CreateReliquarySnapshot(),
             ReliquaryFields = CreateReliquaryFieldSnapshots(),
             BellWarden = CreateBellWardenSnapshot(),
@@ -442,6 +447,7 @@ public sealed partial class RunSimulation
                 CreateFieryAreaSnapshots()),
             AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
             ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
+            BossGlowLightingProjection.Capture(CreateDragonSnapshot(), enemies),
             lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(
                 arenaEnvironment?.LightingRecipe, arenaWidth, arenaHeight) : [],
             TerrainLightingProjection.Capture(arenaEnvironment?.Terrain, player.Position));

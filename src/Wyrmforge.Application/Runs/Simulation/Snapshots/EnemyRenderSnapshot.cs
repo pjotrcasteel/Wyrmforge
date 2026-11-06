@@ -26,6 +26,18 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
     /// <summary>Standing within a Reliquary ward's reach: faster and harder-hitting.</summary>
     public bool Empowered { get; init; }
 
+    /// <summary>0 to 1 while the enemy crawls out of the ground (a field ambush), null otherwise; it cannot act until it reaches 1.</summary>
+    public double? EmergeProgress { get; init; }
+
+    /// <summary>Which authored crawl-out clip an emerging enemy plays: 0 the long pull, 1 the short scramble.</summary>
+    public int EmergeClip { get; init; }
+
+    /// <summary>A boss mid-transformation: no hit lands until it finishes.</summary>
+    public bool Invulnerable { get; init; }
+
+    /// <summary>A boss in the exposed gap after a big commitment (a smash, a rite): the reeling pose.</summary>
+    public bool Recovering { get; init; }
+
     /// <summary>Hoarfrost Cantor frost armour left, as a fraction of a full Rime Hymn crust; 0 when bare.</summary>
     public double RimeArmor { get; init; }
 }

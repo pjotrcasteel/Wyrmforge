@@ -2,6 +2,7 @@
 // road); their light is the C# lighting emitter `terrain:torch:<index>`, which the shared lighting engine renders. Nothing here lights anything:
 // the flame is only the sprite. Drawn in world units in half-unit (one art pixel) steps like the rest of the Hunt 1.0 terrain art.
 import { forestKit, spriteSource } from './forest-kit.js';
+import { torchVariant, torchSprites, burnFrame, drawTorchCell } from './arena-torch-sprites.js';
 
 const FACE = 32;
 
@@ -11,7 +12,8 @@ export function collectTorches(frame) {
     if (frame.torchList) return frame.torchList;
     const torches = [];
     for (let i = 0; i + 1 < frame.torches.length; i += 2)
-        torches.push({ key: `torch:${i / 2}`, x: frame.torches[i] / 16 * FACE, y: frame.torches[i + 1] / 16 * FACE, phase: ((i * 2654435761) >>> 0) / 4294967296 * 9 });
+        torches.push({ key: `torch:${i / 2}`, x: frame.torches[i] / 16 * FACE, y: frame.torches[i + 1] / 16 * FACE, phase: ((i * 2654435761) >>> 0) / 4294967296 * 9,
+            variant: torchVariant(i / 2) });
     frame.torchList = torches;
     return torches;
 }
@@ -21,7 +23,8 @@ export function torchLayers(frame, camera, width, height) {
     const layers = [];
     for (const torch of collectTorches(frame)) {
         if (torch.x < camera.x - 64 || torch.x > camera.x + width + 64 || torch.y < camera.y - 32 || torch.y - 64 > camera.y + height) continue;
-        layers.push({ kind: 'torch', depth: torch.y + 2, torch }, { kind: 'torchFlame', depth: torch.y + 2.5, torch });
+        // `art` flips when the authored sprites finish loading, which invalidates the post's reused capture.
+        layers.push({ kind: 'torch', depth: torch.y + 2, torch, art: torchSprites(torch.variant) !== null }, { kind: 'torchFlame', depth: torch.y + 2.5, torch });
     }
     return layers;
 }
@@ -39,13 +42,15 @@ function flameFallback(ctx, x, baseY, frame) {
 }
 
 /**
- * A road torch: a stone-footed timber post with iron bands that carries a pitch-wrapped iron cup. The flame is the Pixel Crawler pack's own animated
- * fire (kit sprites `torch.flame.0..3`, four frames at about nine a second); `seconds` only animates it.
+ * A road torch. With the authored set loaded (arena-torch-sprites.js) the post is the unlit fixture and the flame is the burn loop's flame pixels;
+ * until then (or if the set fails to load) a code-drawn timber post and the Pixel Crawler fire stand in. `seconds` only animates the flame.
  */
 export function drawTorch(ctx, torch, seconds = 0, part = 'all') {
     const { x, y } = torch;
-    if (part !== 'flame') drawPost(ctx, x, y);
-    if (part !== 'post') drawFlame(ctx, torch, seconds);
+    const sprites = torchSprites(torch.variant);
+    if (part !== 'flame') { if (sprites) drawTorchCell(ctx, sprites.post, x, y); else drawPost(ctx, x, y); }
+    if (part === 'post') return;
+    if (sprites) drawTorchCell(ctx, sprites.flames[burnFrame(seconds, torch.phase)], x, y); else drawFlame(ctx, torch, seconds);
 }
 
 function drawPost(ctx, x, y) {

@@ -83,7 +83,7 @@ public sealed class AshfangBossIterationTests
         typeof(RunSimulation).GetField("arenaWidth",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(run,402d);
         typeof(RunSimulation).GetField("arenaHeight",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(run,874d);
         Invoke(run,"UpdateAshfangFlight",dragon,8.01);Invoke(run,"UpdateAshfangFlight",dragon,1.4);
-        Assert.IsTrue(run.CreateSnapshot().HuntHazards!.Any(h=>h.FromAbove));Assert.AreEqual(0,run.CreateSnapshot().AshfangEffects.Count);
+        Assert.IsTrue(run.CreateSnapshot().HuntHazards!.Any(h=>h.FromAbove));Assert.IsFalse(run.CreateSnapshot().AshfangEffects.Any(e=>e.Kind=="meteor"));Assert.IsTrue(run.CreateSnapshot().AshfangEffects.Any(e=>e.Kind=="takeoff"));
         Invoke(run,"UpdateDragonHuntPressure",1.2,dragon,402d,874d);
         Assert.IsTrue(run.CreateSnapshot().AshfangEffects.Any(e=>e.Kind=="meteor"));
         var before=run.CreateSnapshot().AshfangEffects;CollectionAssert.AreEqual(before.ToArray(),run.CreateSnapshot().AshfangEffects.ToArray());

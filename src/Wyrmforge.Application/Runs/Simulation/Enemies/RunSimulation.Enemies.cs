@@ -41,6 +41,8 @@ public sealed partial class RunSimulation
         if (ReliquaryStage is ReliquaryStage.Hush or ReliquaryStage.Emerging) return;
         // The Warden's road has no horde: its own set piece replaces the encounter director.
         if (UpdateBellWardenRoad(delta)) return;
+        // A field ambush holds every other spawn while its tell runs, and springs a ring of enemies around the hunter.
+        if (UpdateFieldAmbush(delta, width, height)) return;
         var mapEncounter = mapState.EncounterActive;
         if (mapEncounter)
         {
@@ -168,16 +170,23 @@ public sealed partial class RunSimulation
         position = new Vector2D(Math.Clamp(position.X, margin, Math.Max(margin, width - margin)),
             Math.Clamp(position.Y, margin, Math.Max(margin, height - margin)));
         var definition = EnemyCatalog.Get(kind);
-        var (health, speed) = EnemyStats(definition);
         if (mapState.EncounterActive && arenaEnvironment is not null)
         {
             // No valid ground outside the hunter's safety ring: skip this spawn rather than drop it on the player.
             if (arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius) is not { } safe) return;
             position = safe;
         }
+        AddEnemyAt(kind, position);
+    }
+
+    /// <summary>Puts one enemy of the given kind on the floor at an already validated position; every spawn path ends here.</summary>
+    private void AddEnemyAt(EnemyKind kind, Vector2D position, double emergeSeconds = 0)
+    {
+        var definition = EnemyCatalog.Get(kind);
+        var (health, speed) = EnemyStats(definition);
         var elite = TakeEliteFor(kind);
         if (elite != EliteAffix.None) health *= EliteAffixCatalog.Get(elite).HealthMultiplier;
-        var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind) { Elite = elite };
+        var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind) { Elite = elite, EmergeRemaining = emergeSeconds, EmergeTotal = emergeSeconds };
         RecordEnemyEncounter(kind);
         enemy.Penitent?.Face(Vector2D.DirectionTo(position, player.Position));
         // Wraiths arrive under the water and only join the fight when they surface.
@@ -224,6 +233,13 @@ public sealed partial class RunSimulation
             var enemy = enemies[(index + admissionOffset) % count];
             var agent = FindEnemyAgent(enemy);
             enemy.Statuses.Tick(delta);
+            // Still crawling out of the ground: no movement, no attack, no contact (field ambush).
+            if (enemy.EmergeRemaining > 0)
+            {
+                enemy.EmergeRemaining = Math.Max(0, enemy.EmergeRemaining - delta);
+                agent?.Runtime.Pause();
+                continue;
+            }
             var statusTimeScale = enemy.Statuses.TimeScale(false);
             RecordEnemyControl(enemy, delta, statusTimeScale);
             if (statusTimeScale <= 0)
@@ -380,7 +396,7 @@ public sealed partial class RunSimulation
         if (delta <= 0) return;
         foreach (var enemy in enemies)
         {
-            if (enemy.Health <= 0) continue;
+            if (enemy.Health <= 0 || enemy.EmergeRemaining > 0) continue;
             var statusTimeScale = enemy.Statuses.TimeScale(false);
             if (statusTimeScale <= 0 || Vector2D.Distance(enemy.Position, player.Position) > enemy.Radius + player.Radius) continue;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier * EliteImpact(enemy);

@@ -43,6 +43,15 @@ public sealed partial class RunSimulation
     /// <summary>Magic thrown by enemies and Wyrms breaks the ground by the same rule as the hunter's: power 1 scratches, 2 digs, 3 and up carve.</summary>
     private void EnemyTerrainBlast(Vector2D at, int power) => ApplyTerrainBlast(at, power, null);
 
+    /// <summary>Splits the ground at a point with a cleft of the given reach in microcells; the same point always splits the same way.</summary>
+    private void ApplyTerrainFissure(Vector2D at, int reachMicrocells)
+    {
+        if (arenaEnvironment?.Terrain is null) return;
+        var seed = unchecked((long)Math.Round(at.X * 4) * 73856093L ^ (long)Math.Round(at.Y * 4) * 19349663L);
+        ArenaTerrainImpact impact = new(++nextTerrainImpactId, at, 1) { FissureReach = reachMicrocells, FissureSeed = seed };
+        terrainChangesThisTick.AddRange(arenaEnvironment.ApplyTerrainImpact(impact, player.Position, player.Radius, arenaWidth, arenaHeight));
+    }
+
     private void ApplyTerrainBlast(Vector2D at, int power, Vector2D? from)
     {
         if (arenaEnvironment?.Terrain is not { } grid) return;
