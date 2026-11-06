@@ -660,6 +660,8 @@ function drawSplat(ctx, atlas, map, column, row, x, y) {
  * albedo and never fills the square of a column. Coordinates are world units; `view` only culls.
  */
 export function paintLavaEmissive(ctx, frame, band, view) {
+    // The splat cannot contain lava without an authored lava block; skip texture atlas/mask work in ordinary forests.
+    if (!frame?.material?.includes(TERRAIN_MATERIAL.Lava) && !frame?.baseMaterial?.includes(TERRAIN_MATERIAL.Lava)) return 0;
     const atlas = frame?.material ? terrainAtlas(band) : null, contexts = atlas ? scratchContexts() : null;
     if (!atlas || !contexts) return 0;
     const { g, m } = contexts, lava = KIND_INDEX.lavaTop;
