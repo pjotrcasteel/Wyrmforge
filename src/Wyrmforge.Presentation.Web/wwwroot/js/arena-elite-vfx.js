@@ -23,6 +23,17 @@ export function eliteColor(affix) {
     return ELITE_COLORS[affix] ?? '230, 200, 140';
 }
 
+/** 
+ * Cull only local elite/shield ground marks. Distant attack lanes and target telegraphs have their own
+ * endpoints and MUST still render when the caster stands outside the camera.
+ */
+export function enemyGroundDecorationVisible(enemy, view) {
+    if (!enemy?.elite && enemy?.shieldFacing == null) return false;
+    const radius = Math.max(8, Number(enemy.radius) || 12) * 2 + 8;
+    return enemy.x + radius >= view.x && enemy.x - radius <= view.x + view.width &&
+        enemy.y + radius >= view.y && enemy.y - radius <= view.y + view.height;
+}
+
 // Ground half, beneath the actor: a slow dashed sigil and soft glow. Static under reduced motion.
 export function drawEliteGround(ctx, enemy, seconds = 0, reducedMotion = false) {
     if (!enemy?.elite) return;
