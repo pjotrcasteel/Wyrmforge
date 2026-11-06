@@ -404,6 +404,7 @@ public sealed partial class RunSimulation
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
             Exit = CreateTrailExitSnapshot(),
+            ExitLandmark = CreateTrailExitLandmarkSnapshot(),
             ExitPorts = CreateWorldSiteExitSnapshots(),
             World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
             CastMotion = CreateCastMotionSnapshot(),

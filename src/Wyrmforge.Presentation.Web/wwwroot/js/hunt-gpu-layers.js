@@ -21,6 +21,11 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         actor = { x: layer.tree.x, y: layer.tree.footY, radius: 26 };
         id = `tree:${layer.tree.key}`;
         size = layer.tree.captureSize ?? 320;
+    } else if (layer.kind === 'exit') {
+        // The gate shares the actor depth pass, so the GPU terrain cannot paint over it.
+        actor = { x: layer.exit.x, y: layer.exit.y, radius: layer.exit.radius };
+        id = `exit:${layer.exit.x}:${layer.exit.y}`;
+        size = 192;
     } else {
         actor = layer.enemy ?? layer.dragon ?? (layer.kind === 'dragonDeath' ? dragonDeath : player);
         if (!actor) return null;

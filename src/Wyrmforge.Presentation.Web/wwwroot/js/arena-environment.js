@@ -968,22 +968,24 @@ function drawOpenHealingCache(ctx) {
     ctx.stroke();
 }
 
-export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
+export function drawArenaExit(ctx, exit, elapsedSeconds = 0, locked = false) {
     if (!exit) return;
     const { x, y } = exit;
     const pulse = Math.sin(elapsedSeconds * 3) * .08;
+    ctx.save();
+    if (locked) ctx.globalAlpha *= .62;
     if (artReady() && drawArtFrame(ctx, 'environment', 'exit.waystone', Math.round(x), Math.round(y))) {
-        // The waystone's portal breathes; the arrow guide (drawExitGuide) keeps the direction readable.
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = `rgba(161,106,208,${.16 + pulse})`;
-        ctx.beginPath();
-        ctx.ellipse(x, y - 8, 22 * (1 + pulse), 30, 0, 0, Math.PI * 2);
-        ctx.fill();
+        if (!locked) {
+            // Only cleared passages breathe; the waystone remains visible while sealed.
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = `rgba(161,106,208,${.16 + pulse})`;
+            ctx.beginPath();
+            ctx.ellipse(x, y - 8, 22 * (1 + pulse), 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
         ctx.restore();
         return;
     }
-    ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = 'rgba(5,3,12,.82)';
     ctx.strokeStyle = '#c7ac7f';
@@ -997,7 +999,7 @@ export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = 'rgba(161,106,208,.32)';
+    ctx.fillStyle = locked ? 'rgba(65,54,77,.32)' : 'rgba(161,106,208,.32)';
     ctx.beginPath();
     ctx.ellipse(0, 3, 25 * (1 + pulse), 34, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1011,7 +1013,7 @@ export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
     ctx.fillStyle = '#f3d7ac';
     ctx.font = 'bold 11px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('NEXT TRAIL ↑', 0, 54);
+    ctx.fillText(locked ? 'SEALED' : 'NEXT TRAIL ↑', 0, 54);
     ctx.restore();
 }
 

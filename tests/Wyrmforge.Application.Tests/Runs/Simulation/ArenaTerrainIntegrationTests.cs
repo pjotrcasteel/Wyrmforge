@@ -106,6 +106,11 @@ public sealed class ArenaTerrainIntegrationTests
         Assert.IsTrue(simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt));
         simulation.Tick(0, default, 390, 700);
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+        simulation.Tick(0, default, 390, 700);
+        var sealedGate = simulation.CreateSnapshot();
+        Assert.IsNull(sealedGate.Exit, "A sealed landmark must not grant passage before the encounter is cleared.");
+        Assert.IsNotNull(sealedGate.ExitLandmark, "The north-road exit must be visible from the start.");
+        Assert.AreEqual(Width / 2, sealedGate.ExitLandmark.X);
         var player = (Wyrmforge.Domain.Combat.Player.PlayerState)typeof(RunSimulation)
             .GetField("player", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
 
@@ -118,6 +123,7 @@ public sealed class ArenaTerrainIntegrationTests
             while (simulation.PendingChoices.Count > 0) Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
         }
         Assert.IsNotNull(snapshot.Exit, $"seed {seed}: the encounter must clear and open the exit");
+        Assert.AreEqual(snapshot.Exit, snapshot.ExitLandmark, "The cleared passage must open at the visible landmark.");
 
         // The exit is reachable on foot: walk it with the environment's own navigation (terrain plus prop detours).
         var environment = (ArenaEnvironmentState)typeof(RunSimulation).GetField("arenaEnvironment",
