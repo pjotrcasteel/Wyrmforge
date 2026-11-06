@@ -79,8 +79,22 @@ public sealed class ProgressionV13Tests : BrowserTest
             const path = canvas?.dataset.arenaModule;
             if (!path) return false;
             const runtime = await import(path);
-            return runtime.readArenaDiagnostics(canvas)?.hud?.seconds >= 8;
-        }", null, new() { Timeout = 45000 });
+            const diagnostics = runtime.readArenaDiagnostics(canvas);
+            window.progressionEvidence ??= { sawProjectile: false, sawField: false, samples: [] };
+            const evidence = window.progressionEvidence;
+            evidence.sawProjectile ||= diagnostics?.projectiles?.length > 0;
+            evidence.sawField ||= diagnostics?.burningGrounds?.length > 0;
+            if (diagnostics?.hud?.seconds > (evidence.samples.at(-1)?.seconds ?? -1)) {
+                evidence.samples.push({ seconds: diagnostics.hud.seconds, health: diagnostics.hud.health,
+                    dragonHealth: diagnostics.dragon?.health, fields: diagnostics.burningGrounds.length,
+                    projectiles: diagnostics.projectiles.length, performance: diagnostics.performance });
+            }
+            return diagnostics?.hud?.seconds >= 25 || diagnostics?.ended;
+
+        }", null, new() { Timeout = 90000 });
+        await File.WriteAllTextAsync(Path.Combine(folder, $"combat-{width}-diagnostics.json"),
+            await page.EvaluateAsync<string>("JSON.stringify(window.progressionEvidence, null, 2)"));
+        Assert.IsTrue(await page.EvaluateAsync<bool>("window.progressionEvidence.sawProjectile"), "Encounter must actually cast Fireball.");
         await page.GetByRole(AriaRole.Button, new() { Name = "Ⅱ Pause", Exact = true }).ClickAsync();
         await Capture(page, $"combat-{width}-solar-wake-fixture");
         Assert.AreEqual(0, errors.Count, string.Join("\n", errors));

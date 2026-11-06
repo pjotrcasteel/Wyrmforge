@@ -13,6 +13,24 @@ public sealed class DevelopmentHuntTrialTests
 {
     private static readonly SelfPlayBuildDefinition Build = SelfPlayBuildCatalog.All.First();
 
+    [TestMethod]
+    public void FireEvolutionReview_UsesPermanentCoreAndTemporaryPowersWithoutLeakingToNextRun()
+    {
+        var factory = new RunSimulationFactory(new SeededRandomSource(1));
+        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, 1, SpellId.FireBolt, 1337, 390, 844)
+        { ReviewFireEvolution = true, BossReadySpell = false };
+        var review = factory.CreateDevelopmentHunt(Build.SelectedNodes, setup);
+        var normal = factory.Create(Build.SelectedNodes, seed: setup.Seed);
+        Assert.AreEqual(5, review.PreparedFireballLevel);
+        Assert.AreEqual(1, review.PreparedFireballMutations.Count);
+        Assert.AreEqual(1, review.CreateSnapshot().Hud.Spells.Single(spell => spell.Name == SpellCatalog.Get(SpellId.FireBolt).Name).Rank);
+        Assert.AreEqual(1, normal.PreparedFireballLevel);
+        Assert.AreEqual(0, normal.PreparedFireballMutations.Count);
+        Assert.AreEqual(0, normal.SynergyEffectsResolved);
+        Assert.AreEqual(0, review.CompletedMapNodes.Count);
+        Assert.ThrowsExactly<ArgumentException>(() => factory.CreateDevelopmentHunt(Build.SelectedNodes, setup with { BossReadySpell = true }));
+    }
+
     [DataRow(DragonId.Ashfang, true, "Crownfall")]
     [DataRow(DragonId.Stormcoil, true, "Skybreak Crossing")]
     [DataRow(DragonId.Rimeclaw, false, "Glacial Wall")]

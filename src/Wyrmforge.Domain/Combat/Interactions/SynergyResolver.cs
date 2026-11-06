@@ -20,6 +20,8 @@ public static class SynergyResolver
 {
     public const int Version = 1;
     public const int MaximumDepth = 2;
+    // Tuning ceiling per input event, shared across all sources and stacking groups.
+    public const double MaximumRootDamageFraction = 1;
 
     /// <summary>Stable source order, declining same-purpose contributions, immutable root damage and bounded work.</summary>
     public static IReadOnlyList<ResolvedSynergy> Resolve(IEnumerable<SynergyRule> rules, SynergyEvent input, ReactionBudget budget)
@@ -27,14 +29,19 @@ public static class SynergyResolver
         if (input.Ancestry.Count >= MaximumDepth || !double.IsFinite(input.RootDamage) || input.RootDamage <= 0) return [];
         var results = new List<ResolvedSynergy>();
         var stacking = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var rule in rules.OrderBy(rule => rule.SourceId, StringComparer.Ordinal).DistinctBy(rule => rule.SourceId))
+        var remainingFraction = MaximumRootDamageFraction;
+        foreach (var rule in rules.GroupBy(rule => rule.SourceId, StringComparer.Ordinal)
+            .Where(group => group.Distinct().Count() == 1).Select(group => group.First())
+            .OrderBy(rule => rule.SourceId, StringComparer.Ordinal))
         {
             if ((input.Tags & rule.RequiredTags) != rule.RequiredTags || input.Ancestry.Contains(rule.SourceId)) continue;
             if (!double.IsFinite(rule.DamageFraction) || rule.DamageFraction <= 0 || !double.IsFinite(rule.Radius) || rule.Radius <= 0) continue;
-            if (!budget.TrySpend()) break;
+            if (remainingFraction <= 0 || !budget.TrySpend()) break;
             var rank = stacking.GetValueOrDefault(rule.StackingGroup);
             stacking[rule.StackingGroup] = rank + 1;
-            var damage = input.RootDamage * rule.DamageFraction / (1 + rank);
+            var fraction = Math.Min(remainingFraction, rule.DamageFraction / (1 + rank));
+            remainingFraction -= fraction;
+            var damage = input.RootDamage * fraction;
             var tags = rule.OutputTags | (rule.Output == SynergyOutput.Explosion ? EffectTags.Explosion : EffectTags.Field);
             results.Add(new(rule.SourceId, rule.Output, damage, rule.Radius, input.Descend(rule.SourceId, tags)));
         }

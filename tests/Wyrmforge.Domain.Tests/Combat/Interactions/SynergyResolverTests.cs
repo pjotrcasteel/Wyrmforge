@@ -10,6 +10,25 @@ public sealed class SynergyResolverTests
     private static readonly SynergyRule B = new("b", EffectLifetime.Hunt, EffectTags.Kill, SynergyOutput.Explosion, .4, 40, "kill");
 
     [TestMethod]
+    public void ExcessiveContributions_StayFiniteAndShareRootDamageCeiling()
+    {
+        var input = new SynergyEvent(EffectTags.Kill, double.MaxValue, []);
+        var result = SynergyResolver.Resolve([A with { DamageFraction = double.MaxValue }, B], input, new(10));
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(double.MaxValue, result[0].Damage);
+        Assert.IsTrue(double.IsFinite(result[0].Damage));
+    }
+
+    [TestMethod]
+    public void ConflictingSourceDefinitions_AreRejectedRegardlessOfEnumerationOrder()
+    {
+        var conflict = A with { DamageFraction = .9 };
+        var input = new SynergyEvent(EffectTags.Kill, 100, []);
+        Assert.AreEqual(0, SynergyResolver.Resolve([A, conflict], input, new(10)).Count);
+        Assert.AreEqual(0, SynergyResolver.Resolve([conflict, A], input, new(10)).Count);
+    }
+
+    [TestMethod]
     public void Resolution_IsOrderIndependentAndSamePurposeStackingDiminishes()
     {
         var input = new SynergyEvent(EffectTags.Kill, 100, []);
