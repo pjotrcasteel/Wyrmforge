@@ -84,6 +84,7 @@ public sealed class DamageableAshfangExtractionTests
                 $"routes={metrics.CompletedRouteNodes} wyrmReached={metrics.WyrmsReached} " +
                 $"bossMinHP={agent.LowestBossHealthRatio:F2} bossFrames={agent.BossFrames} " +
                 $"bossWindups={agent.BossWindups} stalledExits={agent.ExitSidesteps} " +
+                $"hitByAttack={agent.DamageByAttack} " +
                 $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
                 $"rituals={metrics.ExtractionRitualsCompleted} seconds={metrics.SimulatedSeconds:F1} " +
                 $"evolutions={string.Join(",", metrics.EvolutionIds)}";
@@ -145,8 +146,12 @@ public sealed class DamageableAshfangExtractionTests
         private int exitSidestepTicks;
         private double exitSidestepDirection;
         private bool wasMoving;
+        private double lastHealth = double.NaN;
+        private readonly Dictionary<string, double> damageByAttack = new();
 
         public string Name => "Telegraph-aware " + inner.Name;
+        public string DamageByAttack => string.Join(",", damageByAttack.OrderBy(entry => entry.Key)
+            .Select(entry => $"{entry.Key}:{entry.Value:F0}"));
         public double LowestBossHealthRatio { get; private set; } = 1;
         public int BossFrames { get; private set; }
         public int BossWindups { get; private set; }
@@ -155,6 +160,13 @@ public sealed class DamageableAshfangExtractionTests
         public MovementInput ChooseMovement(RunAgentObservation observation)
         {
             var frame = observation.Snapshot;
+            if (!double.IsNaN(lastHealth) && frame.Hud.Health < lastHealth)
+            {
+                var action = frame.Dragon is { } damageWyrm
+                    ? $"{damageWyrm.Action ?? "idle"}/{damageWyrm.ActionPhase ?? "unknown"}" : "pre-boss";
+                damageByAttack[action] = damageByAttack.GetValueOrDefault(action) + lastHealth - frame.Hud.Health;
+            }
+            lastHealth = frame.Hud.Health;
             if (frame.Exit is not null) return ChooseExitMovement(observation);
             if (frame.Extraction is not null || frame.Dragon is not { Targetable: true } wyrm)
                 return inner.ChooseMovement(observation);
@@ -173,10 +185,17 @@ public sealed class DamageableAshfangExtractionTests
                 return AimAtBoss(escape, player.X, player.Y, wyrm.X, wyrm.Y);
             }
 
-            // Ashfang commits to the direction of a warned attack. Running along
-            // a breath cone's axis is not a dodge; sidestep across that axis.
+            // Ashfang commits to a warned attack. A close claw/tail must be
+            // backed away from; a sweeping breath or pounce needs a sidestep.
             if (wyrm.ActionPhase is "windup" or "strike")
             {
+                var isMelee = wyrm.Action is "claw_right" or "claw_combo" or "bite" or "tail_left" or "tail_right";
+                if (isMelee && Length(player.X - wyrm.X, player.Y - wyrm.Y) < 225)
+                {
+                    return AimAtBoss(Move(player.X - wyrm.X, player.Y - wyrm.Y),
+                        player.X, player.Y, wyrm.X, wyrm.Y);
+                }
+
                 var isBreath = wyrm.Action is "breath" or "breath_sweep";
                 var isPounce = wyrm.Action == "pounce";
                 var x = player.X - wyrm.AttackTargetX;
