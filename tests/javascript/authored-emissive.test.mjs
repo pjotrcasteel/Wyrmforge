@@ -63,14 +63,16 @@ test('the enemy emissive fast path skips unlit poses without suppressing authore
     assert.equal(enemyHasEmissivePose(null, 42), false);
 });
 
-test('the seven ordinary Fire enemy sets currently have no glow strips, so each can skip its emissive canvas', async () => {
+test('Fire enemy glow manifests only target real actions and do not constrain future authored emission', async () => {
     const { readFileSync } = await import('node:fs');
     const { ENEMY_CHARACTERS } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js');
     for (const [kind, name] of ENEMY_CHARACTERS) {
         if (kind > 6) continue;
         const manifest = JSON.parse(readFileSync(new URL(
             `../../src/Wyrmforge.Presentation.Web/wwwroot/art/characters/${name}/manifest.json`, import.meta.url), 'utf8'));
-        assert.deepEqual(manifest.emissive ?? [], [], `${name}: when authored glow is added later, revisit the benchmark`);
+        const actions = new Set(Object.keys(manifest.actions));
+        assert.ok((manifest.emissive ?? []).every(action => actions.has(action)),
+            `${name}: newly added glow strips must name real actions so the conditional GPU upload remains correct`);
     }
 });
 
