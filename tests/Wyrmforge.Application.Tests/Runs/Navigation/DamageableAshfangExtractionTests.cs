@@ -150,6 +150,8 @@ public sealed class DamageableAshfangExtractionTests
         private double exitSidestepDirection;
         private bool wasMoving;
         private double lastHealth = double.NaN;
+        private int dodgeAttackSequence = -1;
+        private int dodgeSide = 1;
         private readonly Dictionary<string, double> damageByAttack = new();
 
         public string Name => "Telegraph-aware " + inner.Name;
@@ -192,6 +194,21 @@ public sealed class DamageableAshfangExtractionTests
             // cone or pounce without altering the real combat rules.
             if (wyrm.ActionPhase is "windup" or "strike")
             {
+                var meleeRange = wyrm.Action switch
+                {
+                    "claw_right" => 155,
+                    "claw_combo" => 165,
+                    "bite" => 180,
+                    "tail_left" or "tail_right" => 150,
+                    _ => 0,
+                };
+                if (wyrm.ActionPhase == "windup" && meleeRange > 0 &&
+                    Length(player.X - wyrm.X, player.Y - wyrm.Y) < meleeRange + 25)
+                {
+                    return AimAtBoss(Move(player.X - wyrm.X, player.Y - wyrm.Y),
+                        player.X, player.Y, wyrm.X, wyrm.Y);
+                }
+
                 var isBreath = wyrm.Action is "breath" or "breath_sweep";
                 var isPounce = wyrm.Action == "pounce";
                 var x = player.X - wyrm.AttackTargetX;
@@ -201,21 +218,28 @@ public sealed class DamageableAshfangExtractionTests
                 {
                     var axisX = wyrm.DirectionX;
                     var axisY = wyrm.DirectionY;
-                    var side = Math.Sign((player.X - wyrm.X) * -axisY + (player.Y - wyrm.Y) * axisX);
-                    if (side == 0) side = wyrm.AttackSequence % 2 == 0 ? 1 : -1;
-                    // Prefer the side with room to dodge when the mage is at a world edge.
-                    var leftX = player.X - axisY * 180;
-                    var leftY = player.Y + axisX * 180;
-                    var rightX = player.X + axisY * 180;
-                    var rightY = player.Y - axisX * 180;
-                    if (frame.World is { } world)
+                    if (dodgeAttackSequence != wyrm.AttackSequence)
                     {
-                        double Clearance(double px, double py) =>
-                            Math.Min(Math.Min(px, world.Width - px), Math.Min(py, world.Height - py));
-                        if (Clearance(side > 0 ? leftX : rightX, side > 0 ? leftY : rightY) < 50 &&
-                            Clearance(side > 0 ? rightX : leftX, side > 0 ? rightY : leftY) > 50) side = -side;
+                        var side = Math.Sign((player.X - wyrm.X) * -axisY + (player.Y - wyrm.Y) * axisX);
+                        if (side == 0) side = wyrm.AttackSequence % 2 == 0 ? 1 : -1;
+                        // Lock the choice for the full committed attack instead of
+                        // reversing direction when a sweeping beam crosses the mage.
+                        var leftX = player.X - axisY * 180;
+                        var leftY = player.Y + axisX * 180;
+                        var rightX = player.X + axisY * 180;
+                        var rightY = player.Y - axisX * 180;
+                        if (frame.World is { } world)
+                        {
+                            double Clearance(double px, double py) =>
+                                Math.Min(Math.Min(px, world.Width - px), Math.Min(py, world.Height - py));
+                            if (Clearance(side > 0 ? leftX : rightX, side > 0 ? leftY : rightY) < 50 &&
+                                Clearance(side > 0 ? rightX : leftX, side > 0 ? rightY : leftY) > 50) side = -side;
+                        }
+                        dodgeSide = side;
+                        dodgeAttackSequence = wyrm.AttackSequence;
                     }
-                    return AimAtBoss(Move(-axisY * side, axisX * side), player.X, player.Y, wyrm.X, wyrm.Y);
+                    return AimAtBoss(Move(-axisY * dodgeSide, axisX * dodgeSide),
+                        player.X, player.Y, wyrm.X, wyrm.Y);
                 }
             }
 
