@@ -90,7 +90,9 @@ public sealed class DamageableAshfangExtractionTests
                 $"hitByAttack={agent.DamageByAttack} " +
                 $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
                 $"rituals={metrics.ExtractionRitualsCompleted} deathsInRitual={metrics.DeathsDuringExtraction} " +
-                $"ritualFrames={agent.ExtractionFrames} seconds={metrics.SimulatedSeconds:F1} " +
+                $"ritualFrames={agent.ExtractionFrames} ritualEntryHp={agent.ExtractionStartHealth:F0} " +
+                $"ritualPaused={agent.ExtractionPausedFrames} ritualKills={agent.ExtractionKills} " +
+                $"seconds={metrics.SimulatedSeconds:F1} " +
                 $"evolutions={string.Join(",", metrics.EvolutionIds)}";
             evidence.Add(row);
             TestContext.WriteLine(row);
@@ -163,6 +165,10 @@ public sealed class DamageableAshfangExtractionTests
         public int BossWindups { get; private set; }
         public int ExitSidesteps { get; private set; }
         public int ExtractionFrames { get; private set; }
+        public double ExtractionStartHealth { get; private set; } = -1;
+        public int ExtractionPausedFrames { get; private set; }
+        public int ExtractionKills { get; private set; }
+        private int extractionStartKills;
 
         public MovementInput ChooseMovement(RunAgentObservation observation)
         {
@@ -262,6 +268,13 @@ public sealed class DamageableAshfangExtractionTests
         {
             ExtractionFrames++;
             var frame = observation.Snapshot;
+            if (ExtractionFrames == 1)
+            {
+                ExtractionStartHealth = frame.Hud.Health;
+                extractionStartKills = frame.Hud.Kills;
+            }
+            ExtractionKills = frame.Hud.Kills - extractionStartKills;
+            if (!frame.Extraction!.IsProgressing) ExtractionPausedFrames++;
             var ritual = frame.Extraction!;
             var px = frame.Player.X;
             var py = frame.Player.Y;
