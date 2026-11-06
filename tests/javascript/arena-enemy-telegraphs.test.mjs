@@ -2,6 +2,30 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple, SHIELD_HALF_ANGLE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
 
+import { enemyGroundDecorationVisible } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-elite-vfx.js';
+
+test('only local elite and shield decorations are culled, without clipping large edge markers', () => {
+    const view = { x: 100, y: 200, width: 390, height: 700 };
+    assert.equal(enemyGroundDecorationVisible({ x: 200, y: 300, radius: 11 }, view), false,
+        'ordinary hordes have no local decoration drawing overhead');
+    assert.equal(enemyGroundDecorationVisible({ x: 200, y: 300, radius: 11, elite: 'Packblood' }, view), true);
+    assert.equal(enemyGroundDecorationVisible({ x: 200, y: 300, radius: 11, shieldFacing: 0 }, view), true);
+    assert.equal(enemyGroundDecorationVisible({ x: 1000, y: 300, radius: 11, elite: 'Packblood' }, view), false);
+    assert.equal(enemyGroundDecorationVisible({ x: 1000, y: 300, radius: 11, shieldFacing: 0 }, view), false);
+    assert.equal(enemyGroundDecorationVisible({ x: 78, y: 300, radius: 11, elite: 'Packblood' }, view), true,
+        'a partially intersecting elite sigil is preserved');
+    assert.equal(enemyGroundDecorationVisible({ x: 600, y: 500, radius: 54, elite: 'Oathshield' }, view), true,
+        'the radius of a large elite keeps its sigil visible at the screen edge');
+});
+
+test('an offscreen caster still paints a visible attack landing marker', () => {
+    const ctx = mockContext();
+    drawEnemyTelegraph(ctx, { x: 5000, y: 5000,
+        telegraph: { kind: 'lob', targetX: 160, targetY: 260, radius: 50, progress: .5 } });
+    assert.deepEqual(ctx.calls.find(call => call[0] === 'arc').slice(1, 4), [160, 260, 50],
+        'the attack location, not the caster position, determines telegraph visibility');
+});
+
 function mockContext() {
     const calls = [];
     const ctx = new Proxy({ calls }, {
