@@ -14,6 +14,8 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Progression.Onboarding;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
@@ -122,32 +124,73 @@ public sealed class FireTierOneFullLoopTests
     }
 
     [TestMethod]
-    [DataRow(42)]
-    [DataRow(1204)]
-    public void FullHunt_DamageableAgent_ReachesAnHonestNaturalOutcome(int seed)
+    public void TwoDamageableHunts_SaveAndReloadWebGrowthBetweenAttempts()
     {
-        var result = PlayFullHunt(seed, damageable: true);
-        TestContext.WriteLine($"seed={seed} outcome={result.Metrics.Outcome} stop={result.Metrics.StopReason} " +
-            $"healthMin={result.Metrics.MinimumHealthRatio:F3} damageTaken={result.Metrics.DamageTaken:F1} " +
-            $"routes={result.Metrics.CompletedRouteNodes} boss={result.Metrics.WyrmsReached} " +
-            $"victories={result.Metrics.DragonsSlain} essenceSecured={result.Metrics.EssenceSecured} " +
-            $"rituals={result.Metrics.ExtractionRitualsCompleted} seconds={result.Metrics.SimulatedSeconds:F1}");
+        // Both trials run the real selected Fire Tier-I map with normal damage and no health restoration.
+        var progress = new FirstHuntProgress();
+        var web = new PassiveTreeSelection(1);
+        web.SetActiveSchool(PassiveSchool.Fire);
 
-        Assert.AreEqual(RunSelfPlayStopReason.NaturalEnd, result.Metrics.StopReason,
-            "The damageable agent must reach a natural death or extraction rather than time out or abandon.");
-        Assert.IsTrue(result.Metrics.Outcome is RunOutcome.Defeated or RunOutcome.Extracted,
-            "A genuine defeat is valid evidence, not proof of a successful extraction.");
-        Assert.IsGreaterThan(0, result.Metrics.DamageTaken, "This trial must expose the mage to real combat damage.");
-        Assert.IsLessThan(1, result.Metrics.MinimumHealthRatio, "Health must not be silently reset by the agent.");
+        var first = PlayFullHunt(42, damageable: true, firstHunt: true);
+        AssertDamageableOutcome(first.Metrics, 1, 42);
+        Assert.IsTrue(progress.TutorialRun);
+        Assert.IsTrue(progress.CompleteRun(first.Metrics.Outcome == RunOutcome.Abandoned));
+        Assert.IsTrue(progress.AtlasUnlocked, "Even a genuine first-Hunt defeat unlocks the Arcane Web.");
+        Assert.IsFalse(progress.AwardsArcanePoint(tutorialRunAtStart: true, abandoned: false),
+            "The tutorial already starts with its first point; never credit it twice.");
+        Assert.AreEqual(1, web.AvailablePoints);
+        Assert.IsTrue(web.Select("fire-start"), "The new hunter must be able to learn the first Fire node.");
+
+        var saved = JsonSerializer.Serialize(new { Runs = progress.CompletedRuns, Budget = web.PointBudget, Nodes = web.Selected.ToArray() });
+        using var document = JsonDocument.Parse(saved);
+        var restoredProgress = new FirstHuntProgress();
+        restoredProgress.Restore(document.RootElement.GetProperty("Runs").GetInt32());
+        var restoredWeb = new PassiveTreeSelection(1);
+        restoredWeb.SetActiveSchool(PassiveSchool.Fire);
+        restoredWeb.RestoreBudget(document.RootElement.GetProperty("Budget").GetInt32());
+        restoredWeb.RestoreNodes(document.RootElement.GetProperty("Nodes").EnumerateArray()
+            .Select(node => node.GetString()!).ToArray());
+        Assert.IsFalse(restoredProgress.TutorialRun, "The next Hunt must not restart the tutorial.");
+        CollectionAssert.AreEquivalent(new[] { "fire-start" }, restoredWeb.Selected.ToArray());
+
+        var second = PlayFullHunt(1204, damageable: true, firstHunt: restoredProgress.TutorialRun,
+            selectedNodes: restoredWeb.Selected);
+        AssertDamageableOutcome(second.Metrics, 2, 1204);
+        Assert.IsTrue(restoredProgress.CompleteRun(second.Metrics.Outcome == RunOutcome.Abandoned));
+        Assert.IsTrue(restoredProgress.AwardsArcanePoint(tutorialRunAtStart: false, abandoned: false));
+        restoredWeb.GrantPoints(1);
+        Assert.AreEqual(2, restoredWeb.PointBudget, "A subsequent completed attempt earns one more point.");
+        CollectionAssert.AreEquivalent(new[] { "fire-start" }, restoredWeb.Selected.ToArray());
+    }
+
+    private void AssertDamageableOutcome(RunSelfPlayMetrics metrics, int attempt, int seed)
+    {
+        TestContext.WriteLine($"attempt={attempt} seed={seed} outcome={metrics.Outcome} stop={metrics.StopReason} " +
+            $"healthMin={metrics.MinimumHealthRatio:F3} damageTaken={metrics.DamageTaken:F1} " +
+            $"routes={metrics.CompletedRouteNodes} boss={metrics.WyrmsReached} victories={metrics.DragonsSlain} " +
+            $"essenceSecured={metrics.EssenceSecured} rituals={metrics.ExtractionRitualsCompleted} " +
+            $"seconds={metrics.SimulatedSeconds:F1} evolutions={string.Join(",", metrics.Evolutions)}");
+
+        Assert.AreEqual(RunSelfPlayStopReason.NaturalEnd, metrics.StopReason,
+            "A damageable agent must reach a natural death or extraction rather than time out.");
+        Assert.IsTrue(metrics.Outcome is RunOutcome.Defeated or RunOutcome.Extracted,
+            "An honest defeat is evidence, not a successful extraction.");
+        Assert.IsGreaterThan(0, metrics.DamageTaken, "The hunter must actually take combat damage.");
+        Assert.IsLessThan(1, metrics.MinimumHealthRatio, "Agent health cannot be secretly restored.");
     }
 
     private static (RunSelfPlayMetrics Metrics, RunSimulation Simulation) PlayFullHunt(int seed,
-        int fireballLevel = 1, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, bool damageable = false)
+        int fireballLevel = 1, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, bool damageable = false,
+        bool firstHunt = false, IReadOnlySet<string>? selectedNodes = null)
     {
+        var nodes = selectedNodes ?? new HashSet<string>();
         var simulation = new RunSimulationFactory(new SeededRandomSource(seed))
-            .Create(new HashSet<string>(), seed: seed, hunt: HuntSelection.FireTierOne,
+            .Create(nodes, seed: seed, hunt: HuntSelection.FireTierOne, firstHunt: firstHunt,
                 fireballLevel: fireballLevel, fireballMutations: fireballMutations);
-        var build = SelfPlayBuildCatalog.Get("Fire • Inferno");
+        var build = damageable
+            ? new SelfPlayBuildDefinition("Fire • Fresh damageable", SelfPlayBuildCohort.KeystoneRoute, SpellSchool.Fire,
+                nodes, [], nodes.Sum(node => PassiveTreeCatalog.Get(node).Cost))
+            : SelfPlayBuildCatalog.Get("Fire • Inferno");
         var heuristic = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, seed, build.PreferredSchool);
         IRunAgent agent = damageable ? new ExitPathAssistAgent(heuristic) : new InvulnerableAgent(heuristic, simulation);
         var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
