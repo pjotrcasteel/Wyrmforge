@@ -14,17 +14,6 @@
                 <strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span>
             </button>
 
-            @if (Selection.ReservedPoints > 0)
-            {
-                <details class="reserved-points">
-                    <summary>@Selection.ReservedPoints reserved</summary>
-                    @foreach (var reservation in Selection.Reserved)
-                    {
-                        <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
-                    }
-                </details>
-            }
-
             @* Navigation stays accessible, but no longer steals vertical space or labels the active sector twice. *@
             <nav class="web-floating-controls" aria-label="Arcane Web navigation">
                 <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
@@ -152,7 +141,7 @@
             @if (!Selection.CanLearn(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
                 <p class="school-learning-lock">@(ArcaneSchoolCatalog.Owner(FocusedNode) != ActiveSchool
-                    ? $"Switch to {SchoolLabel(FocusedNode)} to invest here. Learned bonuses still apply when relevant."
+                    ? $"Switch to {SchoolLabel(FocusedNode)} to invest here. Allocated nodes provide their smaller dormant bonus."
                     : "Discover this mutation before specializing it.")</p>
             }
 
@@ -168,7 +157,7 @@
 
             @if (IsSelected(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
-                <p class="nexus-active-note">✓ Learned · bonuses apply when relevant</p>
+                <p class="nexus-active-note">✓ Learned · @(ArcaneSchoolCatalog.Owner(FocusedNode) == ActiveSchool ? "active effect" : "dormant effect")</p>
                 <button class="route-action refund" disabled="@(!Selection.CanRemove(FocusedNode.Id))" @onclick="RefundFocused">Refund node</button>
             }
             else if (FocusedNode.Kind != PassiveNodeKind.Origin)
@@ -280,7 +269,7 @@
 {
     <dialog @ref="refundDialog" class="school-refund-dialog" aria-labelledby="school-refund-title" @onkeydown="RefundDialogKey">
         <h2 id="school-refund-title">Refund inactive-school points?</h2>
-        <p>Removed bonuses stop applying immediately. These points stay reserved for their school until you switch back.</p>
+        <p>Removed bonuses stop applying immediately. Refunded points become available to spend in your active school.</p>
         <div><button @onclick="CancelRefund">Cancel</button><button class="confirm-refund" @onclick="ConfirmRefundAsync">Refund points</button></div>
     </dialog>
 }

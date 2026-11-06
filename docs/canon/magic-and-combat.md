@@ -348,3 +348,11 @@ Fire Bolt projectile foundation with Rimeclaw cold infusion and conditional ther
 - Up to four contextual spells share a cast economy. Scheduler input/decision traces must reveal whether offensive cooldowns starved defensive utility, whether chain procs grew exponentially, and why a contextual spell fired. Actively engaged manual intent is authoritative on where aimed offensive casts go; without it, legal auto-targeting may aim behind movement direction. Automated threat recognition still determines legal timing and cannot override active manual aiming.
 - Spell blueprint ownership does not give patent rights; export/import remain typed data, never executable scripts; unpublished/unfinished recipes remain private even in ranked sessions. Publishing a revision is a deliberate independent consent operation; withdrawing future availability does not silently delete legitimate previously imported copies.
 
+
+## Progression v1.3 — owner decision, 6 November 2026
+
+The approved master design v1.3 sections 0.4–0.4.6 supersede conflicting earlier progression rules: a six-school north-facing rotating Web; retained allocations on switching; active-school-only investment; explicit refunds into the shared earned Arcane Point balance; five permanent Fireball core levels (Lv1 has no socket, Lv2 opens the first); temporary Hunt Mega Upgrades and gated Evolutions that compose with permanent spellcraft. Existing point cap, costs and milestone rates remain tuning baselines, not newly approved constants. Preserve separate regular, seasonal ranked and Eternal lifecycles.
+
+**Additional owner decision in this implementation session:** inactive allocated nodes have an alternative, smaller dormant bonus instead of their active effect. This applies across node tiers and permits reduced Frost defence while another school is active. Do not stack their full active effects. Numeric dormant strengths are tunable.
+
+Refund migration: old `Reserved` save values represent points already included in the earned budget. Ignore those reservations when loading; do not add them to the budget. Node IDs, allocations and existing earned budget remain intact. Repeated reloads must not duplicate refunds.

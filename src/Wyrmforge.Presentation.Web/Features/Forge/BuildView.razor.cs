@@ -273,7 +273,7 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task Reset()
     {
-        if (!refundWarningAccepted && Selection.Selected.Any(id => ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) != ActiveSchool))
+        if (!refundWarningAccepted && Selection.Selected.Count > 0)
         {
             pendingReset = true;
             showRefundDialog = true;
