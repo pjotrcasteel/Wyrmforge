@@ -170,6 +170,37 @@ test('more than 40 impacted blocks never force an unconditional full terrain rep
     assert.ok(clears.every(rect => rect[2] < 32 * 32), 'neither local clip spans the map width');
 });
 
+test('a new site with the same terrain revision replaces the entire cached image', () => {
+    const clears = [];
+    const ctx = { ...recorder(), clearRect(...rectangle) { clears.push(rectangle); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const initial = { ...frame(4, 4, new Array(16).fill(0)), visualSeed: 101 };
+    assert.equal(cache.update(initial, 0), true);
+    const firstMaps = cache.kindMaps;
+    assert.equal(cache.update({ ...initial, visualSeed: 202 }, 0), true,
+        'different arenas with the same revision cannot share the rendered terrain');
+    assert.equal(cache.repaints, 2);
+    assert.equal(clears.length, 2, 'both site loads must clear and redraw the complete terrain surface');
+    assert.notEqual(cache.kindMaps, firstMaps, 'a new arena must not reuse a previous arena texture mask');
+});
+
+test('ground-cover placement stays fixed across impacts and resets for a new site', () => {
+    const initial = mergeTerrainFrame(null, { revision: 1, columns: 2, rows: 2, visualSeed: 101,
+        surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [] });
+    initial.coverField = new Float32Array([.5, 0, 0, 1]);
+    initial.roadNear = new Float32Array([1, 2, 3, 4]);
+    initial.rockNear = new Float32Array([4, 3, 2, 1]);
+    const changed = mergeTerrainFrame(initial, { revision: 2, columns: 2, rows: 2, visualSeed: 101,
+        surface: [-1, 0, 0, 0], material: [0, 0, 0, 0],
+        fine: [{ index: 0, heights: new Array(64).fill(-1), topsoil: 0, stoneTop: -8 }] });
+    assert.equal(changed.coverField, initial.coverField);
+    assert.equal(changed.roadNear, initial.roadNear);
+    assert.equal(changed.rockNear, initial.rockNear);
+    const nextSite = mergeTerrainFrame(changed, { revision: 1, columns: 2, rows: 2, visualSeed: 202,
+        surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [] });
+    assert.equal(nextSite.coverField, undefined, 'new sites calculate their own cover');
+});
+
 test('cache draw copies the visible window from the padded surface into world space', () => {
     const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => recorder() }));
     cache.update(frame(4, 4, new Array(16).fill(0)), 0);
