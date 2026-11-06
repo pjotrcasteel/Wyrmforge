@@ -1,0 +1,37 @@
+name: Damageable Fire Hunt acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'tests/Wyrmforge.Application.Tests/Runs/Navigation/DamageableAshfangExtractionTests.cs'
+      - '.github/workflows/damageable-fire-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ashfang:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Require .NET 10
+        run: dotnet --list-sdks | grep -Eq '^10\.0\.'
+      - name: Restore focused tests
+        run: dotnet restore tests/Wyrmforge.Application.Tests/Wyrmforge.Application.Tests.csproj
+      - name: Run real-damage Ashfang acceptance
+        run: |
+          dotnet test tests/Wyrmforge.Application.Tests/Wyrmforge.Application.Tests.csproj \
+            -c Release --no-restore \
+            --filter 'FullyQualifiedName~DamageableAshfangExtractionTests' \
+            --logger 'console;verbosity=normal' \
+            --logger 'trx;LogFileName=damageable-ashfang.trx'
+      - name: Preserve reproducible evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: damageable-ashfang-test-evidence
+          path: tests/Wyrmforge.Application.Tests/TestResults/*.trx
+          if-no-files-found: warn
+          retention-days: 14
