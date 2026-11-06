@@ -23,7 +23,7 @@ export function eliteColor(affix) {
     return ELITE_COLORS[affix] ?? '230, 200, 140';
 }
 
-/** 
+/**
  * Cull only local elite/shield ground marks. Distant attack lanes and target telegraphs have their own
  * endpoints and MUST still render when the caster stands outside the camera.
  */
