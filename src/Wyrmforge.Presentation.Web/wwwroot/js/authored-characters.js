@@ -452,12 +452,42 @@ function drawEmerging(ctx, enemy, pose) {
     else {
         ctx.save();
         ctx.beginPath(); ctx.rect(enemy.x - 70, enemy.y - 120, 140, 122); ctx.clip();
-        drawAuthoredCell(ctx, pose.name, 'idle', pose.direction, 0, enemy.x, enemy.y + (1 - progress) * 56);
+        const style = RISE_STYLES[pose.name] ?? RISE_STYLES.default;
+        drawAuthoredCell(ctx, pose.name, 'idle', pose.direction, 0, enemy.x + riseShake(style, progress, enemy.entityId), enemy.y + (1 - riseEmerged(style, progress)) * 56);
         ctx.restore();
     }
     drawEmergeParticles(ctx, enemy.x, enemy.y, enemy.entityId, progress);
     return true;
 }
+
+/**
+ * The emerge styles of the kinds that have no authored crawl-out art (it exists for the Hollowed only): all rise behind the ground line, but each
+ * pulls itself out its own way. `steps` makes the climb a few hauls instead of a glide; `hop` throws the body clear at the end; `shake` is the strain.
+ */
+export const RISE_STYLES = {
+    default: { steps: 5, hop: 0, shake: 2 },
+    'Mire-Hound': { steps: 0, hop: 10, shake: 1 },
+    Ashling: { steps: 3, hop: 4, shake: 3 },
+    Penitent: { steps: 8, hop: 0, shake: 1 },
+    'Ash-Priest': { steps: 0, hop: 0, shake: 0 },
+    'Ash-Slinger': { steps: 4, hop: 3, shake: 2 },
+};
+
+/** How much of the body has cleared the ground (0 to 1) at C#'s emerge progress, in the kind's own rhythm. */
+export function riseEmerged(style, progress) {
+    const p = Math.max(0, Math.min(1, progress));
+    if (p >= 1) return 1;
+    const hauls = style.steps * p;
+    // Hauls climb in whole steps with a small slide between them; the others ease out.
+    const smooth = style.steps > 0 ? (Math.floor(hauls) + (hauls % 1) * .35) / style.steps : 1 - (1 - p) ** 2;
+    const hop = style.hop && p > .8 ? Math.sin((p - .8) / .2 * Math.PI) * style.hop / 56 : 0;
+    return Math.max(0, smooth + hop);
+}
+
+export const riseShake = (style, progress, id) => progress >= 1 ? 0 : Math.round(Math.sin(progress * 40 + id) * style.shake);
+
+/** How far a Drowned Wraith has sunk below the waterline (0 on the surface, 1 gone) from C#'s body opacity, which only the submerge and emerge lower. */
+export const wraithSink = opacity => Math.max(0, Math.min(1, 1 - (Number.isFinite(opacity) ? opacity : 1)));
 
 /** Draws an enemy from its authored pose; false when it has none (the caller then draws the old art). */
 export function drawAuthoredEnemy(ctx, enemy, state) {
@@ -466,7 +496,25 @@ export function drawAuthoredEnemy(ctx, enemy, state) {
     if (!pose) return glowPass ? false : pendingKind(enemy.kind);
     if (pose.emerge) return glowPass ? false : drawEmerging(ctx, enemy, pose);
     const opacity = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
+    // A Drowned Wraith sinks into the water and rises out of it behind a clip line with ripples, instead of fading.
+    if (pose.name === 'Drowned-Wraith' && opacity < 1 && !glowPass) return drawSubmerging(ctx, enemy, pose, wraithSink(opacity));
     return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, { alpha: opacity, radius: Number(enemy.radius) || 11 });
+}
+
+function drawSubmerging(ctx, enemy, pose, sink) {
+    const radius = Number(enemy.radius) || 11;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(enemy.x - 70, enemy.y - 120, 140, 122 + footDrop(radius)); ctx.clip();
+    drawAuthoredCell(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y + footDrop(radius) + sink * 56);
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle = 'rgba(150,190,200,.5)';
+    for (let ring = 0; ring < 2; ring++) {
+        const r = radius * (.7 + ring * .5 + sink * .6);
+        for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; ctx.fillRect(Math.round(enemy.x + Math.cos(a) * r), Math.round(enemy.y + footDrop(radius) + Math.sin(a) * r * .38), 2, 1); }
+    }
+    ctx.restore();
+    return true;
 }
 
 /** A kind whose set (or either boss form) is still downloading is skipped, not drawn in the old art. */

@@ -56,3 +56,18 @@ test('the second forms burn harder and a transformation swells the glow to its p
     assert.ok(emissionIntensity('Bell-Warden-normal', 1) > emissionIntensity('Bell-Warden-normal', .2));
     assert.ok(emissionIntensity('Bell-Warden-normal', 1) >= emissionIntensity('Bell-Warden-molten'), 'at the break it burns as hard as the form it becomes');
 });
+test('each kind pulls itself out of the ground its own way and a Wraith sinks instead of fading', async () => {
+    const { RISE_STYLES, riseEmerged, riseShake, wraithSink } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js');
+    for (const style of Object.values(RISE_STYLES)) {
+        assert.equal(riseEmerged(style, 0), 0);
+        assert.equal(riseEmerged(style, 1), 1, 'every rise ends fully out');
+        assert.equal(riseShake(style, 1, 3), 0, 'no strain once it is out');
+        let last = -1;
+        for (let p = 0; p <= .8; p += .05) { const value = riseEmerged(style, p); assert.ok(value >= last - 1e-9, 'it never sinks back while climbing'); last = value; }
+    }
+    assert.notEqual(riseEmerged(RISE_STYLES.Penitent, .5), riseEmerged(RISE_STYLES['Mire-Hound'], .5), 'the kinds rise differently');
+    assert.ok(riseEmerged(RISE_STYLES['Mire-Hound'], .9) > 1 - 1e-9, 'the hound throws itself clear at the end');
+    assert.equal(wraithSink(1), 0);
+    assert.equal(wraithSink(.25), .75);
+    assert.equal(wraithSink(undefined), 0);
+});
