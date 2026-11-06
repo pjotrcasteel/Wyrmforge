@@ -58,6 +58,9 @@ test('excavation never moves the original undergrowth and pebble placement aroun
         surface: damagedSurface,
         baseMaterial: [...original.material],
         baseSurface: [...original.surface],
+        coverField: undefined,
+        rockNear: undefined,
+        roadNear: undefined,
     };
     assert.deepEqual(Array.from(undergrowthField(excavated)), beforeCover);
     assert.equal(stoneChanceAt(excavated, 4, 41), beforeStone);
