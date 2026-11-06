@@ -335,6 +335,15 @@ export function injectAuthoredSet(name, set) { loaded.set(name, set); requested.
 export const hasEmissive = (name, actionName) => Boolean(loaded.get(name)?.emissive?.has(actionName));
 
 /**
+ * Avoid allocating and clearing a second GPU capture when an enemy's current authored action has no glow.
+ * A future glow strip is picked up automatically as soon as its authored set loads.
+ */
+export function enemyHasEmissivePose(state, entityId) {
+    const pose = state?.enemies?.get(entityId);
+    return Boolean(pose && !pose.emerge && hasEmissive(pose.name, pose.action));
+}
+
+/**
  * How hard a set's glow burns: the second forms (enraged, molten, awakened) are fire-infused and burn harder, and a boss in the middle of a
  * transformation (C# `invulnerable`, progress from its telegraph) swells to its peak as it breaks open.
  */
