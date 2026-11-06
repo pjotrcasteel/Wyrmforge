@@ -1,3 +1,5 @@
+using Wyrmforge.Application.Runs.Navigation;
+
 namespace Wyrmforge.Application.Runs.Simulation;
 
 /// <summary>
@@ -89,7 +91,8 @@ internal static class ArenaTerrainRelief
     /// road opens into a clearing in the trees); each region is woodland, highland (cliffs) or meadow (hills), and their borders are warped by
     /// noise so they wander. Every later feature is placed by the zone it stands in, never scattered over the whole arena.
     /// </summary>
-    public static byte[] Zones(Random rng, int columns, int rows, int[] routeDistance, double influence, IReadOnlyList<ArenaField> fields)
+    public static byte[] Zones(Random rng, int columns, int rows, int[] routeDistance, double influence, IReadOnlyList<ArenaField> fields,
+        WorldSiteLandform? landform = null, WyrmrealmHabitat? habitat = null)
     {
         var zone = new byte[columns * rows];
         Array.Fill(zone, ArenaZone.Meadow);
@@ -97,9 +100,24 @@ internal static class ArenaTerrainRelief
         for (var index = 0; index < zone.Length; index++)
             if (routeDistance[index] >= 5) candidates.Add(index);
         if (candidates.Count < 8) return zone;
-        var biomes = influence >= .55
-            ? new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Highland }
-            : new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Highland };
+        // Chart landform first, encounter habitat second. The wet forest, exposed field and mountain must not share the same land-use template.
+        var biomes = landform switch
+        {
+            WorldSiteLandform.Mountain => new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Highland },
+            WorldSiteLandform.Wetland => new[] { ArenaZone.Forest, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Highland },
+            _ => habitat switch
+            {
+                WyrmrealmHabitat.WetForest or WyrmrealmHabitat.SnowboundPines or WyrmrealmHabitat.FloodedCloister or WyrmrealmHabitat.MirrorMere =>
+                    new[] { ArenaZone.Forest, ArenaZone.Forest, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Forest },
+                WyrmrealmHabitat.OpenField or WyrmrealmHabitat.WhiteoutPlain =>
+                    new[] { ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Meadow, ArenaZone.Meadow, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Meadow },
+                WyrmrealmHabitat.ScorchedApproach or WyrmrealmHabitat.GlacierApproach or WyrmrealmHabitat.Lair or WyrmrealmHabitat.GlacierLair =>
+                    new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Meadow },
+                _ => influence >= .55
+                    ? new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Highland }
+                    : new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Highland },
+            },
+        };
         var seeds = new List<(double X, double Y)>();
         var first = fields.Count > 0
             ? candidates.OrderBy(cell => Math.Pow(cell % columns - fields[0].Column, 2) + Math.Pow(cell / columns - fields[0].Row, 2)).First()

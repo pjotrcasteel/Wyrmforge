@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Tests.Runs.Simulation;
@@ -57,6 +58,20 @@ public sealed class ArenaTerrainTests
         _ = Make(99, .2);
         Assert.AreEqual(first, Fingerprint(Make(1204, .7).Grid));
         Assert.AreNotEqual(first, Fingerprint(Make(1205, .7).Grid));
+    }
+
+    [TestMethod]
+    public void SiteLandform_ShiftsWoodlandAndMountainZonesWithoutChangingTheSafeRoad()
+    {
+        var wetland = ArenaTerrainGenerator.Generate(1204, .3, Columns, Rows, Spawn, Exit,
+            siteProfile: new WorldSiteGenerationProfile(WorldSiteLandform.Wetland, WorldSiteLandmark.None));
+        var mountain = ArenaTerrainGenerator.Generate(1204, .3, Columns, Rows, Spawn, Exit,
+            siteProfile: new WorldSiteGenerationProfile(WorldSiteLandform.Mountain, WorldSiteLandmark.None));
+        Assert.IsGreaterThan(mountain.Zones.Count(zone => zone == ArenaZone.Forest), wetland.Zones.Count(zone => zone == ArenaZone.Forest));
+        Assert.IsGreaterThan(wetland.Zones.Count(zone => zone == ArenaZone.Highland), mountain.Zones.Count(zone => zone == ArenaZone.Highland));
+        CollectionAssert.AreEqual(wetland.Grid.Road.ToArray(), mountain.Grid.Road.ToArray(), "site geography must not block or move the road");
+        Assert.IsTrue(wetland.Grid.IsReachable(Spawn, Exit, PlayerRadius));
+        Assert.IsTrue(mountain.Grid.IsReachable(Spawn, Exit, PlayerRadius));
     }
 
     [TestMethod]

@@ -1,3 +1,5 @@
+using Wyrmforge.Application.Runs.Navigation;
+
 namespace Wyrmforge.Application.Runs.Simulation;
 
 /// <summary>A generated arena heightfield and the cells it promises to keep walkable.</summary>
@@ -45,7 +47,8 @@ public static class ArenaTerrainGenerator
 
     /// <param name="bossFloorMeters">When above zero the arena is a boss arena: one organic, never-round open floor of about this diameter at its centre instead of the road clearings.</param>
     public static ArenaTerrainRecipe Generate(int seed, double influence, int columns, int rows,
-        (int Column, int Row) spawn, (int Column, int Row) exit, double bossFloorMeters = 0)
+        (int Column, int Row) spawn, (int Column, int Row) exit, double bossFloorMeters = 0,
+        WorldSiteGenerationProfile? siteProfile = null, WyrmrealmHabitat? habitat = null)
     {
         influence = double.IsFinite(influence) ? Math.Clamp(influence, 0, 1) : 0;
         var rng = new Random(unchecked(seed * (int)0x9E3779B1 ^ 0x5EED7E44));
@@ -66,7 +69,7 @@ public static class ArenaTerrainGenerator
         PaintAshPatches(rng, grid, influence);
         var routeDistance = ArenaTerrainRelief.DistanceFromRoute(keepClear, columns, rows);
         // Land use first: every tree, cliff, boulder and hill below is placed by the zone it stands in, so the map reads as woodland, highland and meadow.
-        var zones = ArenaTerrainRelief.Zones(rng, columns, rows, routeDistance, influence, fields);
+        var zones = ArenaTerrainRelief.Zones(rng, columns, rows, routeDistance, influence, fields, siteProfile?.Landform, habitat);
         ArenaTerrainRelief.Highlands(rng, grid, zones, routeDistance);
         ArenaTerrainRelief.Knolls(rng, grid, zones, routeDistance);
         ArenaTerrainRelief.Boulders(rng, grid, zones, routeDistance);

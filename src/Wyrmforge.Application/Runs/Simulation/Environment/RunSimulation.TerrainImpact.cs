@@ -52,6 +52,25 @@ public sealed partial class RunSimulation
         terrainChangesThisTick.AddRange(arenaEnvironment.ApplyTerrainImpact(impact, player.Position, player.Radius, arenaWidth, arenaHeight));
     }
 
+    // One field ambush creates many simultaneous cracks. Validate them together to avoid a full path search per mark.
+    private void ApplyTerrainFissures(IEnumerable<Vector2D> positions, int reachMicrocells)
+    {
+        if (arenaEnvironment?.Terrain is null) return;
+        var impacts = positions.Select(at =>
+        {
+            var seed = unchecked((long)Math.Round(at.X * 4) * 73856093L ^ (long)Math.Round(at.Y * 4) * 19349663L);
+            return new ArenaTerrainImpact(++nextTerrainImpactId, at, 1) { FissureReach = reachMicrocells, FissureSeed = seed };
+        }).ToArray();
+        terrainChangesThisTick.AddRange(arenaEnvironment.ApplyTerrainImpacts(impacts, player.Position, player.Radius, arenaWidth, arenaHeight));
+    }
+
+    private void EnemyTerrainBlasts(IEnumerable<Vector2D> positions)
+    {
+        if (arenaEnvironment?.Terrain is null) return;
+        var impacts = positions.Select(at => new ArenaTerrainImpact(++nextTerrainImpactId, at, 1)).ToArray();
+        terrainChangesThisTick.AddRange(arenaEnvironment.ApplyTerrainImpacts(impacts, player.Position, player.Radius, arenaWidth, arenaHeight));
+    }
+
     private void ApplyTerrainBlast(Vector2D at, int power, Vector2D? from)
     {
         if (arenaEnvironment?.Terrain is not { } grid) return;

@@ -88,6 +88,14 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
+    // String.GetHashCode is randomized between processes; the same chart site must generate the same terrain on every device.
+    private static int StableSiteSeed(string siteId)
+    {
+        var hash = 2166136261u;
+        foreach (var character in siteId) hash = unchecked((hash ^ character) * 16777619u);
+        return unchecked((int)hash);
+    }
+
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
         IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false, double? terrainInfluence = null)
     {
@@ -124,8 +132,10 @@ public sealed class ArenaEnvironmentState
             var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
             var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
             // The hunter enters at the south end and the exit is at the north end: the arena is portrait, and the road runs between them.
-            var recipe = ArenaTerrainGenerator.Generate(seed, terrainInfluence ?? node.Influence, columns, rows,
-                (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
+            var siteTerrainSeed = unchecked(seed ^ StableSiteSeed(node.Geography?.SiteId ?? node.Id));
+            var recipe = ArenaTerrainGenerator.Generate(siteTerrainSeed, terrainInfluence ?? node.Influence, columns, rows,
+                (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)),
+                siteProfile: node.GenerationProfile ?? node.Geography?.GenerationProfile, habitat: node.Habitat);
             environment.terrainSpawn = recipe.Spawn;
             environment.terrainFields = recipe.Fields;
             environment.terrain = recipe.Grid;
@@ -288,6 +298,45 @@ public sealed class ArenaEnvironmentState
             return [];
         }
         return changes;
+    }
+
+    /// <summary>
+    /// Apply a simultaneous group of impacts with one exit-reachability check. If their combined damage closes the road,
+    /// restore the exact preceding voxels and retry each impact with the ordinary safety rule.
+    /// </summary>
+    public IReadOnlyList<ArenaTerrainChange> ApplyTerrainImpacts(IReadOnlyList<ArenaTerrainImpact> impacts, Vector2D hunter,
+        double hunterRadius, double width, double height)
+    {
+        if (!TerrainActive(width, height) || impacts.Count == 0) return [];
+        var staged = new List<(ArenaTerrainImpact Impact, IReadOnlyList<ArenaTerrainChange> Changes)>();
+        var combined = new List<ArenaTerrainChange>();
+        foreach (var impact in impacts)
+        {
+            if (!appliedImpactIds.Add(impact.Id)) continue;
+            var changes = ArenaTerrainMutation.Apply(terrain!, impact, terrainProtected);
+            staged.Add((impact, changes));
+            combined.AddRange(changes);
+        }
+        if (combined.Count == 0 || terrain!.IsReachable(ArenaTerrainGrid.ColumnOf(hunter), terrainExit, hunterRadius)) return combined;
+
+        for (var index = staged.Count - 1; index >= 0; index--)
+            ArenaTerrainMutation.Revert(terrain, staged[index].Changes);
+        // The hunter was already stranded; these impacts did not cause it. Keep the original combined damage.
+        if (!terrain.IsReachable(ArenaTerrainGrid.ColumnOf(hunter), terrainExit, hunterRadius))
+        {
+            var unchangedSafety = new List<ArenaTerrainChange>();
+            foreach (var (impact, _) in staged)
+                unchangedSafety.AddRange(ArenaTerrainMutation.Apply(terrain, impact, terrainProtected));
+            return unchangedSafety;
+        }
+
+        var safeChanges = new List<ArenaTerrainChange>();
+        foreach (var (impact, _) in staged)
+        {
+            appliedImpactIds.Remove(impact.Id);
+            safeChanges.AddRange(ApplyTerrainImpact(impact, hunter, hunterRadius, width, height));
+        }
+        return safeChanges;
     }
 
     public ArenaTerrainRecord? CaptureTerrainRecord(string siteKey) => terrain is null || terrainBaseline is null ? null
