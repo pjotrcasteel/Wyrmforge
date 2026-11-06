@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 
@@ -9,6 +10,45 @@ namespace Wyrmforge.Application.Tests.Runs.Hunts;
 [TestClass]
 public sealed class GreatHuntDuelQualificationTests
 {
+    [TestMethod]
+    public void QualifiesFireSignature_TierTwoOrThreeWithEarnedCoreAndMutators_AwardsEmpoweredDuel()
+    {
+        var spells = new SpellBook();
+        Assert.IsTrue(spells.TryChoosePrimary(SpellId.FireBolt));
+        var equipped = new[] { FireballMutationId.Detonation, FireballMutationId.CinderNeedle };
+
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierOne,
+            spells, 3, equipped));
+        Assert.IsTrue(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierTwo,
+            spells, 3, equipped));
+        Assert.IsTrue(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierThree,
+            spells, 3, equipped));
+    }
+
+    [TestMethod]
+    public void QualifiesFireSignature_RejectsPowerShortcutsAndOtherWyrms()
+    {
+        var spells = new SpellBook();
+        Assert.IsTrue(spells.TryChoosePrimary(SpellId.FireBolt));
+        var equipped = new[] { FireballMutationId.Detonation, FireballMutationId.CinderNeedle };
+
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierTwo,
+            spells, 2, equipped));
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierTwo,
+            spells, 3, [FireballMutationId.Detonation]));
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierTwo,
+            spells, 3, [FireballMutationId.Detonation, FireballMutationId.Detonation]));
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Rimeclaw, HuntSelection.FireTierTwo,
+            spells, 5, equipped));
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, null,
+            spells, 5, equipped));
+
+        var wrongPrimary = new SpellBook();
+        Assert.IsTrue(wrongPrimary.TryChoosePrimary(SpellId.FrostShard));
+        Assert.IsFalse(GreatHuntDuelQualification.QualifiesFireSignature(DragonCatalog.Ashfang, HuntSelection.FireTierTwo,
+            wrongPrimary, 5, equipped));
+    }
+
     [TestMethod]
     public void Qualifies_ShallowHunt_DoesNotAwardEvolvedDuel()
     {

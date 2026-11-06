@@ -252,6 +252,64 @@ public sealed class FireTierTwoHuntTests
         CollectionAssert.AreEqual(new[] { DragonId.Ashfang }, simulation.CreateEvaluationSummary().AscendantDragonIds.ToArray());
     }
 
+    [TestMethod]
+    public void EmpoweredFireballDefeat_CreditsMasteryAndGreatHuntWithoutGrantingAscendantCrown()
+    {
+        var equipped = new[] { FireballMutationId.Detonation, FireballMutationId.CinderNeedle };
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 43,
+            hunt: HuntSelection.FireTierTwo, fireballLevel: 3, fireballMutations: equipped);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
+
+        var summary = simulation.CreateEvaluationSummary();
+        CollectionAssert.AreEqual(new[] { DragonId.Ashfang }, summary.DeepEvolvedWyrmDuels.ToArray());
+        CollectionAssert.AreEqual(new[] { SpellId.FireBolt }, summary.WyrmMasteryFeats.ToArray());
+        Assert.AreEqual(0, summary.AscendantDragonIds.Count, "The Great Hunt Ascendant Rite remains a separate, earned challenge.");
+
+        var tierOne = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 43,
+            hunt: HuntSelection.FireTierOne, fireballLevel: 3, fireballMutations: equipped);
+        Assert.IsTrue(tierOne.ChoosePrimary(SpellId.FireBolt));
+        tierOne.Tick(0, default, 390, 700);
+        Invoke(tierOne, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        Invoke(tierOne, "DefeatDragon", Field<DragonState>(tierOne, "dragon"));
+        Assert.AreEqual(0, tierOne.CreateEvaluationSummary().DeepEvolvedWyrmDuels.Count,
+            "Replaying a lower-tier Ashfang is not a shortcut to the empowered oath.");
+    }
+
+    [TestMethod]
+    public void TierTwoAshfangDefeat_RecordsEmpoweredFireballFeatInActualRunSummary()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42,
+            hunt: HuntSelection.FireTierTwo, fireballLevel: 3,
+            fireballMutations: [FireballMutationId.Detonation, FireballMutationId.CinderNeedle]);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        while (!map.AvailableNodes.Any(node => node.Type == WyrmrealmNodeType.Dragon))
+        {
+            Complete(map, map.AvailableNodes[0]);
+        }
+
+        Assert.IsNotNull(map.Choose(map.AvailableNodes.Single(node => node.Type == WyrmrealmNodeType.Dragon).Id));
+        SetField(simulation, "trailExitPending", false);
+        Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
+
+        var summary = simulation.CreateEvaluationSummary();
+        Assert.AreEqual(HuntSelection.FireTierTwo, summary.Hunt);
+        Assert.AreEqual(1, summary.Depth, "A selected Hunt tier must not impersonate legacy depth two.");
+        Assert.AreEqual(1, summary.SpellLoadout.Single(spell => spell.Id == SpellId.FireBolt).Rank,
+            "Mastery must be earned without reviving obsolete spell rank cards.");
+        CollectionAssert.Contains(summary.WyrmMasteryFeats.ToArray(), SpellId.FireBolt);
+        CollectionAssert.Contains(summary.DeepEvolvedWyrmDuels.ToArray(), DragonId.Ashfang);
+        Assert.AreEqual(3, summary.PreparedFireballLevel);
+        CollectionAssert.AreEquivalent(new[] { FireballMutationId.Detonation, FireballMutationId.CinderNeedle },
+            summary.PreparedFireballMutations.ToArray());
+    }
+
     private static RunSimulation Create(HuntSelection hunt)
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42, hunt: hunt);

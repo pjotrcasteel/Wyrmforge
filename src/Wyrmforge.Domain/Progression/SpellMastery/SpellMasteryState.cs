@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 
@@ -12,7 +13,13 @@ public sealed record SpellMasteryEntry(SpellId Spell, int MeaningfulRuns, int Be
 
 public sealed record MasteryRunSpell(SpellId Spell, int Rank);
 public sealed record MasteryRunEvidence(int CompletedRoutes, int Depth, bool Abandoned,
-    IReadOnlySet<SpellId> QualifiedWyrmFeats, IReadOnlyList<MasteryRunSpell> Spells);
+    IReadOnlySet<SpellId> QualifiedWyrmFeats, IReadOnlyList<MasteryRunSpell> Spells)
+{
+    public SpellId? ActiveSpell { get; init; }
+    public bool Extracted { get; init; }
+    public int FireballLevel { get; init; } = 1;
+    public IReadOnlyList<FireballMutationId> FireballMutations { get; init; } = [];
+}
 
 public sealed record MasteryRunProgress(IReadOnlyList<SpellId> Progressed, IReadOnlyList<SpellEvolutionId> NewlyUnlocked);
 
@@ -41,7 +48,13 @@ public sealed class SpellMasteryState
         foreach (var lineage in SpellLineageCatalog.All)
         {
             var spell = evidence.Spells.FirstOrDefault(candidate => candidate.Spell == lineage.Spell);
-            if (spell is null || spell.Rank < 2) continue;
+            if (spell is null) continue;
+            var legacyRankQualified = spell.Rank >= 2;
+            var signatureQualified = lineage.Spell == SpellId.FireBolt && spell.Rank > 0 && evidence.Extracted
+                && evidence.CompletedRoutes >= FireSignatureMasteryCriteria.MeaningfulRunRoutes
+                && evidence.ActiveSpell == SpellId.FireBolt
+                && FireSignatureMasteryCriteria.QualifiesMeaningfulRun(evidence.FireballLevel, evidence.FireballMutations);
+            if (!legacyRankQualified && !signatureQualified) continue;
 
             var previous = Get(lineage.Spell);
             var feat = previous.WyrmFeat || evidence.QualifiedWyrmFeats.Contains(lineage.Spell);

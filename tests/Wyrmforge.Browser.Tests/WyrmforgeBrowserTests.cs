@@ -622,7 +622,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             }
             if (!localStorage.getItem('wyrmforge.fireballCore.v1')) {
                 localStorage.setItem('wyrmforge.fireballCore.v1',
-                    JSON.stringify({Level:1,Discovered:[2],Slots:[2,null,null,null,null]}));
+                    JSON.stringify({Level:2,Discovered:[2],Slots:[2,null,null,null,null]}));
             }");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
@@ -1402,7 +1402,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_FireballMutationSources_ExplainRealAshfangUnlocksWithoutInventedCrafting(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]})); localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart']));");
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]})); localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart'])); localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
@@ -1443,7 +1443,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));
             localStorage.removeItem('wyrmforge.essenceVault');
             localStorage.removeItem('wyrmforge.huntMaterials.v1');");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
@@ -1477,7 +1477,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));
             localStorage.removeItem('wyrmforge.essenceVault');
             localStorage.removeItem('wyrmforge.huntMaterials.v1');");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
@@ -1513,7 +1513,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
             localStorage.setItem('wyrmforge.huntMaterials.v1',
                 JSON.stringify(['EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));
             localStorage.removeItem('wyrmforge.essenceVault');");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
@@ -1544,7 +1544,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));
             localStorage.removeItem('wyrmforge.essenceVault');
             localStorage.removeItem('wyrmforge.huntMaterials.v1');");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
@@ -1581,7 +1581,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart']));
             localStorage.setItem('wyrmforge.huntMaterials.v1',
                 JSON.stringify(['EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');");
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
@@ -1616,7 +1616,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
             localStorage.removeItem('wyrmforge.essenceVault');
             localStorage.setItem('wyrmforge.fireballCore.v1',
-                JSON.stringify({Level:2,Discovered:[2],Slots:[2,null,null,null,null]}));");
+                JSON.stringify({Level:3,Discovered:[2],Slots:[2,null,null,null,null]}));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
@@ -1640,7 +1640,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
             localStorage.setItem('wyrmforge.huntMaterials.v1',JSON.stringify([
                 'EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:2,Discovered:[],Slots:[]}));
         }");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
@@ -1674,7 +1674,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.firstHunt.v1','3');
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
             localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:3,Discovered:[],Slots:[]}));
-            localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart','AshenWing']));
+            localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart','AshenWing','MoltenFang']));
             localStorage.setItem('wyrmforge.essenceGrades.v1',JSON.stringify({CinderHeart:{Epic:1}}));
             localStorage.removeItem('wyrmforge.huntMaterials.v1');
         }");
@@ -1686,13 +1686,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(emberglass).ToContainTextAsync("Emberglass");
         await Expect(emberglass).ToContainTextAsync("Rare · 0 / 1");
         await Expect(emberglass).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("missing"));
-        await Expect(Page.Locator(".fireball-material").Filter(new() { HasText = "Cinder Heart" })).ToContainTextAsync("Epic ×1");
+        await Expect(Page.Locator(".fireball-material").Filter(new() { HasText = "Secured Ashfang Essences" })).ToContainTextAsync("3 / 3");
+        await Expect(Page.Locator(".fireball-material").Filter(new() { HasText = "Secured Ashfang Essences" })).ToContainTextAsync("Cinder Heart");
+        Assert.AreEqual(1, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.essenceGrades.v1')).CinderHeart.Epic"));
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 4" })).ToBeDisabledAsync();
         Assert.AreEqual("rgb(111, 168, 220)", await emberglass.Locator(".loot-rarity-label").EvaluateAsync<string>("label => getComputedStyle(label).color"));
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"));
         await ScreenshotAsync("fireball-emberglass-gate-390.png");
 
-        await Page.EvaluateAsync("() => localStorage.setItem('wyrmforge.huntMaterials.v1', JSON.stringify(['Emberglass']))");
+        await Page.EvaluateAsync("() => localStorage.setItem('wyrmforge.huntMaterials.v1', JSON.stringify(['Emberglass', 'EmberResidue', 'EmberResidue', 'EmberResidue']))");
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
@@ -1702,7 +1704,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("[]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.huntMaterials.v1')"));
         Assert.AreEqual("[]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceVault')"));
         Assert.AreEqual("{}", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceGrades.v1')"));
-        await Expect(Page.Locator(".fireball-material.loot-rarity-rare")).ToContainTextAsync("Rare · 0 / 1");
+        await Expect(Page.Locator(".fireball-material.loot-rarity-rare")).ToContainTextAsync("Rare · 0 / 2");
         var wyrmcinder = Page.Locator(".fireball-material.loot-rarity-epic");
         await Expect(wyrmcinder).ToContainTextAsync("Wyrmcinder Core");
         await Expect(wyrmcinder).ToContainTextAsync("Epic · 0 / 1");
@@ -1737,12 +1739,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return image.naturalWidth === 192 && image.naturalHeight === 128;
         }"), "The upgrade panel must render the same canonical Fire sigil as character creation.");
         await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
-        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(5);
         await Page.Locator(".fireball-socket--3").ClickAsync();
         await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
         await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Socket 3 is sealed");
-        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 3");
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 4");
         await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("equip a researched mutator");
         await Page.Locator(".fireball-center").ClickAsync();
         await Expect(Page.Locator(".fireball-locked-explainer")).ToHaveCountAsync(0);
@@ -1750,6 +1752,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.Locator(".fireball-socket--1").ClickAsync();
         await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 2");
+        await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(Page.Locator(".fireball-mini-pips i")).ToHaveCountAsync(10);
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +0%");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+8%");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
+        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +8%");
+        await Expect(Page.Locator(".fireball-awakening")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-awakening")).ToContainTextAsync("Your Fireball has changed");
+        await Expect(Page.Locator(".fireball-awakening")).ToContainTextAsync("+8% base damage");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose your first mutator" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-awakening")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".fireball-context h3")).ToContainTextAsync("Select a mutator");
         await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
         Assert.AreEqual(3, await Page.Locator(".fireball-mutator img.fireball-mutation-art").CountAsync(),
@@ -1765,14 +1782,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
         Assert.AreEqual("hidden", await Page.Locator("[data-game-version]").EvaluateAsync<string>("element => getComputedStyle(element).visibility"));
-        await Expect(Page.Locator(".fireball-mini-pips i")).ToHaveCountAsync(10);
-        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +0%");
-        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+8%");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
-        await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
         await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +8%");
         await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+16%");
-        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(3);
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
@@ -3387,13 +3398,25 @@ public sealed class WyrmforgeBrowserTests : PageTest
             overlay.className = 'trail-clear-transition';
             overlay.innerHTML = '<div class=""trail-power-burst"" aria-hidden=""true""></div><strong>TRAIL CLEARED</strong><p>XP collected</p><button>CONTINUE</button>';
             for (const element of [overlay, ...overlay.querySelectorAll('*')]) element.setAttribute(scope, '');
-            overlay.querySelector('button').addEventListener('click', () => overlay.remove());
+            window.__trailClearTestClicked = false;
+            overlay.querySelector('button').addEventListener('click', () => {
+                window.__trailClearTestClicked = true;
+                overlay.remove();
+            });
             screen.appendChild(overlay);
             overlay.querySelector('.trail-power-burst').getAnimations().forEach(animation => animation.finish());
         }");
         var burst = Page.Locator(".trail-power-burst");
         await Expect(burst).ToHaveCSSAsync("opacity", "0");
-        await Page.Locator(".trail-clear-transition button").ClickAsync(new() { Timeout = 5000 });
+        // A real pointer click must reach the Continue button, not merely observe its disappearance.
+        // Direct mouse input avoids Playwright waiting for a detached synthetic element to finish its own click action.
+        var continueButton = Page.Locator(".trail-clear-transition button");
+        await Expect(continueButton).ToBeVisibleAsync();
+        var bounds = await continueButton.BoundingBoxAsync();
+        Assert.IsNotNull(bounds);
+        await Page.Mouse.ClickAsync(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => window.__trailClearTestClicked === true"),
+            "The visible Continue button must receive the pointer event.");
         await Expect(Page.Locator(".trail-clear-transition")).ToHaveCountAsync(0);
     }
 
