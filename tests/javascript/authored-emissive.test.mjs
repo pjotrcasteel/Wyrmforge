@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, enemyHasEmissivePose, emissionIntensity } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
+import {
+    injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, enemyHasEmissivePose, emissionIntensity,
+} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 
 const recorder = () => {
     const calls = [];
