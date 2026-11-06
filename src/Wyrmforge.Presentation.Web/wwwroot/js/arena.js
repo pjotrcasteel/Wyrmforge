@@ -1,4 +1,4 @@
-import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
+import { huntLayerCapture, huntLayerRevision, visibleHuntEnemyLayers, prepareHuntGpuScratch, HuntGpuScratchPool,
     prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261106-default-hunt1-gate-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
@@ -573,7 +573,8 @@ function draw(state, snapshot, width, height) {
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
-        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) })),
+        ...(gpu ? visibleHuntEnemyLayers(snapshot.enemies, camera, width, height)
+            : snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) }))),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
@@ -602,7 +603,7 @@ function draw(state, snapshot, width, height) {
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
         const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
         if (gpu) {
-            capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
+            capture = layer.capture ?? huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
