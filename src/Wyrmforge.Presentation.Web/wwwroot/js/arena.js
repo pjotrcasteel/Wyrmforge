@@ -479,8 +479,7 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    let artScale = 1, groundAlbedo = null;
-    const terrainView = gpu ? terrainCaptureWindow(camera, width, height) : null;
+    let artScale = 1, groundAlbedo = null, terrainView = null;
     if (greybox) {
         // Level one-metre grey receiver. No material atlas or walls; the same
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
@@ -491,7 +490,10 @@ function draw(state, snapshot, width, height) {
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
             artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
-            if (artScale > 1) groundAlbedo = groundAlbedoView(state, terrainView, artScale);
+            if (artScale > 1) {
+                terrainView = terrainCaptureWindow(camera, width, height);
+                groundAlbedo = groundAlbedoView(state, terrainView, artScale);
+            }
             else state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
