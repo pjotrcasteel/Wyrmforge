@@ -75,9 +75,12 @@ public sealed class DamageableAshfangExtractionTests
 
             var row = $"seed={seed} outcome={metrics.Outcome} stop={metrics.StopReason} " +
                 $"damage={metrics.DamageTaken:F0} healthMin={metrics.MinimumHealthRatio:F2} " +
-                $"wyrmReached={metrics.WyrmsReached} dragonsSlain={metrics.DragonsSlain} " +
-                $"essence={metrics.EssenceSecured} rituals={metrics.ExtractionRitualsCompleted} " +
-                $"seconds={metrics.SimulatedSeconds:F1} evolutions={string.Join(",", metrics.EvolutionIds)}";
+                $"routes={metrics.CompletedRouteNodes} wyrmReached={metrics.WyrmsReached} " +
+                $"bossMinHP={agent.LowestBossHealthRatio:F2} bossFrames={agent.BossFrames} " +
+                $"bossWindups={agent.BossWindups} stalledExits={agent.ExitSidesteps} " +
+                $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
+                $"rituals={metrics.ExtractionRitualsCompleted} seconds={metrics.SimulatedSeconds:F1} " +
+                $"evolutions={string.Join(",", metrics.EvolutionIds)}";
             evidence.Add(row);
             TestContext.WriteLine(row);
 
@@ -131,14 +134,28 @@ public sealed class DamageableAshfangExtractionTests
     // Does not modify HP, damage, timers, enemies, boss state, RNG, rewards or simulation fields.
     private sealed class AshfangTelegraphAgent(IRunAgent inner) : IRunAgent
     {
+        private (double X, double Y) exitAnchor;
+        private int exitStalledTicks;
+        private int exitSidestepTicks;
+        private double exitSidestepDirection;
+        private bool wasMoving;
+
         public string Name => "Telegraph-aware " + inner.Name;
+        public double LowestBossHealthRatio { get; private set; } = 1;
+        public int BossFrames { get; private set; }
+        public int BossWindups { get; private set; }
+        public int ExitSidesteps { get; private set; }
 
         public MovementInput ChooseMovement(RunAgentObservation observation)
         {
             var frame = observation.Snapshot;
-            if (frame.Exit is not null || frame.Extraction is not null || frame.Dragon is not { Targetable: true } wyrm)
+            if (frame.Exit is not null) return ChooseExitMovement(observation);
+            if (frame.Extraction is not null || frame.Dragon is not { Targetable: true } wyrm)
                 return inner.ChooseMovement(observation);
 
+            BossFrames++;
+            LowestBossHealthRatio = Math.Min(LowestBossHealthRatio, wyrm.Health / Math.Max(1, wyrm.MaxHealth));
+            if (wyrm.ActionPhase == "windup") BossWindups++;
             var player = frame.Player;
             var hazard = (frame.HuntHazards ?? []).OrderBy(h =>
                 Length(player.X - h.X, player.Y - h.Y) - h.Radius).FirstOrDefault();
@@ -149,21 +166,75 @@ public sealed class DamageableAshfangExtractionTests
                 return Length(hx, hy) > .001 ? Move(hx, hy) : Move(player.Y - wyrm.Y, wyrm.X - player.X);
             }
 
-            if (wyrm.ActionPhase == "windup")
+            // Ashfang commits to the direction of a warned attack. Running along
+            // a breath cone's axis is not a dodge; sidestep across that axis.
+            if (wyrm.ActionPhase is "windup" or "strike")
             {
+                var isBreath = wyrm.Action is "breath" or "breath_sweep";
+                var isPounce = wyrm.Action == "pounce";
                 var x = player.X - wyrm.AttackTargetX;
                 var y = player.Y - wyrm.AttackTargetY;
-                if (Length(x, y) < 180)
-                    return Length(x, y) > .001 ? Move(x, y) : Move(wyrm.Y - player.Y, player.X - wyrm.X);
+                var nearTarget = Length(x, y) < 190;
+                if (isBreath || isPounce || nearTarget)
+                {
+                    var axisX = wyrm.DirectionX;
+                    var axisY = wyrm.DirectionY;
+                    var side = Math.Sign((player.X - wyrm.X) * -axisY + (player.Y - wyrm.Y) * axisX);
+                    if (side == 0) side = wyrm.AttackSequence % 2 == 0 ? 1 : -1;
+                    // Prefer the side with room to dodge when the mage is at a world edge.
+                    var leftX = player.X - axisY * 180;
+                    var leftY = player.Y + axisX * 180;
+                    var rightX = player.X + axisY * 180;
+                    var rightY = player.Y - axisX * 180;
+                    if (frame.World is { } world)
+                    {
+                        double Clearance(double px, double py) =>
+                            Math.Min(Math.Min(px, world.Width - px), Math.Min(py, world.Height - py));
+                        if (Clearance(side > 0 ? leftX : rightX, side > 0 ? leftY : rightY) < 50 &&
+                            Clearance(side > 0 ? rightX : leftX, side > 0 ? rightY : leftY) > 50) side = -side;
+                    }
+                    return Move(-axisY * side, axisX * side);
+                }
             }
 
-            // Strafe around the Wyrm rather than walking into its melee/cone telegraphs.
-            // Only move radially if the real spell range or contact distance requires it.
             var dx = player.X - wyrm.X;
             var dy = player.Y - wyrm.Y;
             var distance = Math.Max(1, Length(dx, dy));
-            var radial = distance < wyrm.Radius + 110 ? 1.1 : distance > 265 ? -0.6 : 0;
+            // Stay close enough for legitimate Fire Bolt casts without walking
+            // into Ashfang's 125-unit tail and 175-unit bite ranges.
+            var radial = distance < 205 ? 1.6 : distance > 255 ? -0.9 : 0;
             return Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial);
+        }
+
+        private MovementInput ChooseExitMovement(RunAgentObservation observation)
+        {
+            var movement = inner.ChooseMovement(observation);
+            var frame = observation.Snapshot;
+            var position = (frame.Player.X, frame.Player.Y);
+            var moved = Math.Abs(position.X - exitAnchor.X) + Math.Abs(position.Y - exitAnchor.Y) > 4;
+            if (moved || !wasMoving)
+            {
+                exitAnchor = position;
+                exitStalledTicks = 0;
+            }
+            else exitStalledTicks++;
+            wasMoving = movement.IsMoving;
+            if (exitSidestepTicks > 0)
+            {
+                exitSidestepTicks--;
+                return new MovementInput(exitSidestepDirection, 0);
+            }
+
+            if (exitStalledTicks > 20 && frame.World is { } world && frame.Environment?.Props is { Count: > 0 } props)
+            {
+                var closest = props.OrderBy(prop =>
+                    Math.Abs(prop.X * world.Width - position.X) + Math.Abs(prop.Y * world.Height - position.Y)).First();
+                exitStalledTicks = 0;
+                exitSidestepTicks = 30;
+                exitSidestepDirection = position.X < closest.X * world.Width ? -1 : 1;
+                ExitSidesteps++;
+            }
+            return movement;
         }
 
         private static double Length(double x, double y) => Math.Sqrt(x * x + y * y);
