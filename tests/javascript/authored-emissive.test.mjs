@@ -61,7 +61,7 @@ test('the enemy emissive fast path skips unlit poses without suppressing authore
     assert.equal(enemyHasEmissivePose(null, 42), false);
 });
 
-test('the first seven Fire enemy sets currently have no glow strips: avoid seven empty captures per enemy', async () => {
+test('the seven ordinary Fire enemy sets currently have no glow strips, so each can skip its emissive canvas', async () => {
     const { readFileSync } = await import('node:fs');
     const { ENEMY_CHARACTERS } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js');
     for (const [kind, name] of ENEMY_CHARACTERS) {
