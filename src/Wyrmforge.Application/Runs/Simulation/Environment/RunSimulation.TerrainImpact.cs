@@ -22,11 +22,18 @@ public sealed partial class RunSimulation
     public IReadOnlyList<ArenaTerrainChange> TerrainChangesThisTick => terrainChangesThisTick;
     private readonly List<ArenaTerrainChange> terrainChangesThisTick = [];
 
-    // Terrain power of a Fireball follows its tier and mutators, so a plain tier-1 bolt only scratches the ground while a maxed,
-    // mutated one carves it: rank 1-5 gives power 1, 1, 2, 2, 3; Detonation adds 1 and Meteor Heart adds 2 (power is clamped to 1-5).
+    // Fireball progression is visible in the terrain: rank I leaves a small chip, II-III
+    // carve shallow craters, IV digs deeper and V can break into stone. Mutators enhance
+    // excavation, but never exceed the bedrock-safe power-five profile.
     private int FireballTerrainPower(ProjectileState projectile)
     {
-        var power = (Math.Clamp(projectile.Rank, 1, 5) + 1) / 2;
+        var power = Math.Clamp(projectile.Rank, 1, 5) switch
+        {
+            1 => 1,
+            2 or 3 => 2,
+            4 => 3,
+            _ => 4,
+        };
         if (HasFireballMutation(FireballMutationId.Detonation)) power += 1;
         if (HasFireballMutation(FireballMutationId.MeteorHeart)) power += 2;
         return Math.Clamp(power, 1, 5);
