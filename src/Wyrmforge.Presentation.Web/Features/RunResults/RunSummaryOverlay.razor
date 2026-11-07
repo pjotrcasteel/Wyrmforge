@@ -60,7 +60,7 @@
             </section>
             <section>
                 <span>JOURNEY</span>
-                <strong>Depth @Summary.Depth • Level @Summary.Level</strong>
+                <strong>@(Summary.Hunt is { } tiered ? $"Wyrm Tier {tiered.TierNumber} • Run Depth {Summary.Depth}" : $"Run Depth {Summary.Depth}") • Level @Summary.Level</strong>
                 <small>@Summary.CompletedRouteNodes trails • @Summary.Kills kills • @Summary.Seconds s</small>
             </section>
         </div>
@@ -356,7 +356,7 @@
         {
             var wyrms = Summary.DragonIds.Count;
             var wyrmText = wyrms switch { 0 => "no Wyrms slain", 1 => "1 Wyrm slain", _ => $"{wyrms} Wyrms slain" };
-            return $"{BuildIdentity} • Depth {Summary.Depth} • {wyrmText}";
+            return $"{BuildIdentity} • {(Summary.Hunt is { } tiered ? $"Wyrm Tier {tiered.TierNumber} • " : string.Empty)}Run Depth {Summary.Depth} • {wyrmText}";
         }
     }
 

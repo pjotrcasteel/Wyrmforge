@@ -39,6 +39,8 @@ The first slice teaches combat, one committed fork, the selected Wyrm and securi
 
 **21 October owner decision — ladder Ascendants are not the Ascendant Rite (LOCKED):** Defeating Ascendant Ashfang as the Fire Tier-II target clears the tier but does **not** count as the Great Hunt Ascendant Rite victory; the **Crown of Embers** (and every future rite trophy) is earned only through the invoked rite after the oath is sealed.
 
+**5 November P1c launcher contract (draft; not merged):** Ordinary Hunts start by selecting a lineage and Wyrm tier at the World Gate; contextual Fireball material links can start a validated, unlocked Fire tier directly through that same start contract. The old Settings preparation surface retains offerings and separately invoked **Great Hunt Ascendant Rites**, never a generic Hunt shortcut. Frost retains the playable, depth-based exploration mode until its tier ladder is authored. A *Wyrm tier* is a lineage challenge level; a *run depth* counts descent/checkpoint floors within an untiered run. Historical save rewards and achievements are retained. See [P1c Hunt entry reachability audit](../handover/2026-11-05-p1c-hunt-entry-audit.md).
+
 **Delivery boundary:** Arena Lab is solely for arena design/testing. Keep it independent of real Hunt-route progression and do not enable lab generation in ordinary Hunts as part of this change. Preserve existing Frost/Ascendant paths while Fire is delivered. Seasons come later.
 
 Introductory hunts **shorter**, increasingly formidable Wyrms have longer, richer expeditions (more acts, hazards and meaningful branch decisions). Illustrative shortest-path **combat fights before boss**, not locked balance constants:

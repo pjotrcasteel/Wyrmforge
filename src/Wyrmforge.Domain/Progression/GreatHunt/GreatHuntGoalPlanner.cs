@@ -22,7 +22,7 @@ public static class GreatHuntGoalPlanner
                 if (hunt.IsSealed(oath.Wyrm, mastery))
                 {
                     var rite = AscendantRiteCatalog.Get(oath.Wyrm);
-                    return new GreatHuntGoal(oath.Wyrm, $"Ascendant {oath.Wyrm}", $"Invoke the rite in the Run Hub and defeat Ascendant {oath.Wyrm} at Depth II.",
+                    return new GreatHuntGoal(oath.Wyrm, $"Ascendant {oath.Wyrm}", $"Settings → Rites & offerings: invoke the Great Hunt rite and defeat Ascendant {oath.Wyrm} at Run Depth II (not Wyrm Tier II).",
                         $"Permanent {rite.Trophy} trophy • replayable Ascendant duel", entry.AscendantDefeated ? 1 : 0, 1);
                 }
 
