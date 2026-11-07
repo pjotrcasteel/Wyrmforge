@@ -1239,6 +1239,16 @@ export class TerrainCanvasCache {
         const kitReady = Boolean(forestKit());
         const visualSeed = frame.visualSeed ?? 0;
         if (this.canvas && this.visualSeed === visualSeed && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
+        // The authoritative C# revision may advance without changing a single terrain pixel
+        // (e.g. a repeated impact snapshot). Do not clear a full-screen cache or move road/grass
+        // pixels in response to a nonvisual update. A late art-kit load and new site still repaint.
+        if (this.canvas && this.revision !== null && this.visualSeed === visualSeed && this.band === band &&
+            this.kitReady === kitReady && frame.visualDeltaComplete && frame.changed?.length === 0 &&
+            frame.revision >= this.revision) {
+            this.revision = frame.revision;
+            frame.kindMaps = this.kindMaps;
+            return false;
+        }
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS * ART;
         const height = (frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2) * ART;
