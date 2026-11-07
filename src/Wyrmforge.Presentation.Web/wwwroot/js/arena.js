@@ -41,6 +41,7 @@ import { drawTransformations } from './arena-transformation-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
+import { preloadBellWardenImpact } from './arena-bell-warden-impact.js';
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './art-atlas.js';
@@ -73,6 +74,7 @@ export function initializeArena(canvas, dotNetReference) {
     loadArt(new URL('../art/', import.meta.url).href);
     preloadFireballV5();
     preloadMireHoundVfx();
+    preloadBellWardenImpact();
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
