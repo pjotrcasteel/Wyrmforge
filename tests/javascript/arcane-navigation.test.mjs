@@ -178,3 +178,14 @@ for (const size of [4800, 12000]) {
         assert.equal(m.view().scale, .95);
     });
 }
+
+test('opening a long route reveals its explanation while retaining map context', () => {
+    const m = map();
+    let revealed = null;
+    const explanation = { scrollIntoView(options) { revealed = options.block; } };
+    m.api.revealInspector({ querySelector(selector) {
+        assert.equal(selector, '.inspector-effect');
+        return explanation;
+    }, scrollIntoView() { assert.fail('The entire long route must not displace the map'); } });
+    assert.equal(revealed, 'nearest');
+});

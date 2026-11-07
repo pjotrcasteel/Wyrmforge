@@ -66,6 +66,8 @@ internal static class ArcaneNodePresentation
     {
         BuildStatId.Damage => "✹",
         BuildStatId.BurnDamage => "♨",
+        BuildStatId.MutationDuration => "◴",
+        BuildStatId.MutationRadius => "◉",
         BuildStatId.CastInterval => "⟳",
         BuildStatId.ProjectileSpeed => "➶",
         BuildStatId.MoveSpeed => "↟",
@@ -80,6 +82,8 @@ internal static class ArcaneNodePresentation
     {
         BuildStatId.Damage => "spell damage",
         BuildStatId.BurnDamage => "burning-ground damage",
+        BuildStatId.MutationDuration => "mutation duration",
+        BuildStatId.MutationRadius => "mutation area",
         BuildStatId.CastInterval => "cast speed",
         BuildStatId.ProjectileSpeed => "projectile speed",
         BuildStatId.MoveSpeed => "move speed",

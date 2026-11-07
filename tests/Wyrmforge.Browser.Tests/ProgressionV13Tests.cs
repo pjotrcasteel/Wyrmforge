@@ -41,6 +41,12 @@ public sealed class ProgressionV13Tests : BrowserTest
         {
             await page.Locator($"[data-node-id='{id}']").ClickAsync();
             await Expect(page.Locator(".node-inspector.open")).ToContainTextAsync(name);
+            Assert.IsTrue(await page.Locator($"[data-node-id='{id}']").EvaluateAsync<bool>(@"node => {
+                const rect = node.getBoundingClientRect();
+                const map = node.closest('.arcane-web-viewport').getBoundingClientRect();
+                return rect.top >= Math.max(64, map.top) && rect.bottom <= Math.min(innerHeight, map.bottom);
+            }"), "Inspecting a long route must keep the selected landmark visible below the sticky header.");
+            await Expect(page.Locator(".route-gains")).Not.ToContainTextAsync("MutationDuration");
             await Capture(page, $"web-{width}-{id}");
             await page.GetByRole(AriaRole.Button, new() { Name = "Close node inspector" }).ClickAsync();
             await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();

@@ -220,7 +220,10 @@
 
     function revealInspector(element) {
         if (!element || window.innerWidth > 760) return;
-        element.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+        // Reveal the explanation, not the bottom of a potentially very long route.
+        // Keeping map context visible lets players recognize the selected landmark.
+        const explanation = element.querySelector('.inspector-effect') || element;
+        explanation.scrollIntoView({ block: 'nearest', behavior: 'instant' });
     }
 
     function dispose(viewport) {
