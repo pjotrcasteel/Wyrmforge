@@ -2,6 +2,59 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { huntLightFrame, HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 
+test('ordinary authored enemy poses reuse GPU albedo between moves while the world quad stays aligned', async () => {
+    const { reusableEnemyPoseRevision, alignedEnemyPoseRaster, huntLayerCapture } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const pose = { name: 'Hollowed', action: 'walk', direction: 'SE', frame: 2, emerge: false };
+    const original = { entityId: 42, kind: 0, x: 100.25, y: 220.625, radius: 11, opacity: 1, healthRatio: 1 };
+    const moving = { ...original, x: 194.875, y: 243.125 };
+    const first = { kind: 'enemy', enemy: original }, second = { kind: 'enemy', enemy: moving };
+    const firstRevision = reusableEnemyPoseRevision(first, pose, true);
+    assert.ok(firstRevision);
+    assert.equal(reusableEnemyPoseRevision(second, pose, true), firstRevision,
+        'a C# position change does not force a new GPU texture for the same authored pose');
+    for (const layer of [first, second]) {
+        const snapshot = { ...layer.enemy };
+        const aligned = alignedEnemyPoseRaster(layer.enemy);
+        const capture = huntLayerCapture(layer);
+        assert.ok(Math.abs(aligned.actor.x + aligned.offsetX - capture.x - capture.size / 2) < 1e-9);
+        assert.ok(Math.abs(aligned.actor.y + aligned.offsetY - capture.y - capture.size * .75) < 1e-9);
+        assert.deepEqual(layer.enemy, snapshot, 'position and gameplay state are not mutated');
+    }
+    const size = huntLayerCapture(first).size;
+    const stored = { layers: new Map([['hunt-enemy:42',
+        { revision: firstRevision, pixels: { width: size, height: size } }]]) };
+    assert.equal(HuntGpuWorld.prototype.canReuseCapture.call(stored, 'hunt-enemy:42', firstRevision, size, size), true,
+        'the live upload path can skip repaint and upload when the pose is unchanged');
+    assert.equal(reusableEnemyPoseRevision(second, { ...pose, frame: 3 }, true) === firstRevision, false,
+        'the next animation frame invalidates the capture');
+    assert.notEqual(reusableEnemyPoseRevision(second, { ...pose, direction: 'N' }, true), firstRevision);
+    assert.notEqual(reusableEnemyPoseRevision(second, { ...pose, action: 'hit' }, true), firstRevision);
+    assert.notEqual(reusableEnemyPoseRevision({ kind: 'enemy', enemy: { ...moving, radius: 15 } }, pose, true), firstRevision);
+});
+
+test('dynamic and terrain-occluded enemies never reuse a stale GPU pose', async () => {
+    const { reusableEnemyPoseRevision } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const enemy = { entityId: 7, kind: 1, x: 140, y: 200, radius: 11, opacity: 1, healthRatio: 1 };
+    const pose = { name: 'Mire-Hound', action: 'walk', direction: 'N', frame: 1 };
+    const revision = (overrides = {}, alteredPose = pose, loaded = true, occluded = false, kind = 'enemy') =>
+        reusableEnemyPoseRevision({ kind, enemy: { ...enemy, ...overrides } }, alteredPose, loaded, occluded);
+    assert.ok(revision());
+    assert.equal(revision({}, pose, false), undefined, 'fallback and unready sprite assets use the old render path');
+    assert.equal(revision({}, pose, true, true), undefined, 'nearby raised terrain must rerasterize the silhouette');
+    assert.equal(revision({}, { ...pose, emerge: true }), undefined, 'crawl-out particles are dynamic');
+    for (const effect of [
+        { elite: 'Packblood' }, { telegraph: { kind: 'pounce', progress: .3 } },
+        { shieldFacing: 0 }, { invulnerable: true }, { hitFlash: true },
+        { frozen: true }, { rimeArmor: 1 }, { opacity: .5 }, { healthRatio: .7 }, { kind: 7 },
+    ]) {
+        assert.equal(revision(effect), undefined, `${Object.keys(effect)[0]} must keep its dynamic render`);
+    }
+    assert.equal(revision({}, pose, true, false, 'mage'), undefined, 'the mage uses its own noncached path');
+    assert.equal(revision({ x: NaN }), undefined, 'invalid positions cannot become reusable textures');
+    assert.equal(revision({}, { ...pose, frame: NaN }), undefined);
+});
+
 test('GPU enemy culling preserves visible sprites, raised terrain and partially visible large enemies', async () => {
     const { visibleHuntEnemyLayers, huntLayerCapture } =
         await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
