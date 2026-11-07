@@ -342,8 +342,15 @@ public sealed class ArenaTerrainTests
             var grid = recipe.Grid;
             foreach (var (column, row) in recipe.ProtectedRoute)
             {
-                Assert.IsTrue(grid.IsStandable(ArenaTerrainGrid.CenterOf(column, row), PlayerRadius),
-                    $"seed {seed}: torch must not block safe route cell {column},{row}");
+                var routePoint = ArenaTerrainGrid.CenterOf(column, row);
+                for (var i = 0; i + 1 < grid.Torches.Count; i += 2)
+                {
+                    var foot = new Vector2D(grid.Torches[i] * ArenaTerrainGrid.CellUnits / 16,
+                        grid.Torches[i + 1] * ArenaTerrainGrid.CellUnits / 16);
+                    Assert.IsGreaterThanOrEqualTo(PlayerRadius + ArenaTerrainGrid.TorchBaseRadiusUnits,
+                        Vector2D.Distance(routePoint, foot),
+                        $"seed {seed}: torch foot must not overlap the protected route {column},{row}");
+                }
             }
 
             Assert.IsTrue(grid.IsReachable(recipe.Spawn, recipe.Exit, PlayerRadius), $"seed {seed}: protect route from torch collision");
