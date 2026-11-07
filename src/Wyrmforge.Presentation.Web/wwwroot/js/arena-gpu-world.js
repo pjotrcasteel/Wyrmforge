@@ -36,6 +36,12 @@ export function needsRetainedHuntBuffer(userAgent = '', maxTouchPoints = 0) {
     return /iPhone|iPad|iPod/i.test(userAgent) ||
         /Macintosh/i.test(userAgent) && maxTouchPoints > 1;
 }
+/** iOS WebKit can consume an already painted terrain Canvas directly. Avoid a second full-size Canvas2D copy before WebGL upload. */
+export function canDirectUploadHuntGround(id, source, width, height, enabled = false) {
+    return enabled && (id === 'hunt-ground' || id === GROUND_NORMAL_ID || id === GROUND_EMISSIVE_ID) &&
+        source?.width === width && source?.height === height && typeof source.getContext === 'function';
+}
+
 export function huntGpuRendererBudget(quality = 'balanced', preserveDrawingBuffer = false) {
     if (typeof preserveDrawingBuffer !== 'boolean') throw new TypeError('Invalid Hunt buffer policy');
     return { ...lightingQualityBudget(quality), preserveDrawingBuffer };
@@ -236,8 +242,9 @@ export class HuntGpuWorld {
         this.canvas = document.createElement('canvas');
         this.quality = quality;
         const device = typeof navigator === 'undefined' ? null : navigator;
-        this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality,
-            needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
+        const iosWebKit = needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints);
+        this.directGroundCanvasUpload = iosWebKit;
+        this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality, iosWebKit));
         this.engine.verticalScale = this.projection.verticalScale;
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
@@ -326,22 +333,38 @@ export class HuntGpuWorld {
             throw new TypeError('Capture revision must be a stable string or finite number');
         this.used.add(id);
         let layer = this.layers.get(id);
-        const unchanged = this.canReuseCapture(id, revision, width, height, pixelScale);
         const pixelWidth = Math.max(1, Math.ceil(width * pixelScale)), pixelHeight = Math.max(1, Math.ceil(height * pixelScale));
+        const direct = canDirectUploadHuntGround(id, source, pixelWidth, pixelHeight, this.directGroundCanvasUpload);
+        // An unchanged revision is reusable only when the same direct Canvas source is still attached.
+        const unchanged = this.canReuseCapture(id, revision, width, height, pixelScale) &&
+            (direct ? layer?.direct && layer.pixels === source : !layer?.direct);
         if (!layer) {
-            const pixels = document.createElement('canvas');
-            pixels.width = pixelWidth; pixels.height = pixelHeight;
+            const pixels = direct ? source : document.createElement('canvas');
+            if (!direct) { pixels.width = pixelWidth; pixels.height = pixelHeight; }
             const texture = new T.CanvasTexture(pixels);
             this.engine.registerTexture(id, texture, colorData);
-            layer = { pixels, texture }; this.layers.set(id, layer);
+            layer = { pixels, texture, direct }; this.layers.set(id, layer);
         }
         if (unchanged) return false;
-        if (layer.pixels.width !== pixelWidth) layer.pixels.width = pixelWidth;
-        if (layer.pixels.height !== pixelHeight) layer.pixels.height = pixelHeight;
-        const ctx = layer.pixels.getContext('2d');
-        ctx.imageSmoothingEnabled = false;
-        ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
-        ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+        if (direct) {
+            // The viewport source is complete before HuntGpuWorld.begin(). Safari need not copy it
+            // into another 2D canvas (or retain a second large backing store) before WebGL consumes it.
+            layer.pixels = source;
+            layer.texture.image = source;
+            layer.direct = true;
+        } else {
+            if (layer.direct) {
+                layer.pixels = document.createElement('canvas');
+                layer.texture.image = layer.pixels;
+                layer.direct = false;
+            }
+            if (layer.pixels.width !== pixelWidth) layer.pixels.width = pixelWidth;
+            if (layer.pixels.height !== pixelHeight) layer.pixels.height = pixelHeight;
+            const ctx = layer.pixels.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
+            ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+        }
         layer.texture.needsUpdate = true;
         this.dirtyTextures.add(id);
         layer.revision = revision;
