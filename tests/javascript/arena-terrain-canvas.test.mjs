@@ -224,6 +224,26 @@ test('identical fine updates are ignored but excavation, stone wear and coarse c
     assert.deepEqual(noRepeatRemoval.changed, []);
 });
 
+test('a changed authoritative road never uses the no-op or local damage path', () => {
+    const initial = mergeTerrainFrame(null, { revision: 1, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [0, 0, 16, 16] });
+    const unchanged = mergeTerrainFrame(initial, { revision: 2, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [0, 0, 16, 16] });
+    assert.equal(unchanged.visualDeltaComplete, true);
+    const changed = mergeTerrainFrame(unchanged, { revision: 3, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [16, 0, 16, 32] });
+    assert.equal(changed.visualDeltaComplete, false, 'changed roads affect many background splat tiles');
+    const clears = [];
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {}, clearRect(...args) { clears.push(args); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    cache.update(initial, 0);
+    const baseline = clears.length;
+    assert.equal(cache.update(unchanged, 0), false);
+    assert.equal(clears.length, baseline);
+    assert.equal(cache.update(changed, 0), true);
+    assert.equal(clears.length, baseline + 1, 'road changes clear and repaint the full source canvas');
+});
+
 test('a new site with the same terrain revision replaces the entire cached image', () => {
     const clears = [];
     const ctx = { ...recorder(), clearRect(...rectangle) { clears.push(rectangle); } };
