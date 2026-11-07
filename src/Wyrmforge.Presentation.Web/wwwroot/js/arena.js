@@ -12,6 +12,7 @@ import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
+import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
@@ -95,6 +96,11 @@ export function initializeArena(canvas, dotNetReference) {
         settings.addEventListener('change', state.onDamageNumberModeChanged);
     }
     arenas.set(canvas, state);
+    state.layerLab = mountLayerLab(() => {
+        // The debug switches change rasterized terrain without a server terrain revision.
+        // Force an exact full cache rebuild; regular gameplay never takes this path.
+        if (state.terrainCache) state.terrainCache.revision = null;
+    });
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
     state.lighting01 = lighting01Requested(params);
@@ -144,6 +150,7 @@ export function readArenaDiagnostics(canvas) {
     const state = arenas.get(canvas);
     if (!state) return null;
     return {
+        layerLab: layerLabSnapshot(),
         active: state.active,
         worldReady: hasAuthoritativeHuntWorld(state.latestSnapshot),
         hud: state.latestSnapshot?.hud??null,
@@ -245,6 +252,7 @@ export function disposeArena(canvas) {
     state.detachInput?.();
     if (state.damageNumberSettings) state.damageNumberSettings.removeEventListener('change', state.onDamageNumberModeChanged);
     state.g4Review?.dispose();
+    state.layerLab?.dispose();
     state.gpuWorld?.dispose();
     state.gpuScratchPool?.clear();
     if (state.gpuPresentation) {
@@ -438,7 +446,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const greybox = Boolean(snapshot.environment?.greybox);
-    let gpu = snapshot.lighting && state.gpuWorld;
+    let gpu = snapshot.lighting && state.gpuWorld && layerLabEnabled('gpu');
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
     // Retain it only as a diagnostic A/B switch; the default draws synchronously
@@ -505,7 +513,8 @@ function draw(state, snapshot, width, height) {
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
             artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
             if (artScale > 1) groundAlbedo = groundAlbedoView(state, camera, width, height, artScale);
-            else state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+            else if (layerLabEnabled('albedo')) state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+            else { ctx.fillStyle = '#777777'; ctx.fillRect(camera.x, camera.y, width, height); }
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
         }
@@ -530,6 +539,7 @@ function draw(state, snapshot, width, height) {
     if (!gpu) for (const layer of exitLayers) drawArenaExit(ctx, layer.exit, visualSeconds, layer.locked);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
+    if (layerLabEnabled('groundFx')) {
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
     // In the Canvas path, physical fire decals belong under actor feet and existing telegraphs.
     if (!gpu) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
@@ -564,6 +574,7 @@ function draw(state, snapshot, width, height) {
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
+    }
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
@@ -592,7 +603,7 @@ function draw(state, snapshot, width, height) {
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
-        ...(state.terrainFrame && snapshot.environment?.terrain
+        ...(layerLabEnabled('scenery') && state.terrainFrame && snapshot.environment?.terrain
             ? [...treeLayers(state.terrainFrame, huntBand(state, snapshot), camera, width, height), ...torchLayers(state.terrainFrame, camera, width, height)] : []),
         ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
             : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
@@ -600,11 +611,11 @@ function draw(state, snapshot, width, height) {
     // On the GPU path the ground glows (crack veins, hot craters, bedrock hint) ride the ground's emissive map and are lit surfaces
     // under every actor; the additive overlay versions below remain for the Canvas fallback.
     const view = { x: camera.x, y: camera.y, width, height };
-    const emissive = gpu && state.terrainFrame && snapshot.environment?.terrain
+    const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
             view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
     state.veinSeams = emissive?.seams ?? 0;
-    const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
+    const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
         groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
@@ -612,6 +623,8 @@ function draw(state, snapshot, width, height) {
             camera, worldWidth, worldHeight) : 0;
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
+        if (!layerLabEnabled('actors') && ['enemy', 'mage', 'dragon', 'dragonDeath'].includes(layer.kind)) continue;
+        if (!layerLabEnabled('scenery') && ['tree', 'torch', 'torchFlame', 'masonry'].includes(layer.kind)) continue;
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
         const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
@@ -694,6 +707,7 @@ function draw(state, snapshot, width, height) {
     }
     if (gpu) {
         try {
+            gpu.engine.setDebugView(layerLabView());
             gpu.render(ctx, state.sharedLightingFrame);
         } catch (error) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
@@ -702,25 +716,27 @@ function draw(state, snapshot, width, height) {
     const glowOnGround = Boolean(emissive && gpu);
     // Keep the Warden's authoritative ring and 37-frame impact visible above the GPU
     // presentation. Doing this before gpu.render would discard the effect on 64px/m terrain.
-    if (gpu) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    if (gpu && layerLabEnabled('postGpuFx')) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     // The GPU composites the terrain/actors after its ground pass; replay only these bounded
     // fire patches after that composite, never as a dirty full-terrain texture upload.
-    if (gpu) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
-    drawReliquaryEmergence(ctx, snapshot.reliquary);
-    drawBellWardenEntrance(ctx, snapshot.bellWarden);
+    if (gpu && layerLabEnabled('postGpuFx')) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
+    if (layerLabEnabled('postGpuFx')) {
+        drawReliquaryEmergence(ctx, snapshot.reliquary);
+        drawBellWardenEntrance(ctx, snapshot.bellWarden);
+    }
     if (state.terrainFrame && snapshot.environment?.terrain) {
-        drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
+        if (layerLabEnabled('postGpuFx')) drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
         const nowSeconds = performance.now() / 1000;
-        if (!glowOnGround) {
+        if (!glowOnGround && layerLabEnabled('emissive')) {
             state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
             drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
         }
-        if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
+        if (state.destructionFx && layerLabEnabled('damageFx')) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
         // The world is drawn translated by -camera here; the furnace glow belongs to the screen edges.
         ctx.save();
         ctx.translate(camera.x, camera.y);
-        drawFireZoneVignette(ctx, width, height, huntBand(state, snapshot), nowSeconds, state.reducedMotion.matches);
+        if (layerLabEnabled('postGpuFx')) drawFireZoneVignette(ctx, width, height, huntBand(state, snapshot), nowSeconds, state.reducedMotion.matches);
         ctx.restore();
         // The calibration overlay is drawn unlit over the composite so it is readable in any light.
         if (state.blockInset ??= blockInsetOverlayEnabled())
@@ -1862,5 +1878,10 @@ function groundAlbedoView(state, camera, width, height, scale) {
     g.clearRect(0, 0, pixelWidth, pixelHeight);
     g.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
     state.terrainCache.draw(g, { x: camera.x, y: camera.y, width, height });
+    if (!layerLabEnabled('albedo')) {
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        g.fillStyle = '#777777';
+        g.fillRect(0, 0, pixelWidth, pixelHeight);
+    }
     return canvas;
 }
