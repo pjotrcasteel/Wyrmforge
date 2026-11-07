@@ -21,6 +21,11 @@ const disabled = new Set();
 let view = 'lit';
 let generation = 0;
 
+/** Return the actual renderer instance, never the boolean produced by an && chain. */
+export function selectHuntGpuWorld(lighting, gpuWorld, enabled) {
+    return lighting && enabled ? gpuWorld ?? null : null;
+}
+
 export function layerLabRequested(search = globalThis.location?.search ?? '') {
     return new URLSearchParams(search).get('layerLab') === '1';
 }
