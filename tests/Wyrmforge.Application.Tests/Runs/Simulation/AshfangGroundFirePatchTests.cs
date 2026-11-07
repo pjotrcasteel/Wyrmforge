@@ -1,4 +1,8 @@
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Geometry;
 
@@ -31,6 +35,47 @@ public sealed class AshfangGroundFirePatchTests
         Assert.IsTrue(patch.Burning);
         Assert.AreEqual(0, patch.AgeSeconds);
     }
+
+    [TestMethod]
+    public void RealSimulation_OverlappingPatchesDamageOnlyOnce_AndCoolingMarksAreSafe()
+    {
+        var random = new SeededRandomSource(73);
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        var player = (PlayerState)typeof(RunSimulation).GetField("player", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(simulation)!;
+        var center = new Vector2D(200, 200);
+        player.Position = center;
+
+        Invoke(simulation, "RegisterAshfangGroundFire", center);
+        Invoke(simulation, "RegisterAshfangGroundFire", new Vector2D(206, 200));
+        Assert.HasCount(1, simulation.CreateSnapshot().AshfangGroundFires, "A repeated scorch must rekindle, not stack.");
+        Invoke(simulation, "RegisterAshfangGroundFire", new Vector2D(225, 200));
+        Assert.HasCount(2, simulation.CreateSnapshot().AshfangGroundFires);
+        Assert.IsTrue(simulation.CreateSnapshot().AshfangGroundFires.All(patch => patch.Burning));
+
+        var startHealth = player.Health;
+        Invoke(simulation, "BeginPlayerDamageFrame", 0.05d);
+        Invoke(simulation, "UpdateAshfangGroundFires", 0.05d);
+        Invoke(simulation, "ResolvePlayerDamage");
+        Assert.IsLessThan(startHealth, player.Health + 10,
+            "Even two overlapping patches cannot stack into a boss-sized hit.");
+        Assert.IsGreaterThan(startHealth, player.Health, "An active patch must do actual physical damage.");
+
+        player.Position = new Vector2D(500, 400);
+        Invoke(simulation, "BeginPlayerDamageFrame", 2.8d);
+        Invoke(simulation, "UpdateAshfangGroundFires", 2.8d);
+        Invoke(simulation, "ResolvePlayerDamage");
+        Assert.IsTrue(simulation.CreateSnapshot().AshfangGroundFires.All(patch => !patch.Burning));
+        player.Position = center;
+        var afterCoolingHealth = player.Health;
+        Invoke(simulation, "BeginPlayerDamageFrame", 0.55d);
+        Invoke(simulation, "UpdateAshfangGroundFires", 0.55d);
+        Invoke(simulation, "ResolvePlayerDamage");
+        Assert.AreEqual(afterCoolingHealth, player.Health, "Visible charcoal is not a hidden damaging floor.");
+    }
+
+    private static void Invoke(RunSimulation simulation, string name, params object[] arguments) =>
+        typeof(RunSimulation).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, arguments);
 
     [TestMethod]
     public void ZeroOrNegativeDelta_DoesNotAdvanceFire()
