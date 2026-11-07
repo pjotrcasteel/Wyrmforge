@@ -5,6 +5,7 @@ using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Progression.PassiveTree;
 
 namespace Wyrmforge.Application.Tests.Runs.Development;
 
@@ -29,6 +30,28 @@ public sealed class DevelopmentHuntTrialTests
         Assert.AreEqual(0, normal.SynergyEffectsResolved);
         Assert.AreEqual(0, review.CompletedMapNodes.Count);
         Assert.ThrowsExactly<ArgumentException>(() => factory.CreateDevelopmentHunt(Build.SelectedNodes, setup with { BossReadySpell = true }));
+    }
+
+    [TestMethod]
+    [DataRow(2, 1337)]
+    public void FireEvolutionReview_PhaseTwoLiveCombatProducesField(int phase, int seed)
+    {
+        var selection = new PassiveTreeSelection();
+        selection.SetActiveSchool(PassiveSchool.Fire);
+        selection.SelectPath(PassiveTreePlanner.Plan(selection, "fire-long-pyre")!.NodeIds);
+        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, phase, SpellId.FireBolt, seed, 390, 844, true)
+        { ReviewFireEvolution = true, BossReadySpell = false, Environment = true };
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(selection.Selected, setup);
+        var agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, Build.PreferredSchool);
+        var snapshot = run.CreateSnapshot();
+        var sawField = false;
+        for (var step = 0; step < 2400 && snapshot.Dragon is not null && !run.IsEnded; step++)
+        {
+            var observation = new RunAgentObservation(snapshot, [], [], [], [], [], run.Depth, 0, false);
+            snapshot = run.Tick(.05, agent.ChooseMovement(observation), 390, 844);
+            sawField |= snapshot.BurningGroundCount > 0;
+        }
+        Assert.IsTrue(sawField, $"No field: time={snapshot.Hud.Seconds}, boss={snapshot.Dragon?.Health}, effects={run.SynergyEffectsResolved}");
     }
 
     [DataRow(DragonId.Ashfang, true, "Crownfall")]

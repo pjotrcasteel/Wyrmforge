@@ -45,3 +45,12 @@ Use original irregular clusters, visible distant commitments and readable tradeo
 ## Concurrent work
 
 Main now includes #481 core economy/mastery, #490 damageable Hunt proofs and terrain stability updates. Merge reconciliation preserves those changes, the new essence/material recipes and legacy sealed equipment. PR #491 aggregate saves/cloud backup remains independent. No terrain/art/AI implementation is authored by this slice.
+
+## 7 November integration and validation follow-up
+
+- Reconciled main through f4db829, including #481 and #490. CI 155c9cc passed 430 Domain and 874 Application tests, publish and focused magic: https://github.com/pjotrcasteel/Wyrmforge/actions/runs/42317411323.
+- Browser checks exposed four Fire-route path obstructions/crossings. Repositioned the five new landmarks; geometry check covers 70 nodes and 77 paths, no crossings/obstructions or pairs under 90 world pixels. Actual browser regression remains authoritative.
+- Field evidence originally read a nonexistent snapshot `burningGrounds` array. Existing rendering combines fire fields into `EssenceBursts`; added a read-only `BurningGroundCount` without duplicating render geometry. Previous diagnostics cannot establish absence of fields.
+- Live simulation showed the original practice setup's burn expires during Ashfang flight before the killing hit. The explicitly labelled late-run review loadout now includes existing Emberbrand II. Phase-two combat creates a field through ordinary casts; no enemy health, status or damage is injected by the test. A separate negative test verifies non-burning kills do not trigger either breakthrough.
+- Removed a duplicated first-upgrade browser action introduced by merging overlapping test fixes. No production Nexus behavior changed in this follow-up.
+- Full JavaScript suite after integration: 790 passed. New mobile captures and latest full CI remain pending. Existing main-origin first-trail Chart-return smoke failures are tracked separately from the progression slice; do not suppress them.

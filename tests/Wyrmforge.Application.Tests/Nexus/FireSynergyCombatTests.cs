@@ -42,8 +42,20 @@ public sealed class FireSynergyCombatTests
         Assert.AreEqual(1, web.Rank);
     }
 
+    [TestMethod]
+    public void KillWithoutBurning_DoesNotTriggerCascadeOrSolarWake()
+    {
+        foreach (var evolve in new[] { false, true })
+        {
+            var result = Resolve(evolve, FireballMutationId.Detonation, true, burning: false);
+            Assert.AreEqual(0, result.Effects);
+            Assert.AreEqual(0, result.Fields);
+            Assert.AreEqual(1000, result.Health);
+        }
+    }
+
     private static (double Health, int Effects, int Fields, double Radius, double Duration, int Rank) Resolve(
-        bool evolve, FireballMutationId mutation, bool web)
+        bool evolve, FireballMutationId mutation, bool web, bool burning = true)
     {
         var nodes = web ? new HashSet<string> { "fire-start", "fire-1", "fire-2", "fire-cinder-thread", "fire-ember-memory",
             "fire-crucible", "fire-ember-covenant", "fire-long-pyre" } : new HashSet<string>();
@@ -55,7 +67,7 @@ public sealed class FireSynergyCombatTests
         if (evolve) build.RunUpgrades.Apply(RunUpgradeId.SolarWake);
         Call(simulation, "RefreshBuildModifiers", false);
         var victim = new EnemyState(1, new(100, 100), 8, 1, 0);
-        victim.Statuses.Apply(CombatStatusCatalog.Get(CombatStatusId.Burning), 4);
+        if (burning) victim.Statuses.Apply(CombatStatusCatalog.Get(CombatStatusId.Burning), 4);
         var neighbor = new EnemyState(2, new(110, 100), 8, 1000, 0);
         Get<List<EnemyState>>(simulation, "enemies").AddRange([victim, neighbor]);
         Call(simulation, "RebuildCombatSpatialIndex");
@@ -63,6 +75,8 @@ public sealed class FireSynergyCombatTests
         Call(simulation, "DamageTarget", victim, 100d, projectile, null);
         Call(simulation, "ResolvePendingSynergies");
         var fields = (System.Collections.IList)typeof(RunSimulation).GetField("burningGrounds", Private)!.GetValue(simulation)!;
+        Assert.AreEqual(fields.Count, simulation.CreateSnapshot().BurningGroundCount);
+        Assert.IsTrue(simulation.CreateSnapshot().EssenceBursts.Count >= fields.Count);
         var field = fields.Count > 0 ? fields[0] : null;
         var radius = field is null ? 0 : (double)field.GetType().GetProperty("EffectiveRadius")!.GetValue(field)!;
         var duration = field is null ? 0 : (double)field.GetType().GetProperty("RemainingSeconds")!.GetValue(field)!;

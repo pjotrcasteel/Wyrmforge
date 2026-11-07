@@ -84,10 +84,10 @@ public sealed class ProgressionV13Tests : BrowserTest
             window.progressionEvidence ??= { sawProjectile: false, sawField: false, samples: [] };
             const evidence = window.progressionEvidence;
             evidence.sawProjectile ||= diagnostics?.projectiles?.length > 0;
-            evidence.sawField ||= diagnostics?.burningGrounds?.length > 0;
+            evidence.sawField ||= diagnostics?.burningGroundCount > 0;
             if (diagnostics?.hud?.seconds > (evidence.samples.at(-1)?.seconds ?? -1)) {
                 evidence.samples.push({ seconds: diagnostics.hud.seconds, health: diagnostics.hud.health,
-                    dragonHealth: diagnostics.dragon?.health, fields: diagnostics.burningGrounds.length,
+                    dragonHealth: diagnostics.dragon?.health, fields: diagnostics.burningGroundCount,
                     projectiles: diagnostics.projectiles.length, performance: diagnostics.performance });
             }
             return diagnostics?.hud?.seconds >= 25 || diagnostics?.ended;
@@ -126,7 +126,7 @@ public sealed class ProgressionV13Tests : BrowserTest
         await page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('.hunt-lab-canvas');
             const diagnostics = window.progressionRuntime.readArenaDiagnostics(canvas);
-            return diagnostics?.burningGrounds?.length > 0;
+            return diagnostics?.burningGroundCount > 0;
         }", null, new() { Timeout = 120000 });
         await page.GetByRole(AriaRole.Button, new() { Name = "Ⅱ Pause", Exact = true }).ClickAsync();
         await Capture(page, "combat-390-solar-wake-triggered-practice");
