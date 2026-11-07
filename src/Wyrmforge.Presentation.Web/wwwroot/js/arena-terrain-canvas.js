@@ -11,6 +11,7 @@ if (ART !== TERRAIN_ART_SCALE) throw new Error('Terrain tiles and the terrain ca
 import { drawGroundDecals } from './arena-ground-decals.js';
 import { cellShadow, shadowStyle, SHADOW_SAMPLES } from './arena-terrain-shadows.js';
 import { forestKit } from './forest-kit.js';
+import { layerLabEnabled } from './arena-layer-lab.js';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4, Boulder: 5 });
 const isUprightProp = material => material === TERRAIN_MATERIAL.Wood || material === TERRAIN_MATERIAL.Boulder;
@@ -361,6 +362,7 @@ function neighbourHeights(frame, column, row, microX, microY, own) {
 }
 
 function microDepthCues(ctx, frame, column, row, microX, microY, height, x, y) {
+    if (!layerLabEnabled('bakedShadows')) return 0;
     const { north, south } = neighbourHeights(frame, column, row, microX, microY, height);
     let painted = 0;
     const step = shadowStep(north - height);
@@ -371,6 +373,7 @@ function microDepthCues(ctx, frame, column, row, microX, microY, height, x, y) {
 
 /** Whole columns get the same cues as 4 px bands across their top face, grouped into runs of equal steps. */
 function wholeDepthCues(ctx, frame, column, row, height, top) {
+    if (!layerLabEnabled('bakedShadows')) return 0;
     let painted = 0;
     for (let microX = 0; microX < MICRO_PER_COLUMN;) {
         const { north } = neighbourHeights(frame, column, row, microX, 0, height);
@@ -741,6 +744,7 @@ function steppedEllipse(ctx, cx, cy, rx, ry, color) {
  * standing on it. Cosmetic and baked into the terrain; the upright sprite carries the trunk and adds its own contact shadow.
  */
 function drawTrunkFoot(ctx, column, row, top) {
+    if (!layerLabEnabled('decals')) return 0;
     const cx = top.x + FACE_PIXELS / 2, cy = top.y + 9;
     steppedEllipse(ctx, cx, cy, 14, 6, 'rgba(10,6,8,.14)');
     steppedEllipse(ctx, cx, cy, 10, 4.5, 'rgba(10,6,8,.3)');
@@ -771,6 +775,7 @@ const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.2)', dirtUpper: 'rgba(6,4,8
  * continuously down the wall. `sx`/`width` pick the slice of the block in world units; `column` places it inside the wrapping texture.
  */
 function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, column) {
+    if (!layerLabEnabled('faces')) return 0;
     let painted = 0;
     const wallTop = segments.length ? segments[0].from : 0;
     const source = texX(column) + sx * ART;
@@ -815,6 +820,7 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
 
 /** Paints the stepped moon shadow of a whole column's top face (`levels` from cellShadow) as horizontal runs of 2-unit samples. */
 function paintShadow(ctx, levels, x, y) {
+    if (!layerLabEnabled('bakedShadows')) return 0;
     if (!levels) return 0;
     let painted = 0;
     for (let sy = 0; sy < SHADOW_SAMPLES; sy++) {
@@ -832,6 +838,13 @@ function paintShadow(ctx, levels, x, y) {
 
 /** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
 function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
+    // Diagnostic only: compare the same site with authoritative excavation visually hidden.
+    // The C# terrain, collisions, impact events and enemy simulation remain untouched.
+    if (!layerLabEnabled('excavation')) {
+        const base = { ...frame, fine: null, surface: frame.baseSurface ?? frame.surface,
+            material: frame.baseMaterial ?? frame.material };
+        return paintTerrainCell(ctx, base, band, column, row, grain);
+    }
     const { columns, rows } = frame;
     const atlas = grain ? terrainAtlas(band) : null;
     const shade = atlas ? cellShadow(frame, column, row, block.heights) : null;
@@ -877,7 +890,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const tint = heightTint(coarseHeight);
             if (tint) { ctx.fillStyle = tint; ctx.fillRect(originalTop.x, originalTop.y, originalTop.width, originalTop.height); painted++; }
             if (baseKind !== 'lavaTop') {
-                painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, originalTop);
+                if (layerLabEnabled('decals')) painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, originalTop);
                 painted += paintShadow(ctx, cellShadow(frame, column, row, coarseHeight), originalTop.x, originalTop.y);
             }
             painted += wholeDepthCues(ctx, frame, column, row, coarseHeight, originalTop);
@@ -923,6 +936,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                 painted++;
             }
             if (!unchangedTop) painted += microDepthCues(ctx, frame, column, row, microX, microY, height, x, y - height * MICROCELL_UNITS);
+            if (!layerLabEnabled('faces')) continue;
             const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
@@ -995,7 +1009,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
         if (tileKind !== 'lavaTop') {
-            painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
+            if (layerLabEnabled('decals')) painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
             painted += paintShadow(ctx, cellShadow(frame, column, row, height), top.x, top.y);
         }
         if (material[index] === TERRAIN_MATERIAL.Wood) painted += drawTrunkFoot(ctx, column, row, top);
@@ -1005,6 +1019,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         if (grain) painted += paintGrain(ctx, band, material[index], height, column, row, top, baseColor);
     }
     painted += wholeDepthCues(ctx, frame, column, row, height, top);
+    if (!layerLabEnabled('faces')) return painted;
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;
     // A whole column standing behind a subdivided one meets its microcolumns, not their average.
     if (row + 1 < rows && frame.fine?.has(index + columns)) {
