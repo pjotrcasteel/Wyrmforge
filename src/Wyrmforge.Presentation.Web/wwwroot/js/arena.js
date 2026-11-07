@@ -12,7 +12,7 @@ import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js';
+import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot, selectHuntGpuWorld } from './arena-layer-lab.js';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
@@ -446,7 +446,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const greybox = Boolean(snapshot.environment?.greybox);
-    let gpu = snapshot.lighting && state.gpuWorld && layerLabEnabled('gpu');
+    let gpu = selectHuntGpuWorld(snapshot.lighting, state.gpuWorld);
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
     // Retain it only as a diagnostic A/B switch; the default draws synchronously
