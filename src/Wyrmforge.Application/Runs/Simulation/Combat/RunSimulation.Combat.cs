@@ -1,3 +1,4 @@
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
@@ -197,17 +198,30 @@ public sealed partial class RunSimulation
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
                 if (defeatedEnemy.Revived) break;
-                // Normal Fire-region foes occasionally leave physical minor crafting loot.
-                // The enemy id is stable: this does not perturb the combat spawn/random stream.
-                if (mapState.EncounterActive && defeatedEnemy.Kind is EnemyKind.Ashling or EnemyKind.AshSlinger &&
-                    defeatedEnemy.Id % 3 == 0)
-                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "EmberResidue");
-                // Elites carry Rare salvage only where the Hunt tier allows Rare drops (Fire Tier 2 and up).
-                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Rare))
-                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "Emberglass");
-                // From Fire Tier 3 an elite also carries Epic Wyrmcinder; the watchtower shows which roads hide one.
-                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Epic))
-                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position + new Vector2D(14, 6), arenaWidth, arenaHeight, "Wyrmcinder");
+                if (mapState.EncounterActive && arenaEnvironment is { } environment)
+                {
+                    var loot = HuntLootCatalog.For(SelectedHunt);
+                    var lootSource = defeatedEnemy.Kind switch
+                    {
+                        EnemyKind.Ashling => HuntLootSource.Ashling,
+                        EnemyKind.AshSlinger => HuntLootSource.AshSlinger,
+                        _ => (HuntLootSource?)null,
+                    };
+                    if (lootSource is { } ordinarySource)
+                        foreach (var material in loot.MaterialsFor(ordinarySource, defeatedEnemy.Id))
+                            environment.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, material.ToString());
+
+                    if (defeatedEnemy.IsElite)
+                    {
+                        var eliteMaterials = loot.MaterialsFor(HuntLootSource.EliteEnemy, defeatedEnemy.Id);
+                        for (var i = 0; i < eliteMaterials.Count; i++)
+                        {
+                            // Retain the original non-overlapping physical pickups for Tier-III elites.
+                            var position = defeatedEnemy.Position + new Vector2D(i * 14, i * 6);
+                            environment.SpawnMaterialPickup(position, arenaWidth, arenaHeight, eliteMaterials[i].ToString());
+                        }
+                    }
+                }
                 experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();

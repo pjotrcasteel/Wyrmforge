@@ -1,3 +1,4 @@
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Geometry;
@@ -97,7 +98,8 @@ public sealed class ArenaEnvironmentState
     }
 
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
-        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false, double? terrainInfluence = null)
+        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false, double? terrainInfluence = null,
+        HuntSelection? hunt = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -168,13 +170,14 @@ public sealed class ArenaEnvironmentState
         var generated = HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair);
         // Keep the experimental forest ecology in the lab. Only small, visible, breakable
         // salvage props enter ordinary Hunts, without changing existing crossing geometry.
+        var loot = HuntLootCatalog.For(hunt);
         var props = generatorPreview ? generated : generated
             .Where(prop => prop.Kind is "barrel" or "crate")
             .Take(6)
-            .Select(prop => prop with { DropKind = "material:CharredScrap" })
+            .Select(prop => prop with { DropKind = MaterialDropKind(loot, prop.Kind) })
             .ToArray();
         if (!generatorPreview && props.Count == 0)
-            props = [new HuntArenaGenerator.Prop(-1, "barrel", .20, .52, 12, 25, "material:CharredScrap")];
+            props = [new HuntArenaGenerator.Prop(-1, "barrel", .20, .52, 12, 25, MaterialDropKind(loot, "barrel"))];
         foreach (var prop in props)
         {
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
@@ -204,6 +207,19 @@ public sealed class ArenaEnvironmentState
             }
         }
         return environment;
+    }
+
+    private static string? MaterialDropKind(HuntLootTable loot, string propKind)
+    {
+        var source = propKind switch
+        {
+            "barrel" => HuntLootSource.Barrel,
+            "crate" => HuntLootSource.Crate,
+            _ => (HuntLootSource?)null,
+        };
+        if (source is null) return null;
+        var materials = loot.MaterialsFor(source.Value);
+        return materials.Count == 0 ? null : $"material:{materials[0]}";
     }
 
     public void SetPhase(EncounterPhase current)
