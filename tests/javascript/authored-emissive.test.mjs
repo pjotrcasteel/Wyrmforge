@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, enemyHasEmissivePose, emissionIntensity,
+    injectAuthoredSet, setAuthoredRenderMode, drawGrounded, drawAuthoredCorpses, authoredCorpseVisible,
+    hasEmissive, enemyHasEmissivePose, emissionIntensity,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 
 const recorder = () => {
@@ -74,6 +75,34 @@ test('Fire enemy glow manifests only target real actions and do not constrain fu
         assert.ok((manifest.emissive ?? []).every(action => actions.has(action)),
             `${name}: newly added glow strips must name real actions so the conditional GPU upload remains correct`);
     }
+});
+
+test('offscreen authored corpses remain alive but do not render their sprite and ground shadows', () => {
+    const corpseSet = set(false);
+    corpseSet.manifest.actions.death = { framesPerDirection: 2, durationsMs: [150, 500] };
+    corpseSet.strips.set('death', { albedo: 'death' });
+    injectAuthoredSet('Test-Corpse-Cull', corpseSet);
+    const near = { name: 'Test-Corpse-Cull', x: 200, y: 200, direction: 'S', started: 0 };
+    const far = { ...near, x: 4000, y: 4000 };
+    const state = { clock: .3, corpses: new Map([[1, near], [2, far]]) };
+    const view = { x: 0, y: 0, width: 390, height: 844 };
+    setAuthoredRenderMode('overlay');
+    assert.equal(authoredCorpseVisible(near, corpseSet.manifest, view), true);
+    assert.equal(authoredCorpseVisible(far, corpseSet.manifest, view), false);
+    assert.equal(authoredCorpseVisible({ ...near, x: 390 + 127 }, corpseSet.manifest, view), true,
+        'the larger-than-sprite shadow margin remains visible at the viewport edge');
+    const ctx = recorder();
+    drawAuthoredCorpses(ctx, state, view);
+    assert.equal(images(ctx).length, 2, 'one visible corpse draws only its own shadow and body');
+    assert.equal(state.corpses.size, 2, 'offscreen bodies are not despawned or expired by the drawing path');
+    assert.deepEqual([...state.corpses.values()], [near, far], 'the original corpse states are unchanged');
+    const distantView = { x: 3900, y: 3900, width: 390, height: 844 };
+    const other = recorder();
+    drawAuthoredCorpses(other, state, distantView);
+    assert.equal(images(other).length, 2, 'moving to the former offscreen area renders its corpse again');
+    const legacy = recorder();
+    drawAuthoredCorpses(legacy, state);
+    assert.equal(images(legacy).length, 4, 'unscoped proof callers keep their prior draw-all behaviour');
 });
 
 test('the second forms burn harder and a transformation swells the glow to its peak', () => {

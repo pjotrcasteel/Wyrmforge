@@ -533,10 +533,19 @@ function pendingKind(kind) {
     return authoredPending(name) || (Number(kind) === 7 && authoredPending('Reliquary-awakened')) || (Number(kind) === 9 && authoredPending('Bell-Warden-molten'));
 }
 
-export function drawAuthoredCorpses(ctx, state) {
+/** A corpse cannot affect pixels beyond its authored body, grounding shadow or footprint. Keep a generous art-scaled margin. */
+export function authoredCorpseVisible(corpse, manifest, view) {
+    if (!view) return true;
+    const extent = Math.max(96, ...manifest.canvas.map(dimension => dimension * 1.6));
+    return corpse.x >= view.x - extent && corpse.x <= view.x + view.width + extent &&
+        corpse.y >= view.y - extent && corpse.y <= view.y + view.height + extent;
+}
+
+/** Offscreen bodies retain their state and expiry, but never issue needless Canvas sprite/shadow draws. */
+export function drawAuthoredCorpses(ctx, state, view = null) {
     for (const corpse of state.corpses.values()) {
         const manifest = loaded.get(corpse.name)?.manifest;
-        if (!manifest) continue;
+        if (!manifest || !authoredCorpseVisible(corpse, manifest, view)) continue;
         const pose = corpsePose(state, corpse, manifest);
         drawGrounded(ctx, corpse.name, pose.action, corpse.direction, pose.frame, corpse.x, corpse.y, { alpha: pose.alpha, radius: 11 });
     }
