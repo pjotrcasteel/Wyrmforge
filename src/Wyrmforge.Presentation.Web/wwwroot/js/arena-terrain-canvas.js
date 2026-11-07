@@ -1225,6 +1225,12 @@ export class TerrainCanvasCache {
         this.visualSeed = null;
         this.band = null;
         this.repaints = 0;
+        this.fullRepaints = 0;
+        this.regionalRepaints = 0;
+        this.artKitRepaints = 0;
+        this.unchangedRevisionSkips = 0;
+        this.lastPaintReason = null;
+        this.lastDirtyBlocks = 0;
         this.totalRepaintMs = 0;
         this.maxRepaintMs = 0;
     }
@@ -1248,12 +1254,17 @@ export class TerrainCanvasCache {
             frame.revision >= this.revision) {
             this.revision = frame.revision;
             frame.kindMaps = this.kindMaps;
+            this.unchangedRevisionSkips++;
+            this.lastDirtyBlocks = 0;
+            this.lastPaintReason = 'identical-authoritative-terrain';
             return false;
         }
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS * ART;
         const height = (frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2) * ART;
-        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null || this.visualSeed !== visualSeed || this.kitReady !== kitReady;
+        const kitSwitched = Boolean(this.canvas) && this.kitReady !== kitReady;
+        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height ||
+            this.band !== band || this.revision === null || this.visualSeed !== visualSeed || kitSwitched;
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
         if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
@@ -1280,6 +1291,11 @@ export class TerrainCanvasCache {
         this.band = band;
         this.kitReady = kitReady;
         this.repaints++;
+        if (regional) this.regionalRepaints++;
+        else this.fullRepaints++;
+        if (kitSwitched) this.artKitRepaints++;
+        this.lastDirtyBlocks = frame.changed?.length ?? 0;
+        this.lastPaintReason = kitSwitched ? 'forest-kit-loaded' : regional ? 'voxel-changes' : 'full-terrain-refresh';
         const elapsed = (globalThis.performance?.now() ?? 0) - started;
         this.totalRepaintMs += elapsed;
         this.maxRepaintMs = Math.max(this.maxRepaintMs, elapsed);

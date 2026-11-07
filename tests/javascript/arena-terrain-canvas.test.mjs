@@ -118,6 +118,34 @@ test('the cache repaints only when the revision or influence band changes', () =
     assert.equal(cache.update(null, 0), false);
 });
 
+test('terrain diagnostics report authoritative no-op revisions separately from real local or full repaints', () => {
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const source = { revision: 1, columns: 4, rows: 4, visualSeed: 27, surface: Array(16).fill(0),
+        material: Array(16).fill(0), fine: [] };
+    const initial = mergeTerrainFrame(null, source);
+    assert.equal(cache.update(initial, 0), true);
+    assert.equal(cache.fullRepaints, 1);
+    assert.equal(cache.lastPaintReason, 'full-terrain-refresh');
+    const repeated = mergeTerrainFrame(initial, { ...source, revision: 2 });
+    assert.equal(cache.update(repeated, 0), false);
+    assert.equal(cache.unchangedRevisionSkips, 1);
+    assert.equal(cache.lastPaintReason, 'identical-authoritative-terrain');
+    assert.equal(cache.lastDirtyBlocks, 0);
+    const heights = Array(64).fill(0);
+    heights[3] = -2;
+    const damaged = mergeTerrainFrame(repeated, { ...source, revision: 3,
+        fine: [{ index: 5, heights, topsoil: 0, stoneTop: -8 }] });
+    assert.equal(cache.update(damaged, 0), true);
+    assert.equal(cache.regionalRepaints, 1);
+    assert.equal(cache.lastDirtyBlocks, 1);
+    assert.equal(cache.lastPaintReason, 'voxel-changes');
+    assert.equal(cache.update(damaged, 1), true);
+    assert.equal(cache.fullRepaints, 2);
+    assert.equal(cache.artKitRepaints, 0);
+    assert.equal(cache.repaints, 3);
+});
+
 test('GPU camera captures reuse terrain textures only while pixels and viewport are identical', () => {
     const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
     const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
