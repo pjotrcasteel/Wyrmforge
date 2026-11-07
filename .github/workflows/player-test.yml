@@ -57,7 +57,7 @@ jobs:
       - name: Prepare safe player-test configuration
         env:
           WYRMFORGE_TEST_FEEDBACK_ENDPOINT: ${{ vars.WYRMFORGE_TEST_FEEDBACK_ENDPOINT }}
-          FIREBASE_TEST_PROJECT_ID: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+          FIREBASE_TEST_PROJECT_ID: wyrmforge-player-test
         run: |
           python3 - <<'PY'
           import json
@@ -133,7 +133,7 @@ jobs:
 
       - name: Require owner-supplied test Firebase credentials
         env:
-          PROJECT_ID: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+          PROJECT_ID: wyrmforge-player-test
           SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TEST }}
         run: |
           test -n "$PROJECT_ID" || { echo "::error::Configure FIREBASE_TEST_PROJECT_ID as an Actions variable"; exit 1; }
@@ -143,12 +143,12 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TEST }}
-          projectId: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+          projectId: wyrmforge-player-test
           channelId: live
 
       - name: Smoke-check live test version
         env:
-          PROJECT_ID: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+          PROJECT_ID: wyrmforge-player-test
         run: |
           set -euo pipefail
           base="https://$PROJECT_ID.web.app"
