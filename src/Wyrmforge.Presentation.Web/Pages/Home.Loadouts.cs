@@ -36,8 +36,11 @@ public partial class Home
     {
         selection.SetKnownFireballMutations(fireballCore.Discovered);
         if (loadouts.Apply(index, selection, laboratory, CanSelectOffering, mutationAmplifiers) is not { } result) return null;
-        await SaveArcaneBuildAsync();
-        await TrySetLaboratoryAsync();
+        await BatchHunterSaveAsync(async () =>
+        {
+            await SaveArcaneBuildAsync();
+            await TrySetLaboratoryAsync();
+        });
         // A loadout cannot silently respec a character into another Divine Wyrm lineage.
         var skippedPrimary = result.Primary is { } primary && primary != preferredPrimary;
         selectedOffering = result.Offering;
@@ -59,22 +62,25 @@ public partial class Home
         if (definition.ExistingSignature is not { } signature) return;
         characterSchool = school;
         selection.SetActiveSchool(ArcaneSchoolCatalog.For(school));
-        await SetPreferredPrimaryAsync(signature);
-        await SaveCharacterSchoolAsync();
+        await BatchHunterSaveAsync(async () =>
+        {
+            await SetPreferredPrimaryAsync(signature);
+            await SaveCharacterSchoolAsync();
+        });
     }
 
     private async Task SetPreferredPrimaryAsync(SpellId id)
     {
         if (preferredPrimary == id) return;
         preferredPrimary = id;
-        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, PreferredPrimaryKey, id.ToString()); }
+        try { await WriteHunterSaveAsync(PreferredPrimaryKey, id.ToString()); }
         catch (JSException) { }
     }
 
     private async Task SaveCharacterSchoolAsync()
     {
         if (characterSchool is null) return;
-        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, CharacterSchoolKey, characterSchool.Value.ToString()); }
+        try { await WriteHunterSaveAsync(CharacterSchoolKey, characterSchool.Value.ToString()); }
         catch (JSException) { }
     }
 
@@ -82,9 +88,9 @@ public partial class Home
     {
         try
         {
-            var primary = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, PreferredPrimaryKey);
+            var primary = await ReadHunterSaveAsync(PreferredPrimaryKey);
             preferredPrimary = Enum.TryParse<SpellId>(primary, out var spell) && Enum.IsDefined(spell) ? spell : null;
-            var savedSchool = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, CharacterSchoolKey);
+            var savedSchool = await ReadHunterSaveAsync(CharacterSchoolKey);
             if (Enum.TryParse<DivineArchetype>(savedSchool, out var parsed) && Enum.IsDefined(parsed)
                 && DivineArchetypeCatalog.Get(parsed).ExistingSignature is not null)
             {
@@ -101,7 +107,7 @@ public partial class Home
                 selection.SetActiveSchool(ArcaneSchoolCatalog.For(school));
                 await SetPreferredPrimaryAsync(DivineArchetypeCatalog.Get(school).ExistingSignature!.Value);
             }
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, LoadoutsKey);
+            var stored = await ReadHunterSaveAsync(LoadoutsKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             loadouts.Restore(JsonSerializer.Deserialize<HuntLoadoutSave>(stored));
         }
@@ -113,7 +119,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, LoadoutsKey, JsonSerializer.Serialize(loadouts.ToSave()));
+            await WriteHunterSaveAsync(LoadoutsKey, JsonSerializer.Serialize(loadouts.ToSave()));
         }
         catch (JSException) { }
     }

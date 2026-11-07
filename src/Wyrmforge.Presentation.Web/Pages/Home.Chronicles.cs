@@ -24,9 +24,9 @@ public partial class Home
     {
         try
         {
-            var grants = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, SaveLayout.LegacyGrants);
+            var grants = await ReadHunterSaveAsync(SaveLayout.LegacyGrants);
             if (!string.IsNullOrWhiteSpace(grants)) legacyGrants.Restore(JsonSerializer.Deserialize<string[]>(grants));
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, SaveLayout.Chronicles);
+            var stored = await ReadHunterSaveAsync(SaveLayout.Chronicles);
             if (!string.IsNullOrWhiteSpace(stored)) chronicles.Restore(JsonSerializer.Deserialize<ChronicleRegistrySave>(stored));
         }
         catch (JSException) { }
@@ -41,7 +41,7 @@ public partial class Home
         if (!AdvancedAccess.TryUnlock(legacyGrants, AdvancementFacts)) return;
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, SaveLayout.LegacyGrants,
+            await WriteHunterSaveAsync(SaveLayout.LegacyGrants,
                 JsonSerializer.Serialize(legacyGrants.Save()));
         }
         catch (JSException) { }

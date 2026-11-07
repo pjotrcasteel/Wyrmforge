@@ -1,0 +1,6 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    { "collectionGroup": "hunterBackups", "fieldPath": "payload", "indexes": [] }
+  ]
+}

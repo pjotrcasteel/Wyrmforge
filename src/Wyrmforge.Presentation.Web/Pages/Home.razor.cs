@@ -162,8 +162,11 @@ public partial class Home
         var cost = ForgeMasteryCatalog.Get(id).Cost;
         if (!forgeProgression.Forge(id, essenceVault)) return;
         if (selectedOffering == cost && essenceVault.Count(cost) == 0) selectedOffering = null;
-        await TrySetEssenceVaultAsync();
-        await TrySetForgeMasteryAsync();
+        await BatchHunterSaveAsync(async () =>
+        {
+            await TrySetEssenceVaultAsync();
+            await TrySetForgeMasteryAsync();
+        });
     }
 
     private void SelectAscendant(DragonId? selected) =>
@@ -228,6 +231,17 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        await BatchHunterSaveAsync(() => SettleRunAsync(value));
+        await TryRecordPlaytestFinishAsync(value);
+        if (value.Outcome != RunOutcome.Abandoned && value.Score > 0 && leaderboardModule is not null)
+        {
+            try { await leaderboardModule.InvokeVoidAsync("recordRun", value.Score, AppBuildInfo.Version); }
+            catch (JSException) { }
+        }
+    }
+
+    private async Task SettleRunAsync(RunSummary value)
+    {
         await RecordHuntClearedAsync(value);
         if (value.Outcome is RunOutcome.Defeated or RunOutcome.Extracted) await TryPlayAudioAsync(value.Outcome == RunOutcome.Extracted ? "victory" : "death");
         var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
@@ -280,12 +294,6 @@ public partial class Home
         if (chapterAdvanced) leaderboardOpen = true;
         reviewPromptOutcome = value.Outcome;
         reviewPromptOpen = !reviewPromptMuted;
-        await TryRecordPlaytestFinishAsync(value);
-        if (value.Outcome != RunOutcome.Abandoned && value.Score > 0 && leaderboardModule is not null)
-        {
-            try { await leaderboardModule.InvokeVoidAsync("recordRun", value.Score, AppBuildInfo.Version); }
-            catch (JSException) { }
-        }
         if (tutorialEnded)
         {
             tutorialCinematic = true;
@@ -371,11 +379,11 @@ public partial class Home
     {
         try
         {
-            var saved = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FirstHuntKey);
+            var saved = await ReadHunterSaveAsync(FirstHuntKey);
             if (int.TryParse(saved, out var count))
             {
                 firstHunt.Restore(count);
-                var persistedBuild = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneBuildKey);
+                var persistedBuild = await ReadHunterSaveAsync(ArcaneBuildKey);
                 // Migrated accounts were already playing with all 24 points before Arcane budget persistence existed.
                 if (count >= 2 && string.IsNullOrWhiteSpace(persistedBuild)) selection.RestoreBudget(PassiveTreeCatalog.TotalPoints);
                 return;
@@ -400,7 +408,7 @@ public partial class Home
 
     private async Task PersistFirstHuntAsync()
     {
-        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, FirstHuntKey, firstHunt.CompletedRuns.ToString(CultureInfo.InvariantCulture)); }
+        try { await WriteHunterSaveAsync(FirstHuntKey, firstHunt.CompletedRuns.ToString(CultureInfo.InvariantCulture)); }
         catch (JSException) { }
     }
 
@@ -408,7 +416,7 @@ public partial class Home
     {
         try
         {
-            var saved = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneBuildKey);
+            var saved = await ReadHunterSaveAsync(ArcaneBuildKey);
             if (string.IsNullOrWhiteSpace(saved)) return;
             var state = JsonSerializer.Deserialize<ArcaneBuildSave>(saved);
             if (state is null) return;
@@ -430,7 +438,7 @@ public partial class Home
         {
             var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience, selection.Reserved,
                 mutationAmplifiers.ToSave().ToArray());
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
+            await WriteHunterSaveAsync(ArcaneBuildKey, JsonSerializer.Serialize(state));
         }
         catch (JSException) { }
     }
@@ -508,7 +516,7 @@ public partial class Home
     {
         try
         {
-            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, BestScoreKey);
+            var storedValue = await ReadHunterSaveAsync(BestScoreKey);
             return int.TryParse(storedValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
         }
         catch (JSException) { return 0; }
@@ -518,7 +526,7 @@ public partial class Home
     {
         try
         {
-            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, EssenceVaultKey);
+            var storedValue = await ReadHunterSaveAsync(EssenceVaultKey);
             if (string.IsNullOrWhiteSpace(storedValue)) return;
             var storedEssences = JsonSerializer.Deserialize<string[]>(storedValue);
             if (storedEssences is null) return;
@@ -535,7 +543,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, EssenceGradesKey);
+            var stored = await ReadHunterSaveAsync(EssenceGradesKey);
             if (string.IsNullOrWhiteSpace(stored)) return null;
             var raw = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, int>>>(stored) ?? [];
             var grades = new Dictionary<DragonEssenceId, IReadOnlyDictionary<Wyrmforge.Domain.Progression.Loot.LootRarity, int>>();
@@ -556,7 +564,7 @@ public partial class Home
     {
         try
         {
-            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ForgeProgressionKey);
+            var storedValue = await ReadHunterSaveAsync(ForgeProgressionKey);
             if (string.IsNullOrWhiteSpace(storedValue)) return;
             var storedDiscoveries = JsonSerializer.Deserialize<string[]>(storedValue);
             if (storedDiscoveries is null) return;
@@ -572,7 +580,7 @@ public partial class Home
     {
         try
         {
-            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ForgeMasteryKey);
+            var storedValue = await ReadHunterSaveAsync(ForgeMasteryKey);
             if (string.IsNullOrWhiteSpace(storedValue)) return;
             var storedMasteries = JsonSerializer.Deserialize<string[]>(storedValue);
             if (storedMasteries is null) return;
@@ -588,7 +596,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, SpellMasteryKey);
+            var stored = await ReadHunterSaveAsync(SpellMasteryKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             var saved = JsonSerializer.Deserialize<SpellMasteryEntry[]>(stored);
             if (saved is not null) spellMastery.Restore(saved);
@@ -601,7 +609,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, SpellMasteryKey,
+            await WriteHunterSaveAsync(SpellMasteryKey,
                 JsonSerializer.Serialize(spellMastery.Snapshot()));
         }
         catch (JSException) { }
@@ -611,7 +619,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, GreatHuntKey);
+            var stored = await ReadHunterSaveAsync(GreatHuntKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             var saved = JsonSerializer.Deserialize<GreatHuntEntry[]>(stored);
             if (saved is not null) greatHunt.Restore(saved);
@@ -624,7 +632,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, GreatHuntKey,
+            await WriteHunterSaveAsync(GreatHuntKey,
                 JsonSerializer.Serialize(greatHunt.Snapshot()));
         }
         catch (JSException) { }
@@ -634,7 +642,7 @@ public partial class Home
     {
         try
         {
-            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneCodexKey);
+            var storedValue = await ReadHunterSaveAsync(ArcaneCodexKey);
             if (string.IsNullOrWhiteSpace(storedValue)) return;
             var storedDiscoveries = JsonSerializer.Deserialize<string[]>(storedValue);
             if (storedDiscoveries is null) return;
@@ -650,7 +658,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, HuntMaterialsKey);
+            var stored = await ReadHunterSaveAsync(HuntMaterialsKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             var items = JsonSerializer.Deserialize<string[]>(stored) ?? [];
             huntMaterials.Restore(items.Select(value => Enum.TryParse<HuntMaterialId>(value, out var id)
@@ -664,7 +672,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, HuntMaterialsKey,
+            await WriteHunterSaveAsync(HuntMaterialsKey,
                 JsonSerializer.Serialize(huntMaterials.Items.Select(id => id.ToString()).ToArray()));
         }
         catch (JSException) { }
@@ -675,10 +683,14 @@ public partial class Home
         try
         {
             var storedEssences = essenceVault.SecuredEssences.Select(essence => essence.ToString()).ToArray();
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceVaultKey, JsonSerializer.Serialize(storedEssences));
             var grades = essenceVault.Grades().ToDictionary(pair => pair.Key.ToString(),
                 pair => pair.Value.ToDictionary(grade => grade.Key.ToString(), grade => grade.Value));
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceGradesKey, JsonSerializer.Serialize(grades));
+            var changes = new Dictionary<string, string>
+            {
+                [EssenceVaultKey] = JsonSerializer.Serialize(storedEssences),
+                [EssenceGradesKey] = JsonSerializer.Serialize(grades),
+            };
+            await WriteHunterSaveAsync(changes);
         }
         catch (JSException) { }
     }
@@ -688,7 +700,7 @@ public partial class Home
         try
         {
             var discoveries = forgeProgression.Discovered.Select(discovery => discovery.ToString()).ToArray();
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ForgeProgressionKey, JsonSerializer.Serialize(discoveries));
+            await WriteHunterSaveAsync(ForgeProgressionKey, JsonSerializer.Serialize(discoveries));
         }
         catch (JSException) { }
     }
@@ -698,7 +710,7 @@ public partial class Home
         try
         {
             var masteries = forgeProgression.Forged.Select(mastery => mastery.ToString()).ToArray();
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ForgeMasteryKey, JsonSerializer.Serialize(masteries));
+            await WriteHunterSaveAsync(ForgeMasteryKey, JsonSerializer.Serialize(masteries));
         }
         catch (JSException) { }
     }
@@ -708,14 +720,14 @@ public partial class Home
         try
         {
             var storedDiscoveries = SynergyCatalog.All.Where(synergy => arcaneCodex.Contains(synergy.Id)).Select(synergy => synergy.Id.ToString()).ToArray();
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneCodexKey, JsonSerializer.Serialize(storedDiscoveries));
+            await WriteHunterSaveAsync(ArcaneCodexKey, JsonSerializer.Serialize(storedDiscoveries));
         }
         catch (JSException) { }
     }
 
     private async Task TrySetBestScoreAsync(int value)
     {
-        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, BestScoreKey, value.ToString(CultureInfo.InvariantCulture)); }
+        try { await WriteHunterSaveAsync(BestScoreKey, value.ToString(CultureInfo.InvariantCulture)); }
         catch (JSException) { }
     }
 }

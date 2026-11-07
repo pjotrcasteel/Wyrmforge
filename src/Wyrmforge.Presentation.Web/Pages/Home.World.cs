@@ -59,7 +59,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, SaveLayout.World);
+            var stored = await ReadHunterSaveAsync(SaveLayout.World);
             if (!string.IsNullOrWhiteSpace(stored) && JsonSerializer.Deserialize<WorldSave>(stored) is { } save)
             {
                 world.Restore(save.Discovered);
@@ -86,7 +86,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, SaveLayout.World,
+            await WriteHunterSaveAsync(SaveLayout.World,
                 JsonSerializer.Serialize(new WorldSave(world.Save(), selectedRegion?.Value, clearedHuntTiers.Keys.Order().ToArray(),
                     new SortedDictionary<string, int>(clearedHuntTiers, StringComparer.Ordinal))));
         }

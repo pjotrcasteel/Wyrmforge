@@ -3,9 +3,19 @@
 @using Wyrmforge.Presentation.Web.Features.Playtesting
 @using Wyrmforge.Presentation.Web.Features.Leaderboard
 
+@if (hunterSaveLoadFailed)
+{
+    <p role="alert">Hunter progress could not be loaded. Check browser storage and reload the game.</p>
+}
+else if (hunterSaveFailed)
+{
+    <p role="alert">Hunter progress could not be saved. Keep the game open and retry.</p>
+    <button type="button" @onclick="RetryHunterSaveAsync">Retry Hunter save</button>
+}
+
 @if (!runActive)
 {
-    <ForgeView SkipTitle="@(runNumber > 0)" PlayerName="@playerName" CharacterSchool="@characterSchool" OnChooseSchool="ChooseCharacterSchoolAsync" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" MutationAmplifiers="mutationAmplifiers" OnAssignFireballAmplifier="AssignFireballAmplifierAsync" Vault="essenceVault" Codex="arcaneCodex" Bestiary="bestiary" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback" OnResetCharacter="ResetCharacterAsync"
+    <ForgeView HunterSaveUnavailable="@(hunterSaveFailed || hunterSaveLoadFailed)" SkipTitle="@(runNumber > 0)" PlayerName="@playerName" CharacterSchool="@characterSchool" OnChooseSchool="ChooseCharacterSchoolAsync" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" MutationAmplifiers="mutationAmplifiers" OnAssignFireballAmplifier="AssignFireballAmplifierAsync" Vault="essenceVault" Codex="arcaneCodex" Bestiary="bestiary" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback" OnResetCharacter="ResetCharacterAsync"
         OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" OnStartHunt="StartSelectedHuntAsync" FireClearedTier="@ClearedHuntTier(RegionCatalog.CinderFrontierId)" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneSelectionAsync" Laboratory="laboratory" FireballCore="fireballCore" HuntMaterials="huntMaterials" CraftCinderNeedle="CraftCinderNeedleAsync" UpgradeFireball="UpgradeFireballCoreAsync" EquipFireball="EquipFireballCoreAsync" LaboratoryNotice="@laboratoryNotice" OnDismissLaboratoryNotice="DismissLaboratoryNotice" RunExperiment="RunLaboratoryExperimentAsync" StabilizeMutation="StabilizeLaboratoryMutationAsync" EquipMutation="EquipLaboratoryMutationAsync" Loadouts="loadouts" SaveLoadout="SaveLoadoutAsync" ApplyLoadout="ApplyLoadoutAsync" ClearLoadout="ClearLoadoutAsync" TrackMutation="TrackLaboratoryMutationAsync" StartInLaboratory="openLaboratoryOnReturn" LaboratoryFocus="laboratoryFocus" OnLeaderboard="OpenLeaderboard" OnQuests="OpenQuests" QuestRewards="quests.ReadyCount" RewardCaches="quests.Caches" Hunter="hunter" Region="CurrentRegion" World="world" Advancement="Advancement" RegionAccess="RegionAccess" OnRegionChanged="SelectRegionAsync" />
 }
 else

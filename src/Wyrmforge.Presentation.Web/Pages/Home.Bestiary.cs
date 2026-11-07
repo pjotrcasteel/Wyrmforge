@@ -22,7 +22,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, BestiaryKey);
+            var stored = await ReadHunterSaveAsync(BestiaryKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             bestiary.Restore(JsonSerializer.Deserialize<BestiarySave>(stored));
         }
@@ -35,7 +35,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, BestiaryKey,
+            await WriteHunterSaveAsync(BestiaryKey,
                 JsonSerializer.Serialize(bestiary.Snapshot()));
         }
         catch (JSException) { }

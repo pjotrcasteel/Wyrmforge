@@ -81,9 +81,11 @@ public partial class Home
         var stabilizer = LaboratoryCatalog.Get(id).Stabilizer;
         if (!laboratory.Stabilize(id, essenceVault, consentToConsume: true)) return false;
         if (selectedOffering == stabilizer && essenceVault.Count(stabilizer) == 0) selectedOffering = null;
-        // Save the recipe before the vault: an interrupted write can only leave the player with an extra Essence, never a lost one.
-        await TrySetLaboratoryAsync();
-        await TrySetEssenceVaultAsync();
+        await BatchHunterSaveAsync(async () =>
+        {
+            await TrySetLaboratoryAsync();
+            await TrySetEssenceVaultAsync();
+        });
         return true;
     }
 
@@ -128,7 +130,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, LaboratoryKey);
+            var stored = await ReadHunterSaveAsync(LaboratoryKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             laboratory.Restore(JsonSerializer.Deserialize<LaboratorySave>(stored));
         }
@@ -140,7 +142,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, LaboratoryKey, JsonSerializer.Serialize(laboratory.ToSave()));
+            await WriteHunterSaveAsync(LaboratoryKey, JsonSerializer.Serialize(laboratory.ToSave()));
         }
         catch (JSException) { }
     }
@@ -149,7 +151,7 @@ public partial class Home
     {
         try
         {
-            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FireballCoreKey);
+            var stored = await ReadHunterSaveAsync(FireballCoreKey);
             if (!string.IsNullOrWhiteSpace(stored)) fireballCore.Restore(JsonSerializer.Deserialize<FireballCoreSave>(stored));
         }
         catch (JSException) { }
@@ -161,7 +163,7 @@ public partial class Home
     {
         try
         {
-            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, FireballCoreKey,
+            await WriteHunterSaveAsync(FireballCoreKey,
                 JsonSerializer.Serialize(fireballCore.ToSave()));
         }
         catch (JSException) { }
@@ -171,10 +173,11 @@ public partial class Home
     {
         if (characterSchool != Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer ||
             !fireballCore.CraftCinderNeedle(huntMaterials)) return false;
-        // Save the permanent discovery before the materials, so interrupted writes
-        // never consume the recipe without granting the mutator.
-        await TrySetFireballCoreAsync();
-        await TrySetHuntMaterialsAsync();
+        await BatchHunterSaveAsync(async () =>
+        {
+            await TrySetFireballCoreAsync();
+            await TrySetHuntMaterialsAsync();
+        });
         return true;
     }
 
@@ -182,10 +185,12 @@ public partial class Home
     {
         if (characterSchool != Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer) return false;
         if (!fireballCore.Upgrade(essenceVault, huntMaterials)) return false;
-        // Match existing research saves: never lose resources if interrupted between writes.
-        await TrySetFireballCoreAsync();
-        await TrySetEssenceVaultAsync();
-        await TrySetHuntMaterialsAsync();
+        await BatchHunterSaveAsync(async () =>
+        {
+            await TrySetFireballCoreAsync();
+            await TrySetEssenceVaultAsync();
+            await TrySetHuntMaterialsAsync();
+        });
         return true;
     }
 
