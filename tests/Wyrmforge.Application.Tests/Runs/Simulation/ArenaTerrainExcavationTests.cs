@@ -151,6 +151,17 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
+    public void FireballRanks_ProgressFromAChipToRealExcavationBeforeSocketMutators()
+    {
+        CollectionAssert.AreEqual(new[] { 1, 2, 2, 3, 4 },
+            Enumerable.Range(1, 5).Select(ArenaTerrainMutation.FireballPowerForRank).ToArray());
+        Assert.AreEqual(1, ArenaTerrainMutation.FireballPowerForRank(0));
+        Assert.AreEqual(4, ArenaTerrainMutation.FireballPowerForRank(99));
+        Assert.AreEqual(1, ArenaTerrainMutation.CraterDepthMicrocells(1));
+        Assert.AreEqual(16, ArenaTerrainMutation.CraterDepthMicrocells(5));
+    }
+
+    [TestMethod]
     public void UpgradedFireballs_MakeDeepIrregularCratersInsteadOfPerfectCircularDecals()
     {
         var centre = ArenaTerrainGrid.CenterOf(6, 6);
