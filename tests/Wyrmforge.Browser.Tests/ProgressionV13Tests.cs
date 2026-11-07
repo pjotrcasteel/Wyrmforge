@@ -102,6 +102,37 @@ public sealed class ProgressionV13Tests : BrowserTest
         Assert.IsNull(await page.EvaluateAsync<string?>("localStorage.getItem('wyrmforge.arcaneBuild.v1')"));
     }
 
+    [TestMethod]
+    public async Task RealCombat_SolarWakePractice_ShowsTriggeredField()
+    {
+        var folder = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.GetTempPath();
+        Directory.CreateDirectory(folder);
+        await using var context = await Browser.NewContextAsync(new()
+        {
+            ViewportSize = new() { Width = 390, Height = 844 }, HasTouch = true, IsMobile = true,
+            RecordVideoDir = folder, RecordVideoSize = new() { Width = 390, Height = 844 },
+        });
+        var page = await context.NewPageAsync();
+        var url = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        // Separate, explicitly invulnerable phase-two practice proves the conditional
+        // effect's rendering; the full-damage encounter above remains the threat check.
+        await page.GotoAsync(url.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ascendant=false&phase=2&loadout=fire-evolution&invulnerable=true&seed=1337");
+        await Expect(page.Locator(".hunt-lab-canvas")).ToBeVisibleAsync();
+        await Expect(page.GetByText("DEVELOPER FIXTURE", new() { Exact = false })).ToBeVisibleAsync();
+        await page.EvaluateAsync(@"async () => {
+            const canvas = document.querySelector('.hunt-lab-canvas');
+            window.progressionRuntime = await import(canvas.dataset.arenaModule);
+        }");
+        await page.WaitForFunctionAsync(@"() => {
+            const canvas = document.querySelector('.hunt-lab-canvas');
+            const diagnostics = window.progressionRuntime.readArenaDiagnostics(canvas);
+            return diagnostics?.burningGrounds?.length > 0;
+        }", null, new() { Timeout = 120000 });
+        await page.GetByRole(AriaRole.Button, new() { Name = "Ⅱ Pause", Exact = true }).ClickAsync();
+        await Capture(page, "combat-390-solar-wake-triggered-practice");
+        Assert.IsNull(await page.EvaluateAsync<string?>("localStorage.getItem('wyrmforge.arcaneBuild.v1')"));
+    }
+
     private static async Task Capture(IPage page, string name)
     {
         var folder = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.GetTempPath();
