@@ -19,7 +19,9 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
     /// terrain before and after the first and third additional kill.
     /// </summary>
     [TestMethod]
-    public async Task LiveTrail_ThreeKillsDoNotRetextureUnaffectedRoadOrForest()
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task LiveTrail_ThreeKillsDoNotRetextureUnaffectedRoadOrForest(bool bright)
     {
         const int width = 390, height = 844;
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -33,7 +35,8 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             """);
         var pageErrors = new List<string>();
         Page.PageError += (_, error) => pageErrors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=1204&speed=3&bright=1&perf=1",
+        var lighting = bright ? "&bright=1" : "";
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=1204&speed=3&perf=1" + lighting,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
 
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
@@ -59,19 +62,20 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
                 state?.hunt1Terrain?.snapshotRevision && state?.greyboxLighting === 'shared-gpu');
             """, 90000, "the real Hunt has painted terrain and decoded forest art");
 
-        var baseline = await CaptureAsync("start", output);
+        var mode = bright ? "bright" : "night";
+        var baseline = await CaptureAsync($"{mode}-start", output);
         var initialKills = baseline.GetProperty("kills").GetInt32();
         await ArenaBrowserWait.UntilAsync(Page,
             $"return (state?.hud?.kills ?? 0) >= {initialKills + 1} && " +
             "state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision;",
             120000, "an actual Fireball kill with the updated C# voxel frame");
-        var firstKill = await CaptureAsync("first-kill", output);
+        var firstKill = await CaptureAsync($"{mode}-first-kill", output);
 
         await ArenaBrowserWait.UntilAsync(Page,
             $"return (state?.hud?.kills ?? 0) >= {initialKills + 3} && " +
             "state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision;",
             150000, "three real kills with C# voxel and road updates");
-        var thirdKill = await CaptureAsync("third-kill", output);
+        var thirdKill = await CaptureAsync($"{mode}-third-kill", output);
         Assert.IsEmpty(pageErrors, string.Join(Environment.NewLine, pageErrors));
 
         CompareUnexcavatedSourcePixels(baseline, firstKill);
