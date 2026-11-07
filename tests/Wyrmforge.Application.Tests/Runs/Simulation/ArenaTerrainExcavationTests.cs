@@ -330,6 +330,33 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
+    public void ScriptedAmbushFissures_PreserveRoadButLeaveOffRoadTerrainDestructible()
+    {
+        var grid = FlatSoil(16);
+        var guarded = new bool[grid.Columns * grid.Rows];
+        for (var row = 0; row < grid.Rows; row++) guarded[row * grid.Columns + 8] = true;
+
+        var fissure = new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(8, 8), 1)
+        {
+            FissureReach = 16,
+            FissureSeed = 73
+        };
+        var changes = ArenaTerrainMutation.Apply(grid, fissure, guarded);
+
+        Assert.IsTrue(changes.Any(change => change.Column != 8), "the ambush must still fracture ground beside the road");
+        for (var row = 0; row < grid.Rows; row++)
+        {
+            Assert.AreEqual(0, grid.Surface(8, row), $"the authored road at row {row} must remain level");
+            Assert.IsFalse(grid.IsSubdivided(8, row), $"the scripted fissure must not subdivide road at row {row}");
+        }
+
+        var shot = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, ArenaTerrainGrid.CenterOf(8, 8), 1), guarded);
+        Assert.IsTrue(shot.Any(change => change.Column == 8), "direct Fireballs must still damage protected road safely");
+        Assert.IsTrue(grid.IsSubdivided(8, 8));
+        Assert.IsGreaterThanOrEqualTo(ArenaTerrainMutation.RouteFloorMicrocells, grid.Surface(8, 8));
+    }
+
+    [TestMethod]
     public void Revert_RestoresEveryColumnExactly()
     {
         var grid = FlatSoil();
