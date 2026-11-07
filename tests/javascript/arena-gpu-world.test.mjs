@@ -21,6 +21,27 @@ test('terrain albedo and normal maps share a stable capture revision; animated e
     assert.equal(captures[0][8].revision, undefined);
 });
 
+test('buffered ground textures keep their world footprint while the camera moves', () => {
+    const uploads = [], captures = [];
+    const world = { used: new Set(), dirtyTextures: new Set(), engine: {},
+        uploadLayer(...args) { uploads.push(args); }, capture(...args) { captures.push(args); } };
+    const ground = { source: {}, scale: 2, revision: 'same-buffered-pixels',
+        view: { x: -16, y: 48, width: 416, height: 664 } };
+    const ctx = { canvas: {} };
+    for (const camera of [{ x: 31.25, y: 73.5 }, { x: 63.99, y: 127.99 }]) {
+        uploads.length = 0;
+        captures.length = 0;
+        HuntGpuWorld.prototype.begin.call(world, ctx, camera, 320, 568, {}, {}, ground);
+        assert.equal(uploads[0][2], ground.view.width, 'emissive covers the full buffered ground');
+        assert.equal(uploads[1][3], ground.view.height, 'normal map matches the buffered geometry');
+        assert.equal(captures[0][4], ground.view.width);
+        assert.equal(captures[0][5], ground.view.height);
+        assert.equal(captures[0][2], ground.view.x - camera.x);
+        assert.equal(captures[0][3], ground.view.y - camera.y);
+        assert.equal(captures[0][8].revision, ground.revision, 'same capture uses the same GPU revision');
+    }
+});
+
 test('Hunt lights track camera with the same world scale and handedness as receivers', () => {
     const frame = { version: 1, time: 2, environment: { ambient: 0 }, lights: [{
         id: 'source', position: [144, 240, 24], direction: [1, 2, -1], range: 144,
