@@ -120,15 +120,18 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 const evidence = [cache.canvas.toDataURL('image/png')];
                 const context = () => cache.canvas.getContext('2d', { willReadFrequently: true });
                 const locations = [0, 4].map(column => ({
-                    index: (rows - 1) * columns + column,
-                    x: (column * 32 + 3 * 4) * 2,
-                    y: (TERRAIN_PAD_UNITS + (rows - 1) * 32 + 7 * 4) * 2
+                    index: 3 * columns + column,
+                    x: (column * 32 + 4 * 4) * 2,
+                    y: (TERRAIN_PAD_UNITS + 3 * 32 + 4 * 4) * 2
                 }));
                 const patch = (loc, depth) => context().getImageData(loc.x, loc.y + depth * 8, 8, 8).data;
                 const intact = locations.map(location => patch(location, 0));
                 const damaged = depth => locations.map(location => ({
                     index: location.index,
-                    heights: Array.from({ length: 64 }, (_, index) => index === 7 * 8 + 3 ? -depth : 0),
+                    heights: Array.from({ length: 64 }, (_, index) => {
+                        const x = index % 8, y = Math.floor(index / 8);
+                        return x >= 2 && x <= 6 && y >= 2 && y <= 6 ? -depth : 0;
+                    }),
                     topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -8
                 }));
                 let frame = mergeTerrainFrame(null, original);
@@ -148,8 +151,14 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                             a[i + 2] === b[i + 2] && a[i + 3] === b[i + 3]) matched++;
                     return matched;
                 };
-                return locations.map((_, i) => [equalPixels(intact[i], shallow[i]),
-                    equalPixels(intact[i], deep[i])]).flat();
+                const opaquePixels = patch => {
+                    let painted = 0;
+                    for (let i = 3; i < patch.length; i += 4) if (patch[i] === 255) painted++;
+                    return painted;
+                };
+                return [...locations.map((_, i) => [equalPixels(intact[i], shallow[i]),
+                    equalPixels(intact[i], deep[i])]).flat(),
+                    ...intact.map(opaquePixels)];
             }
             """);
 
@@ -165,11 +174,15 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
         }
 
-        Assert.IsGreaterThan(8, matches[0],
+        Assert.IsGreaterThan(55, matches[4],
+            "grass comparison must sample real painted pixels, not transparent bottom padding");
+        Assert.IsGreaterThan(55, matches[5],
+            "road comparison must sample real painted pixels, not transparent bottom padding");
+        Assert.IsGreaterThan(16, matches[0],
             "shallow grass must retain a substantial number of its original exact pixels, even though its top sinks");
         Assert.IsGreaterThan(matches[1], matches[0],
             "one-step shallow grass must resemble its original grass more than a genuinely exposed deep dirt floor");
-        Assert.IsGreaterThan(8, matches[2],
+        Assert.IsGreaterThan(16, matches[2],
             "the road must retain its original fine-grained pixel-art texture after one shallow 12.5cm scratch");
     }
 
