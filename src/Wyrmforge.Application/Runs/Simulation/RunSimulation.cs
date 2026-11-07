@@ -458,7 +458,7 @@ public sealed partial class RunSimulation
             SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
                 elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
                 CreateFieryAreaSnapshots()),
-            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
+            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects(), CreateAshfangGroundFireSnapshots()),
             ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
             BossGlowLightingProjection.Capture(CreateDragonSnapshot(), enemies),
             lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(

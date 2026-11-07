@@ -61,6 +61,9 @@ public sealed class ArenaTerrainGrid
     /// <summary>Seeds purely visual ground variety (which patches are mud, dry grass or rubble); gameplay never reads it.</summary>
     public int VisualSeed { get; private set; }
     public void SetVisualSeed(int seed) => VisualSeed = seed;
+    /// <summary>Separate physical fuel-moisture seed; fire never reads the visual-only grass/mud seed.</summary>
+    public int FireMoistureSeed { get; private set; }
+    public void SetFireMoistureSeed(int seed) => FireMoistureSeed = seed;
     public void SetCracks(IReadOnlyList<int[]> cracks) => Cracks = cracks;
     /// <summary>The road's centre line as x, y pairs in 1/16 cell units (a smooth curve, from the generator); presentation paints the dirt road along it.</summary>
     public IReadOnlyList<int> Road { get; private set; } = [];
@@ -158,7 +161,7 @@ public sealed class ArenaTerrainGrid
 
     public ArenaTerrainGrid Clone()
     {
-        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks, VisualSeed = VisualSeed, Road = Road, Torches = Torches };
+        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks, VisualSeed = VisualSeed, FireMoistureSeed = FireMoistureSeed, Road = Road, Torches = Torches };
         surface.CopyTo(copy.surface, 0);
         stoneTop.CopyTo(copy.stoneTop, 0);
         materials.CopyTo(copy.materials, 0);
