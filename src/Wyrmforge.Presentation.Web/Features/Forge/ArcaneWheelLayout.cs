@@ -26,7 +26,7 @@ internal static class ArcaneWheelLayout
     private static readonly IReadOnlyDictionary<string, (double Side, double Radius)> Landmarks =
         new Dictionary<string, (double, double)>
         {
-            ["fire-cinder-thread"] = (-220, 650),
+            ["fire-cinder-thread"] = (-300, 600),
             ["fire-ember-memory"] = (-380, 700),
             ["fire-crucible"] = (-550, 800),
             ["fire-ember-covenant"] = (-670, 1000),

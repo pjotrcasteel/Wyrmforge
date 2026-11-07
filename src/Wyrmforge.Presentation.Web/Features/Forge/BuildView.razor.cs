@@ -338,7 +338,6 @@ public partial class BuildView : IAsyncDisposable
         refundWarningAccepted = true;
         if (reset) await Reset();
         else if (id is not null && Selection.Remove(id)) await OnSelectionChanged.InvokeAsync();
-        refundWarningAccepted = false;
     }
 
     public async ValueTask DisposeAsync()
