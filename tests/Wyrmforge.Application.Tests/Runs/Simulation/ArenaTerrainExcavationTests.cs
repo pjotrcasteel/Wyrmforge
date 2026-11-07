@@ -334,7 +334,10 @@ public sealed class ArenaTerrainExcavationTests
     {
         var grid = FlatSoil(16);
         var guarded = new bool[grid.Columns * grid.Rows];
-        for (var row = 0; row < grid.Rows; row++) guarded[row * grid.Columns + 8] = true;
+        for (var row = 0; row < grid.Rows; row++)
+        {
+            guarded[row * grid.Columns + 8] = true;
+        }
 
         var fissure = new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(8, 8), 1)
         {
