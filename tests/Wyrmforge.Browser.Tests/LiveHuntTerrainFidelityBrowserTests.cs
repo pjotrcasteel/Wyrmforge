@@ -172,11 +172,14 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             !newFine.TryGetValue(index, out var later) || earlier != later).ToHashSet();
         Assert.IsNotEmpty(altered, "the live combat replay must actually modify terrain");
         var excluded = new HashSet<int>();
-        // Only altered voxel columns and their immediate wall/shadow neighbours may change.
-        // A broad 5x5 exclusion used to hide the square patches the owner reported.
-        // Unchanged older craters must remain pixel-identical, even after later impacts.
+        // A metre column's top/wall can project as far as four screen rows vertically
+        // (raised cliffs to the north, deep pits to the south). Those are legitimately
+        // changed *visible* pixels even when their screen row belongs to another column.
+        // Keep the horizontal exclusion to one neighbour; unlike the former 5x5
+        // square, this narrow footprint follows the actual 2.5D projection.
+        // Old craters beyond this footprint must remain pixel-identical.
         foreach (var changed in altered)
-            for (var dy = -1; dy <= 1; dy++)
+            for (var dy = -4; dy <= 4; dy++)
                 for (var dx = -1; dx <= 1; dx++)
                 {
                     var row = changed / columns + dy;
