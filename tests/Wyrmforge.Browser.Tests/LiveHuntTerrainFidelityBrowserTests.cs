@@ -33,7 +33,7 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             """);
         var pageErrors = new List<string>();
         Page.PageError += (_, error) => pageErrors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=1204&speed=10&bright=1&perf=1",
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=1204&speed=3&bright=1&perf=1",
             new() { WaitUntil = WaitUntilState.NetworkIdle });
 
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
