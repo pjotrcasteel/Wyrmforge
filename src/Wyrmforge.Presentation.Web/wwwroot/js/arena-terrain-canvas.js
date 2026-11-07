@@ -284,7 +284,8 @@ export function mergeTerrainFrame(previous, incoming) {
         // A reliable visual delta: retransmitted but identical heights/stone wear must never redraw or reupload
         // distant undamaged terrain. A new site always repaints fully regardless of this list.
         changed: [...changed],
-        visualDeltaComplete: Boolean(sameSite),
+        // Road edits require a whole-site resplat, not a local dirty clip.
+        visualDeltaComplete: Boolean(sameSite && (!incoming.road?.length || terrainArrayEqual(incoming.road, previous.road))),
         // The generated crack network travels once, with the first full load; so do the road (1/16 cell polyline) and the torches.
         cracks: incoming.cracks?.length ? incoming.cracks : previous?.cracks ?? [],
         road: incoming.road?.length ? incoming.road : previous?.road ?? [],
@@ -1262,7 +1263,8 @@ export class TerrainCanvasCache {
         baseCtx.setTransform(ART, 0, 0, ART, 0, 0);
         if (this.withNormals) this.normalCanvas.getContext('2d').setTransform(ART, 0, 0, ART, 0, 0);
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
-        const regions = !full && Array.isArray(frame.changed) ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
+        const regions = !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
+            ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
         const regional = regions.length > 0;
         // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
