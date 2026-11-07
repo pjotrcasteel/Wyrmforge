@@ -27,8 +27,8 @@ test('enabled layer lab independently isolates named layers and resets without a
         globalThis.location = { search: '?layerLab=1' };
         const lab = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-layer-lab.js?enabled-unit');
         assert.equal(lab.layerLabSnapshot().active, true);
-        assert.equal(lab.LAYER_OPTIONS.length, 12);
-        assert.equal(new Set(lab.LAYER_OPTIONS.map(option => option[0])).size, 12);
+        assert.equal(lab.LAYER_OPTIONS.length, 13);
+        assert.equal(new Set(lab.LAYER_OPTIONS.map(option => option[0])).size, 13);
         const generation = lab.layerLabGeneration();
         lab.setLayerLabEnabled('excavation', false);
         lab.setLayerLabEnabled('normals', false);
