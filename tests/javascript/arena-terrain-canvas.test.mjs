@@ -308,6 +308,9 @@ test('the original road stays a continuous fine-grained path rather than a chain
     }
     assert.ok(new Set(leftEdges).size >= 5, 'road edges vary smoothly at art-pixel resolution');
     assert.ok(leftEdges.some(x => x % 64 !== 0), 'road edges must not snap to whole 1m voxel boundaries');
+    const largestStep = Math.max(...leftEdges.slice(1).map((x, i) => Math.abs(x - leftEdges[i])));
+    assert.ok(largestStep <= 12,
+        `road edges must flow smoothly, not jump in 32px block-sized steps (measured ${largestStep}px)`);
 
     const chipped = Array(64).fill(0);
     chipped[18] = -2;
