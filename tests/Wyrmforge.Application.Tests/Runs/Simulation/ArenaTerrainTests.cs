@@ -353,6 +353,14 @@ public sealed class ArenaTerrainTests
                 }
             }
 
+            for (var i = 0; i + 1 < grid.Torches.Count; i += 2)
+            {
+                var footX = grid.Torches[i] * ArenaTerrainGrid.CellUnits / 16;
+                Assert.IsGreaterThanOrEqualTo(ArenaTerrainGrid.CellUnits * 1.5,
+                    Math.Abs(footX - grid.Columns * ArenaTerrainGrid.CellUnits / 2),
+                    $"seed {seed}: solid posts must leave the central exit/entry passage clear");
+            }
+
             Assert.IsTrue(grid.IsReachable(recipe.Spawn, recipe.Exit, PlayerRadius), $"seed {seed}: protect route from torch collision");
         }
     }
