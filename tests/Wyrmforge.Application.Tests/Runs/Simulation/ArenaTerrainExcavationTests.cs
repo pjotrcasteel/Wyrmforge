@@ -360,6 +360,26 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
+    public void SimultaneousAmbushCracks_KeepTheExitOpenAndReplayOnlyOnce()
+    {
+        var arena = Arena(1204);
+        var hunter = ArenaTerrainGrid.CenterOf(16, 52);
+        var impacts = Enumerable.Range(0, 16).Select(index =>
+        {
+            var angle = index * Math.PI * 2 / 16;
+            var position = hunter + new Vector2D(Math.Cos(angle) * 200, Math.Sin(angle) * 200);
+            return new ArenaTerrainImpact(index + 1, position, 1) { FissureReach = 16, FissureSeed = index + 100 };
+        }).ToArray();
+        var changes = arena.ApplyTerrainImpacts(impacts, hunter, 12, Width, Height);
+        Assert.IsGreaterThan(0, changes.Count);
+        var exit = ArenaTerrainGrid.ColumnOf(new Vector2D(Width / 2, Math.Max(80, Height * .11)));
+        Assert.IsTrue(arena.Terrain!.IsReachable(ArenaTerrainGrid.ColumnOf(hunter), exit, 12));
+        var revision = arena.Terrain.Revision;
+        Assert.AreEqual(0, arena.ApplyTerrainImpacts(impacts, hunter, 12, Width, Height).Count);
+        Assert.AreEqual(revision, arena.Terrain.Revision, "replayed eruption must not repaint untouched voxels");
+    }
+
+    [TestMethod]
     public void ThousandsOfImpacts_NeverCutTheHunterOffFromTheExit()
     {
         for (var seed = 0; seed < 12; seed++)

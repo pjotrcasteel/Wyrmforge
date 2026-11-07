@@ -111,7 +111,7 @@ public partial class ArenaView : IAsyncDisposable
         var lighting01 = query.Any(value => string.Equals(value, "lighting01=1", StringComparison.OrdinalIgnoreCase)) &&
             query.Any(value => string.Equals(value, "arenaGpu=1", StringComparison.OrdinalIgnoreCase));
         // Historical AR/GPU/material proof URLs keep their original scene for regression analysis.
-        // Ordinary unparameterized Hunts now use the neutral one-metre greybox.
+        // The Hunt 1.0 terrain is the normal arena; hunt1=0 retains the old greybox for diagnostics.
         var legacyArenaReview = geographyPreview || query.Any(value =>
             value.StartsWith("arenaTerrain=", StringComparison.OrdinalIgnoreCase) ||
             value.StartsWith("arenaGpu=", StringComparison.OrdinalIgnoreCase) ||
@@ -122,13 +122,21 @@ public partial class ArenaView : IAsyncDisposable
             ?.Split('=', 2).Last();
         previewMountainMonastery = geographyPreview && requestedSite == "mountain-monastery";
         var seedKind = previewMountainMonastery ? "mountain-pass" : requestedSite;
+        // Repeatable CI walks use a fixed terrain layout; normal Hunts retain their generated seed.
+        var testSeed = query.Any(value => string.Equals(value, "bot=road", StringComparison.OrdinalIgnoreCase)) &&
+            query.Any(value => string.Equals(value, "god=1", StringComparison.OrdinalIgnoreCase))
+            ? query.Select(value => value.StartsWith("testSeed=", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(value[9..], out var parsed) ? (int?)parsed : null).FirstOrDefault(value => value is not null)
+            : null;
         var previewSeed = geographyPreview && seedKind is "forest-fork" or "mountain-pass"
             ? FindWorldSiteReviewSeed(seedKind)
-            : RunSeed;
+            : RunSeed ?? testSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();
-        if (query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase)))
+        var terrainRequested = query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase));
+        var terrainDisabled = query.Any(value => string.Equals(value, "hunt1=0", StringComparison.OrdinalIgnoreCase));
+        if (!terrainDisabled && (!legacyArenaReview || terrainRequested))
             simulation.EnableHunt1Terrain(query.Select(value => value.StartsWith("influence=", StringComparison.OrdinalIgnoreCase)
                 && double.TryParse(value[10..], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed : (double?)null).FirstOrDefault(value => value is not null));
         debugGod = query.Any(value => string.Equals(value, "god=1", StringComparison.OrdinalIgnoreCase));

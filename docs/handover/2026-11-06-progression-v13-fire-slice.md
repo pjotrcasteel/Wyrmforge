@@ -18,13 +18,17 @@ Authority: owner design v1.3, Library libfile_24b6faecc30081918a63b181f0744045, 
 
 ## Verification and evidence
 
-- Local full Domain suite: 417 passed, including after graph indexing.
+- CI at 52ff279: full Domain 417 passed, full Application 863 passed, web publish passed: https://github.com/pjotrcasteel/Wyrmforge/actions/runs/42275917206
+- Combined latest-main reconciliation still requires fresh CI.
 - Full JavaScript suite: 779 passed; Solar Wake glyph mapping and reward-pool signature regressions fixed.
 - Local focused Application suite: 60 passed (Nexus, temporary breakthroughs, milestones, cohorts, development encounter isolation/determinism).
 - Web and browser-test builds passed. Full Application suite is not claimed locally; use CI.
 - Both Chromium and WebKit passed all four mobile tests at e7124e42a463bd9bf07b474b35ad86c3e48cafeb: https://github.com/pjotrcasteel/Wyrmforge/actions/runs/42225593129
 - That run contains actual Web screenshots. Its combat wait was later found to accept an asynchronous result at simulation time zero: the initial combat captures are INVALID as gameplay evidence. The corrected capture imports the diagnostics module first, then synchronously polls simulation time, requires an actual projectile, and records fields/performance. Inspect the later run before claiming combat proof. Desktop-emulated mobile results are not physical iOS/Android GPU measurements.
 - Local browser execution is unavailable due sandbox Unix-socket restrictions. Evidence is produced by the real published game in Actions, not generated artwork.
+
+- Corrected native 320/390 Chromium and WebKit evidence passed at 52ff279: https://github.com/pjotrcasteel/Wyrmforge/actions/runs/42275917201. Actual 25-second combat showed casts and boss damage (WebKit 390: Ashfang 1100 to 550 HP; hunter 100 to 16 HP). No Solar Wake field triggered during that capture. A separate labelled invulnerable practice test now waits for a real field, pending CI.
+- Browser smoke failures exposed old level-one socket fixtures, a repeat refund acknowledgement bug and a close node pair. These are corrected; new CI must verify them. Terrain smoke timeouts remain to be reassessed against latest main.
 
 ## Next acceptance work (not complete)
 
@@ -40,4 +44,4 @@ Use original irregular clusters, visible distant commitments and readable tradeo
 
 ## Concurrent work
 
-Keep PR #481's core-economy work and PR #491's aggregate saves/cloud backup independent. This branch uses the same socket-capacity contract names as #481 to make reconciliation easier, without importing its unrelated changes. Terrain/art/AI work remains outside this slice.
+Main now includes #481 core economy/mastery, #490 damageable Hunt proofs and terrain stability updates. Merge reconciliation preserves those changes, the new essence/material recipes and legacy sealed equipment. PR #491 aggregate saves/cloud backup remains independent. No terrain/art/AI implementation is authored by this slice.

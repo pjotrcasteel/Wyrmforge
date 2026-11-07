@@ -44,7 +44,7 @@ public sealed partial class RunSimulation
         var progress = 1 - ambush.TellRemaining / FieldAmbushTellSeconds;
         while (ambush.FissureStage < FissureStageStarts.Length && progress >= FissureStageStarts[ambush.FissureStage])
         {
-            foreach (var (position, _) in ambush.Marks) ApplyTerrainFissure(position, FissureStageReach[ambush.FissureStage]);
+            ApplyTerrainFissures(ambush.Marks.Select(mark => mark.Position), FissureStageReach[ambush.FissureStage]);
             ambush.FissureStage++;
         }
     }
@@ -120,14 +120,17 @@ public sealed partial class RunSimulation
 
     private void SpringFieldAmbush(FieldAmbushRuntime ambush, double width, double height)
     {
+        var emerging = new List<(Vector2D Position, EnemyKind Kind)>();
         foreach (var (position, kind) in ambush.Marks)
         {
             // The hunter may have moved onto a mark: re-validate against where they stand now, and skip a mark with no legal ground left.
             if (arenaEnvironment!.AdjustSpawnPosition(position, player.Position, width, height, EnemyCatalog.Get(kind).Radius) is not { } safe) continue;
-            // The ground gives way a little where each one climbs out; the crater is real terrain, so it shows in collision, cover and the next fireball.
-            if (arenaEnvironment.Terrain is not null) EnemyTerrainBlast(safe, 1);
-            AddEnemyAt(kind, safe, enemyId % 2 == 0 ? CrawlOutPullSeconds : CrawlOutScrambleSeconds);
+            emerging.Add((safe, kind));
         }
+        // All the crawl-out craters are still real voxel damage, but one navigation validation covers the full eruption.
+        EnemyTerrainBlasts(emerging.Select(mark => mark.Position));
+        foreach (var (position, kind) in emerging)
+            AddEnemyAt(kind, position, enemyId % 2 == 0 ? CrawlOutPullSeconds : CrawlOutScrambleSeconds);
         ambush.Marks.Clear();
         // The ordinary director waits for the ring to be fought before it adds more.
         spawnTimer = Math.Max(spawnTimer, FieldAmbushAftermathSeconds);

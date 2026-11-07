@@ -237,7 +237,13 @@ public partial class Home
             value.Depth,
             value.Outcome == RunOutcome.Abandoned,
             value.WyrmMasteryFeats.ToHashSet(),
-            value.SpellLoadout.Select(spell => new MasteryRunSpell(spell.Id, spell.Rank)).ToArray()));
+            value.SpellLoadout.Select(spell => new MasteryRunSpell(spell.Id, spell.Rank)).ToArray())
+        {
+            ActiveSpell = value.ActiveSpell,
+            Extracted = value.Outcome == RunOutcome.Extracted,
+            FireballLevel = value.PreparedFireballLevel,
+            FireballMutations = value.PreparedFireballMutations,
+        });
         newlyUnlockedLineages = mastery.NewlyUnlocked;
         advancedSpellIds = mastery.Progressed;
         if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();

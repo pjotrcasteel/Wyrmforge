@@ -6,8 +6,6 @@ public enum FireballMutationId { MeteorHeart = 1, Detonation = 2, ScorchedEarth 
 
 public sealed record FireballMutationDefinition(FireballMutationId Id, string Name, string Description, DragonEssenceId? ResearchSample, string Symbol, bool Playable = true);
 
-public sealed record FireballUpgradeNeed(DragonEssenceId Material, int Required);
-
 public sealed record FireballCoreSave(int Level, FireballMutationId[]? Discovered, FireballMutationId?[]? Slots);
 
 public static class FireballCoreCatalog
@@ -34,7 +32,8 @@ public static class FireballCoreCatalog
     // Research adds possible mutations; Web investment augments the effects of equipped mutations.
     public static double DamageMultiplier(int level) => 1 + 0.08 * (Math.Clamp(level, 1, 5) - 1);
 
-    // Same capacity schedule as the existing progression draft #481; tunable.
+    // Level 1 is the unmodified signature. Level 5 is the double-socket capstone,
+    // retaining the Nexus's five visible sockets without adding a sixth core level.
     public static int SocketCapacityForLevel(int level) => Math.Clamp(level, 1, 5) switch
     {
         1 => 0,
@@ -53,21 +52,33 @@ public static class FireballCoreCatalog
         _ => throw new ArgumentOutOfRangeException(nameof(index)),
     };
 
-    // Initial recipe tuning, using real secured Ashfang materials. No fictional wallet or resources.
-    public static IReadOnlyList<FireballUpgradeNeed> UpgradeTo(int nextLevel) => nextLevel switch
-    {
-        2 => [new(DragonEssenceId.CinderHeart, 1)],
-        3 => [new(DragonEssenceId.MoltenFang, 1)],
-        4 => [new(DragonEssenceId.CinderHeart, 1), new(DragonEssenceId.AshenWing, 1)],
-        5 => [new(DragonEssenceId.CinderHeart, 1), new(DragonEssenceId.MoltenFang, 1), new(DragonEssenceId.AshenWing, 1)],
-        _ => [],
-    };
+    // Initial pacing: 1/2/3/4 secured Ashfang Essences for Levels 2/3/4/5.
+    // Accept any Ashfang part to avoid random boss parts blocking progression;
+    // consume low-rarity copies first, preserving the rarest for other research.
+    public static int EssenceCountTo(int nextLevel) => nextLevel is >= 2 and <= 5 ? nextLevel - 1 : 0;
 
-    // Rare Tier-II salvage gates the two highest core levels and Epic Tier-III salvage the last; the Essence costs above are unchanged.
+    public static IReadOnlyList<SecuredEssence> SelectUpgradeEssences(DragonEssenceVault vault, int nextLevel)
+    {
+        ArgumentNullException.ThrowIfNull(vault);
+        var allowed = DragonEssenceCatalog.AshfangChoices.Select(choice => choice.Id).ToHashSet();
+        return vault.Entries.Where(essence => allowed.Contains(essence.Id))
+            .OrderBy(essence => essence.Rarity)
+            .ThenBy(essence => essence.Id)
+            .Take(EssenceCountTo(nextLevel))
+            .ToArray();
+    }
+
+    public static DragonEssenceId? FirstUpgradeEssenceChoice(DragonEssenceVault vault) =>
+        SelectUpgradeEssences(vault, 2).FirstOrDefault()?.Id;
+
+    // Level 3 asks players to hunt Ashlings and break props, not just repeat Ashfang.
+    // Level 4 needs elite/refuge Tier-II Rare salvage; Level 5 needs Tier-III Epic salvage.
+    // Legendary ordinary materials belong to future Tier-IV/V content, not inaccessible current recipes.
     public static IReadOnlyList<HuntMaterialNeed> UpgradeMaterialsTo(int nextLevel) => nextLevel switch
     {
-        4 => [new(HuntMaterialId.Emberglass, 1)],
-        5 => [new(HuntMaterialId.Emberglass, 1), new(HuntMaterialId.Wyrmcinder, 1)],
+        3 => [new(HuntMaterialId.EmberResidue, 2), new(HuntMaterialId.CharredScrap, 2)],
+        4 => [new(HuntMaterialId.Emberglass, 1), new(HuntMaterialId.EmberResidue, 3)],
+        5 => [new(HuntMaterialId.Emberglass, 2), new(HuntMaterialId.Wyrmcinder, 1), new(HuntMaterialId.CharredScrap, 4)],
         _ => [],
     };
 }
@@ -83,7 +94,7 @@ public sealed class FireballCoreState
     public IReadOnlyList<FireballMutationId?> Slots => slots.ToArray();
     public IReadOnlyList<FireballMutationId> Equipped => slots.Take(SocketCapacity).OfType<FireballMutationId>().ToArray();
     public bool CanUpgrade(DragonEssenceVault vault, HuntMaterialSatchel materials) =>
-        Level < 5 && FireballCoreCatalog.UpgradeTo(Level + 1).All(need => vault.Count(need.Material) >= need.Required)
+        Level < 5 && FireballCoreCatalog.SelectUpgradeEssences(vault, Level + 1).Count == FireballCoreCatalog.EssenceCountTo(Level + 1)
         && FireballCoreCatalog.UpgradeMaterialsTo(Level + 1).All(need => materials.Count(need.Material) >= need.Required);
 
     public bool DiscoverSecured(IEnumerable<DragonEssenceId> secured)
@@ -126,14 +137,11 @@ public sealed class FireballCoreState
         ArgumentNullException.ThrowIfNull(materials);
         if (!CanUpgrade(vault, materials)) return false;
         var spent = new List<SecuredEssence>();
-        foreach (var need in FireballCoreCatalog.UpgradeTo(Level + 1))
+        foreach (var essence in FireballCoreCatalog.SelectUpgradeEssences(vault, Level + 1))
         {
-            for (var i = 0; i < need.Required; i++)
-            {
-                if (vault.TryConsume(need.Material, out var rarity)) { spent.Add(new SecuredEssence(need.Material, rarity)); continue; }
-                Refund(vault, spent);
-                return false;
-            }
+            if (vault.TryConsume(essence.Id, out var rarity)) { spent.Add(new SecuredEssence(essence.Id, rarity)); continue; }
+            Refund(vault, spent);
+            return false;
         }
         if (!materials.ConsumeRecipe(FireballCoreCatalog.UpgradeMaterialsTo(Level + 1)))
         {
@@ -161,6 +169,8 @@ public sealed class FireballCoreState
         Array.Clear(slots, 0, slots.Length);
         var taken = new HashSet<FireballMutationId>();
         var savedSlots = state.Slots ?? [];
+        // Keep legacy loadouts in sealed slots: older saves could equip at Lv1 and
+        // had one more socket at Lv2-4. They stay dormant, not erased, until unlocked.
         for (var i = 0; i < Math.Min(Level, savedSlots.Length); i++)
         {
             if (savedSlots[i] is not { } id || !discovered.Contains(id) || !taken.Add(id)) continue;

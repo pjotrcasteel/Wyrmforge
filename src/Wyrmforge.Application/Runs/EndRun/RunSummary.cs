@@ -41,6 +41,10 @@ public sealed record RunSummary(
     public IReadOnlyList<DragonId> AscendantDragonIds { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<SpellId> WyrmMasteryFeats { get; init; } = Array.Empty<SpellId>();
     public IReadOnlyList<DragonId> DeepEvolvedWyrmDuels { get; init; } = Array.Empty<DragonId>();
+    /// <summary>The signature actually prepared before combat, not the current post-Hunt Nexus build.</summary>
+    public SpellId? ActiveSpell { get; init; }
+    public int PreparedFireballLevel { get; init; } = 1;
+    public IReadOnlyList<FireballMutationId> PreparedFireballMutations { get; init; } = [];
     public IReadOnlyList<RunSpellSummary> SpellLoadout { get; init; } = Array.Empty<RunSpellSummary>();
     public IReadOnlyList<RunUpgradeSummary> UpgradeLoadout { get; init; } = Array.Empty<RunUpgradeSummary>();
     public IReadOnlyList<RunRelicSummary> RelicLoadout { get; init; } = Array.Empty<RunRelicSummary>();

@@ -23,7 +23,7 @@ public sealed class FireProgressionCohortsTests
             Assert.AreEqual(cohort.Build.SpentPoints,
                 cohort.Build.SelectedNodes.Sum(id => PassiveTreeCatalog.Get(id).Cost));
             Assert.IsTrue(cohort.Build.SelectedNodes.All(id => ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) == PassiveSchool.Fire));
-            Assert.IsLessThanOrEqualTo(cohort.CoreLevel, cohort.EquippedMutations.Count);
+            Assert.IsLessThanOrEqualTo(FireballCoreCatalog.SocketCapacityForLevel(cohort.CoreLevel), cohort.EquippedMutations.Count);
 
             var descriptions = cohort.EquippedMutations
                 .Select(MutationAmplifierCatalog.ForFireball).OfType<MutationEffectDescriptor>().ToArray();

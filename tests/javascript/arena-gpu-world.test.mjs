@@ -2,6 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { huntLightFrame, HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 
+test('terrain albedo and normal maps share a stable capture revision; animated emissive remains live', () => {
+    const uploads = [], captures = [];
+    const world = { used: new Set(), dirtyTextures: new Set(), engine: {},
+        uploadLayer(...args) { uploads.push(args); }, capture(...args) { captures.push(args); } };
+    const terrain = { source: {}, scale: 2, revision: 'painted-3:camera-10:20' };
+    const ctx = { canvas: {} };
+    HuntGpuWorld.prototype.begin.call(world, ctx, { x: 10, y: 20 }, 320, 390, {}, {}, terrain);
+    assert.equal(uploads[0][4], undefined, 'animated emissive has no reuse token');
+    assert.equal(uploads[1][4], terrain.revision, 'normal map uses the fixed camera-window token');
+    assert.equal(captures[0][8].revision, terrain.revision, 'albedo uses exactly the same token');
+    assert.equal(captures[0][8].pixelScale, 2);
+
+    uploads.length = 0;
+    captures.length = 0;
+    HuntGpuWorld.prototype.begin.call(world, ctx, { x: 10, y: 20 }, 320, 390, {}, {}, null);
+    assert.equal(uploads[1][4], undefined, 'legacy dynamic ground remains uncached');
+    assert.equal(captures[0][8].revision, undefined);
+});
+
 test('Hunt lights track camera with the same world scale and handedness as receivers', () => {
     const frame = { version: 1, time: 2, environment: { ambient: 0 }, lights: [{
         id: 'source', position: [144, 240, 24], direction: [1, 2, -1], range: 144,
@@ -199,6 +218,17 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
     assert.throws(invalid, RangeError);
 });
 
+
+test('the north-road gate is a GPU depth layer, so terrain cannot overwrite it', async () => {
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const exit = { x: 512, y: 110, radius: 37 };
+    const gate = huntLayerCapture({ kind: 'exit', exit, locked: true }, null);
+    assert.equal(gate.id, 'hunt-exit:512:110');
+    assert.equal(gate.size, 192);
+    assert.ok(gate.x <= exit.x - 44 && gate.y <= exit.y - 62, 'The authored waystone fits inside its capture.');
+    assert.deepEqual(gate, huntLayerCapture({ kind: 'exit', exit, locked: false }, null),
+        'Opening the same gate must preserve the stable capture identity.');
+});
 
 test('Hollowed and Ashling shadow anchors do not drift south as capture sizes vary', async () => {
     const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');

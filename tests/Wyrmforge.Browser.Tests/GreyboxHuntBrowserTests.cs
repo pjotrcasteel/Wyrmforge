@@ -5,14 +5,50 @@ using System.Text.RegularExpressions;
 
 namespace Wyrmforge.Browser.Tests;
 
-/// <summary>Production Town → Chart → Hunt, with no legacy terrain query or synthetic Arena Lab.</summary>
+/// <summary>Production Town → Chart → Hunt, including default terrain and the diagnostic greybox fallback.</summary>
 [TestClass]
 public sealed class GreyboxHuntBrowserTests : PageTest
 {
+    /// <summary>Fresh browser storage must lead from character creation through the real World Gate into a damageable Fire Hunt.</summary>
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task DefaultHunt_HasFlatOneMetreGreyboxWithEnemiesAndNoTerrain(int width, int height)
+    public async Task FreshSave_CreatesFireMageAndEntersDamageableTierOneHunt(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+
+        // PageTest creates a clean context. Do not seed tutorial completion, a school, a save or debug god/bot flags.
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") }).ClickAsync();
+        await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await ArenaBrowserWait.UntilAsync(Page, "return state?.worldReady === true && state?.hud?.maxHealth > 0 && !state?.renderingFailed;",
+            60000, "a real first Fire Hunt canvas and damageable mage on fresh storage");
+
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"fresh-damageable-fire-hunt-{width}.png"), FullPage = false });
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task DiagnosticGreybox_HasFlatOneMetreGreyboxWithEnemiesAndNoTerrain(int width, int height)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
@@ -25,7 +61,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + "/?hunt1=0", new() { WaitUntil = WaitUntilState.NetworkIdle });
 
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
@@ -87,7 +123,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             return readable >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
-        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"default-greybox-hunt-{width}.png"), FullPage = false });
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"diagnostic-greybox-hunt-{width}.png"), FullPage = false });
     }
 
     /// <summary>Hunt 1.0 H5.1: the opt-in C# heightfield is streamed to the browser and painted under the shared GPU lighting.</summary>
@@ -267,7 +303,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     /// <summary>Hunt 1.0 H0.3: with the debug bot and accelerated time, the first trail clears and the real exit returns to the Chart.</summary>
     [TestMethod]
     [DataRow("")]
-    [DataRow("&hunt1=1")]
+    [DataRow("&hunt1=0")]
     public async Task FirstTrail_IsClearedAndLeftThroughTheRealExitBackToTheChart(string extraQuery)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -294,10 +330,40 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
 
-        // The debug bot kites and then walks to the real exit; the Chart must come back with the trail cleared.
+        // The normal URL now renders terrain and a sealed waystone, while hunt1=0 remains
+        // available to diagnose the old greybox without weakening the exit's clearance rule.
+        var initialState = default(System.Text.Json.JsonElement);
+        for (var attempt = 0; attempt < 24; attempt++)
+        {
+            initialState = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+                async () => {
+                    const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                    const state = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                    return { ready: Boolean(state?.worldReady), terrain: Boolean(state?.hunt1Terrain),
+                        landmark: Boolean(state?.exitLandmark), exitOpen: Boolean(state?.exit) };
+                }
+                """);
+            if (initialState.GetProperty("ready").GetBoolean()) break;
+            await Task.Delay(250);
+        }
+        Assert.IsTrue(initialState.GetProperty("ready").GetBoolean(), "The real Hunt must publish an arena snapshot.");
+        Assert.AreEqual(extraQuery.Length == 0, initialState.GetProperty("terrain").GetBoolean(), "Default Hunts must have terrain, hunt1=0 must not.");
+        Assert.AreEqual(extraQuery.Length == 0, initialState.GetProperty("landmark").GetBoolean(), "The terrain gate must be visible before clearance.");
+        Assert.IsFalse(initialState.GetProperty("exitOpen").GetBoolean(), "The exit must stay sealed during combat.");
+
+        // The bot can walk through the exit and return to the Chart automatically; some builds also present
+        // Continue first. Both are successful transitions, so do not wait for a button after the Chart is back.
         try
         {
-            await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync(new() { Timeout = 150000 });
+            await Page.WaitForFunctionAsync(@"() => {
+                const progress = document.querySelector('.map-run-progress');
+                const chartReturned = progress?.getClientRects().length > 0 && progress.textContent?.includes('1 cleared');
+                const continueVisible = [...document.querySelectorAll('button')].some(button =>
+                    button.textContent?.trim() === 'Continue' && button.getClientRects().length > 0);
+                return chartReturned || continueVisible;
+            }", null, new() { Timeout = 150000 });
+            if (!await Page.Locator(".map-run-progress").IsVisibleAsync())
+                await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync();
             await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 30000 });
         }
         catch
@@ -544,7 +610,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=42&speed=2", new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
         await start.ClickAsync();

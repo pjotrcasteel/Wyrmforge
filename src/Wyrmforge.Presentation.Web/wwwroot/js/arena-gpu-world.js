@@ -302,13 +302,15 @@ export class HuntGpuWorld {
         // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
         if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height, undefined, true, scale);
         // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
-        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, undefined, false, scale);
+        // Static terrain normals share the same immutable camera-window revision as its albedo. Moving lights do not change either.
+        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, ground?.revision, false, scale);
         const material = {
             ...(groundEmissive ? { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } : {}),
             ...(groundNormal ? { normal: GROUND_NORMAL_ID, normalScale: GROUND_NORMAL_SCALE } : {}),
         };
         this.capture('hunt-ground', ground?.source ?? ctx.canvas, 0, 0, width, height, 0, false,
-            { ...(Object.keys(material).length ? { material } : {}), ...(scale !== 1 ? { pixelScale: scale } : {}) });
+            { ...(Object.keys(material).length ? { material } : {}), ...(scale !== 1 ? { pixelScale: scale } : {}),
+                ...(ground?.revision !== undefined ? { revision: ground.revision } : {}) });
     }
     /** Callers may skip repaint only when their explicit visual revision is unchanged. */
     canReuseCapture(id, revision, width, height, pixelScale = 1) {

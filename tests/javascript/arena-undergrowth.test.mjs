@@ -42,3 +42,27 @@ test('the field is cached on the frame and tolerates cells outside it', () => {
     assert.equal(undergrowthAt(frame, -1, 3), 0);
     assert.equal(undergrowthAt(null, 1, 1), 0);
 });
+
+test('excavation never moves the original undergrowth and pebble placement around a hit', () => {
+    const original = make();
+    const beforeCover = Array.from(undergrowthField(original));
+    const beforeStone = stoneChanceAt(original, 4, 41);
+    const damagedMaterial = [...original.material];
+    const damagedSurface = [...original.surface];
+    // A tall cliff column became loose soil at the crater, but the original scene dressing is fixed.
+    damagedMaterial[40 * columns + 4] = 0;
+    damagedSurface[40 * columns + 4] = -12;
+    const excavated = {
+        ...original,
+        material: damagedMaterial,
+        surface: damagedSurface,
+        baseMaterial: [...original.material],
+        baseSurface: [...original.surface],
+        coverField: undefined,
+        rockNear: undefined,
+        roadNear: undefined,
+    };
+    assert.deepEqual(Array.from(undergrowthField(excavated)), beforeCover);
+    assert.equal(stoneChanceAt(excavated, 4, 41), beforeStone);
+    assert.equal(undergrowthAt(excavated, 5, 41), undergrowthAt(original, 5, 41));
+});

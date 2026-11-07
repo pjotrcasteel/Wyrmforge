@@ -38,7 +38,11 @@
             <span class="section-kicker">WYRMFORGED SPELL LINEAGES</span>
             <small>@Masteries.UnlockedCount / @SpellLineageCatalog.All.Count awakened</small>
         </div>
-        <p class="lineage-codex-guide">Master a spell across meaningful hunts, then defeat its Wyrm with the spell at Rank III. The reward is a new evolution branch forever available in future runs.</p>
+        <p class="lineage-codex-guide">
+            Fireball mastery: equip a mutator on Lv.2+, clear at least three trails and extract from four Hunts,
+            then overcome Ascendant or Elder Ashfang using Lv.3+ with two mutators.
+            Other spell lineages retain their legacy rank requirements.
+        </p>
         <div class="codex-grid lineage-codex-grid">
             @foreach (var lineage in SpellLineageCatalog.All)
             {
@@ -54,15 +58,20 @@
                         <small>@lineage.Clue</small>
                         <div class="lineage-codex-progress">
                             <span class="@(progress.MeaningfulRuns >= lineage.RequiredRuns ? "done" : string.Empty)">@(Math.Min(progress.MeaningfulRuns, lineage.RequiredRuns)) / @lineage.RequiredRuns meaningful hunts</span>
-                            <span class="@(progress.WyrmFeat ? "done" : string.Empty)">@(progress.WyrmFeat ? "✓" : "◇") @wyrm.Name with Rank III @spell.Name</span>
+                            <span class="@(progress.WyrmFeat ? "done" : string.Empty)">@(progress.WyrmFeat ? "✓" : "◇") @(lineage.Spell == SpellId.FireBolt
+                                ? "Ascendant/Elder Ashfang • Fireball Lv.3+ and 2 mutators"
+                                : $"{wyrm.Name} with Rank III {spell.Name}")</span>
                         </div>
                         @if (awakened)
                         {
-                            <small class="lineage-reward">AWAKENED • @evolution.Description</small>
+                            <small class="lineage-reward">AWAKENED • @(lineage.Spell == SpellId.FireBolt
+                                ? "Wyrmfire lineage recorded; Great Hunt seal and Ascendant rite may now be earned."
+                                : evolution.Description)</small>
                         }
                         else
                         {
-                            <small class="lineage-reward">REWARD • undiscovered evolution</small>
+                            <small class="lineage-reward">REWARD • @(lineage.Spell == SpellId.FireBolt
+                                ? "Wyrmfire lineage and Great Hunt progress" : "undiscovered evolution")</small>
                         }
                     </div>
                 </article>
@@ -86,9 +95,17 @@
                     <div>
                         <strong>@spell.Name</strong>
                         <small>@spell.Description</small>
-                        <small>Rank III → @string.Join(" / ", evolutions.Select(evolution => evolution.RequiresForgeUnlock && !Progression.UnlocksEvolution(evolution.Id) ? "🔒 Forge blueprint"
-                            : evolution.RequiresMasteryUnlock && !Masteries.Unlocks(evolution.Id) ? "◇ Hidden lineage"
-                            : $"{evolution.Icon} {evolution.Name}"))</small>
+                        @if (spell.Id == SpellId.FireBolt)
+                        {
+                            <small>Fireball Lv.1–5 and equipped mutators grow through the Arcane Nexus; Wyrmfire is earned through Mastery.</small>
+                        }
+                        else
+                        {
+                            <small>Rank III → @string.Join(" / ", evolutions.Select(evolution =>
+                                evolution.RequiresForgeUnlock && !Progression.UnlocksEvolution(evolution.Id) ? "🔒 Forge blueprint"
+                                : evolution.RequiresMasteryUnlock && !Masteries.Unlocks(evolution.Id) ? "◇ Hidden lineage"
+                                : $"{evolution.Icon} {evolution.Name}"))</small>
+                        }
                     </div>
                 </article>
             }

@@ -255,7 +255,8 @@ public sealed partial class RunSimulation
         var towardPlayer = Vector2D.DirectionTo(activeDragon.Position, player.Position);
         var direction = MovementDirection(profile, distance, towardPlayer);
         var speed = activeDragon.Speed * profile.SpeedMultiplier.For(activeDragon.Phase);
-        activeDragon.Position += direction * speed * delta;
+        var proposed = activeDragon.Position + direction * speed * delta;
+        activeDragon.Position = arenaEnvironment is null ? proposed : arenaEnvironment.RestrictMovement(activeDragon.Position, proposed, arenaWidth, arenaHeight, activeDragon.Radius);
     }
 
     private static Vector2D MovementDirection(DragonMovementProfile profile, double distance, Vector2D towardPlayer)
@@ -348,7 +349,11 @@ public sealed partial class RunSimulation
         defeatedDragonIds.Add(definition.Id);
         // Only the Great Hunt Ascendant Rite earns the Crown; a selected Tier-II Hunt against the same Ascendant does not.
         if (ascendantActive && SelectedHunt is null) ascendantVictories.Add(definition.Id);
-        if (GreatHuntDuelQualification.Qualifies(definition, depthState.Depth, build.Spells, build.Evolutions)) deepEvolvedWyrmDuels.Add(definition.Id);
+        var empoweredFireballDuel = GreatHuntDuelQualification.QualifiesFireSignature(definition, SelectedHunt, build.Spells,
+            preparedFireballLevel, preparedFireballMutations);
+        if (empoweredFireballDuel || GreatHuntDuelQualification.Qualifies(definition, depthState.Depth, build.Spells, build.Evolutions))
+            deepEvolvedWyrmDuels.Add(definition.Id);
+        if (empoweredFireballDuel) qualifiedWyrmFeats.Add(SpellId.FireBolt);
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);

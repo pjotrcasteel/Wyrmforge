@@ -35,6 +35,8 @@ public sealed record RunRenderSnapshot(
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }
     public ArenaExitRenderSnapshot? Exit { get; init; }
+    /// <summary>The sealed north-road landmark in terrain arenas; only Exit authorizes passage after clearance.</summary>
+    public ArenaExitRenderSnapshot? ExitLandmark { get; init; }
     /// <summary>Multiple real world-graph exits after clearing an AR1 geographic site.</summary>
     public IReadOnlyList<ArenaExitRenderSnapshot> ExitPorts { get; init; } = [];
     public ArenaWorldRenderSnapshot? World { get; init; }
