@@ -277,7 +277,11 @@ public sealed partial class RunSimulation
 
     private IReadOnlyList<BellShockwaveRenderSnapshot> CreateBellShockwaveSnapshots() => bellShockwaves
         .Select(wave => new BellShockwaveRenderSnapshot(wave.Center.X, wave.Center.Y, wave.Radius, BellSmashRadius, BellShockwaveMaxRadius,
-            Math.Clamp(wave.Elapsed / BellShockwaveDelaySeconds, 0, 1), wave.Expanding))
+            Math.Clamp(wave.Elapsed / BellShockwaveDelaySeconds, 0, 1), wave.Expanding)
+        {
+            AgeSeconds = wave.Elapsed,
+            Z = GroundUnitsAt(wave.Center),
+        })
         .ToArray();
 
     private sealed class BellShockwaveState(Vector2D center)

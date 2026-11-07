@@ -11,4 +11,11 @@ public sealed record BellWardenRenderSnapshot(string Stage, double X, double Y, 
 /// A bell smash's aftermath: the crater (ImpactRadius) holds while the ring charges (Charge 0→1), then the shockwave front rolls out
 /// to the marked outer ring (MaxRadius). Only the front hurts.
 /// </summary>
-public sealed record BellShockwaveRenderSnapshot(double X, double Y, double Radius, double ImpactRadius, double MaxRadius, double Charge, bool Expanding);
+public sealed record BellShockwaveRenderSnapshot(double X, double Y, double Radius, double ImpactRadius, double MaxRadius, double Charge, bool Expanding)
+{
+    /// <summary>Seconds since the authoritative smash occurred; times cosmetic impact frames without repeat triggers.</summary>
+    public double AgeSeconds { get; init; }
+
+    /// <summary>Authoritative ground surface elevation in world units for 2.5D impact projection.</summary>
+    public double Z { get; init; }
+}
