@@ -360,6 +360,37 @@ public sealed class ArenaTerrainTests
     }
 
     [TestMethod]
+    public void Trees_BlockAtTheVisibleTrunkNotAcrossTheEntireTerrainSquare()
+    {
+        var grid = new ArenaTerrainGrid(7, 7);
+        grid.Set(3, 3, 16, ArenaTerrainMaterial.Wood);
+        var trunk = new Vector2D(3.5 * ArenaTerrainGrid.CellUnits, 3.5 * ArenaTerrainGrid.CellUnits - ArenaTerrainGrid.TreeFootRaiseUnits);
+        var clear = new Vector2D(3 * ArenaTerrainGrid.CellUnits + 30, 3 * ArenaTerrainGrid.CellUnits + 30);
+        var approach = new Vector2D(clear.X, 4 * ArenaTerrainGrid.CellUnits + 16);
+
+        Assert.IsFalse(grid.IsStandable(trunk, PlayerRadius), "the physical trunk remains solid");
+        Assert.IsTrue(grid.BlocksMovement(approach, trunk, PlayerRadius), "walking into the trunk is blocked");
+        Assert.IsTrue(grid.IsStandable(clear, PlayerRadius), "the clear corner of the tree's square is traversable");
+        Assert.IsFalse(grid.BlocksMovement(approach, clear, PlayerRadius), "no invisible block extends toward the player");
+        Assert.AreEqual(clear, grid.RestrictMovement(approach, clear, PlayerRadius));
+        Assert.AreEqual(0d, grid.SurfaceMetersAt(clear), "ground beside the trunk is at floor height");
+        Assert.IsGreaterThan(1d, grid.SurfaceMetersAt(trunk)!.Value, "the actual trunk still has world height");
+    }
+
+    [TestMethod]
+    public void Trees_AllowDiagonalNavigationAroundTheirClearBackCorner()
+    {
+        var grid = new ArenaTerrainGrid(7, 7);
+        grid.Set(3, 3, 16, ArenaTerrainMaterial.Wood);
+        var start = ArenaTerrainGrid.CenterOf(2, 3);
+        var destination = ArenaTerrainGrid.CenterOf(3, 4);
+        var cost = grid.DistanceFrom((3, 4), PlayerRadius);
+
+        Assert.IsFalse(grid.BlocksMovement(start, destination, PlayerRadius));
+        Assert.AreEqual(14, cost[3 * grid.Columns + 2], "the corner is walkable without routing through the trunk");
+    }
+
+    [TestMethod]
     public void Movement_StopsAtSheerStepsAndPitsButSlidesAlongThem()
     {
         var grid = new ArenaTerrainGrid(8, 8);
