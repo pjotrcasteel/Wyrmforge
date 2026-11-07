@@ -96,7 +96,7 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
                 const map = module.renderArenaMapOverview(element);
                 if (!map || !state?.hunt1Terrain) throw new Error('No authoritative terrain overview');
                 const image = new Image();
-                image.src = map.png;
+                image.src = map.terrainPng;
                 await image.decode();
                 const canvas = document.createElement('canvas');
                 canvas.width = image.naturalWidth;
@@ -117,7 +117,8 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
                         }
                         hashes.push(hash);
                     }
-                return JSON.stringify({ png: map.png, hashes, columns: map.columns, rows: map.rows,
+                return JSON.stringify({ png: map.png, groundPng: map.terrainPng, hashes,
+                    columns: map.columns, rows: map.rows, fineStates: map.fineStates,
                     kills: state.hud?.kills ?? 0, seconds: state.hud?.seconds ?? 0,
                     seed: map.visualSeed, band: map.band, road: map.road,
                     dug: map.dug, terrain: state.hunt1Terrain });
@@ -126,8 +127,11 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
         using var parsed = JsonDocument.Parse(json);
         var sample = parsed.RootElement.Clone();
         var dataUrl = sample.GetProperty("png").GetString()!;
-        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-ground-{label}.png"),
+        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-overview-{label}.png"),
             Convert.FromBase64String(dataUrl[(dataUrl.IndexOf(',') + 1)..]));
+        var groundUrl = sample.GetProperty("groundPng").GetString()!;
+        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-ground-{label}.png"),
+            Convert.FromBase64String(groundUrl[(groundUrl.IndexOf(',') + 1)..]));
         await File.WriteAllTextAsync(Path.Combine(directory, $"live-ground-{label}.json"),
             JsonSerializer.Serialize(new
             {
@@ -152,13 +156,20 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
         Assert.AreEqual(columns, after.GetProperty("columns").GetInt32());
         Assert.AreEqual(rows, after.GetProperty("rows").GetInt32());
 
-        var dug = new HashSet<int>(before.GetProperty("dug").EnumerateArray().Select(x => x.GetInt32()));
-        dug.UnionWith(after.GetProperty("dug").EnumerateArray().Select(x => x.GetInt32()));
+        var oldFine = before.GetProperty("fineStates").EnumerateArray().ToDictionary(
+            pair => pair[0].GetInt32(), pair => pair[1].GetString());
+        var newFine = after.GetProperty("fineStates").EnumerateArray().ToDictionary(
+            pair => pair[0].GetInt32(), pair => pair[1].GetString());
+        var altered = oldFine.Keys.Union(newFine.Keys).Where(index =>
+            !oldFine.TryGetValue(index, out var earlier) ||
+            !newFine.TryGetValue(index, out var later) || earlier != later).ToHashSet();
+        Assert.IsNotEmpty(altered, "the live combat replay must actually modify terrain");
         var excluded = new HashSet<int>();
-        // Four-block halo includes the existing painter's conservative cliff/front and shadow overdraw.
-        foreach (var changed in dug)
-            for (var dy = -4; dy <= 4; dy++)
-                for (var dx = -4; dx <= 4; dx++)
+        // Two-block halo includes cliff/front overdraw and any neighbouring splat seams.
+        // Unchanged pre-existing craters are NOT excluded. Compare those pixels too.
+        foreach (var changed in altered)
+            for (var dy = -2; dy <= 2; dy++)
+                for (var dx = -2; dx <= 2; dx++)
                 {
                     var row = changed / columns + dy;
                     var column = changed % columns + dx;
@@ -178,7 +189,8 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             examined++;
             if (earlier[index] != later[index]) mismatches.Add(index);
         }
-        Assert.IsGreaterThan(150, examined, "need enough unexcavated ground to verify visual stability");
+        Assert.IsGreaterThan(900, examined,
+            "more than 900 unaffected source cells must be compared, including unchanged old craters");
         Assert.IsEmpty(mismatches,
             $"The real Hunt restyled {mismatches.Count} undamaged 1m cells after " +
             $"{after.GetProperty("kills").GetInt32()} kills. First cells: {string.Join(",", mismatches.Take(20))}. " +
