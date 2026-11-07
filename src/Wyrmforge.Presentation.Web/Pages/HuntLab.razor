@@ -8,6 +8,7 @@
 @using Wyrmforge.Application.Runs.Simulation
 @using Wyrmforge.Application.Runs.Simulation.Snapshots
 @using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Spells
 
@@ -41,6 +42,17 @@
         <label>Hunter loadout
             <select @bind="loadout"><option value="tier1">Tier I hunter</option><option value="stress">Overpowered stress build</option><option value="fire-evolution">Fire progression · Solar Wake (review)</option></select>
         </label>
+        @if (loadout == "fire-evolution")
+        {
+            <label>Crafted mutator
+                <select @bind="reviewMutation">
+                    @foreach (var mutation in FireballCoreCatalog.Mutations.Where(mutation => mutation.Playable))
+                    {
+                        <option value="@mutation.Id">@mutation.Name</option>
+                    }
+                </select>
+            </label>
+        }
         <label>Agent
             <select @bind="personality">
                 @foreach (var value in Enum.GetValues<RunAgentPersonality>()) { <option value="@value">@value</option> }
@@ -60,7 +72,7 @@
     </section>
     @if (loadout == "fire-evolution")
     {
-        <p class="hunt-lab-note">DEVELOPER FIXTURE · Nexus Lv5 + Detonation · Ember Covenant → Long Pyre · Emberbrand II → Cinder Cascade → Solar Wake. No earned progression is claimed or saved.</p>
+        <p class="hunt-lab-note">DEVELOPER FIXTURE · Nexus Lv5 + @FireballCoreCatalog.Get(reviewMutation).Name · Ember Covenant → Long Pyre · Emberbrand II → Cinder Cascade → Solar Wake. No earned progression is claimed or saved.</p>
     }
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
 </main>
@@ -106,6 +118,8 @@
     private int seed = 1337;
     [Parameter, SupplyParameterFromQuery(Name = "loadout")] public string? LoadoutQuery { get; set; }
     private string loadout = "tier1";
+    [Parameter, SupplyParameterFromQuery(Name = "mutator")] public string? MutatorQuery { get; set; }
+    private FireballMutationId reviewMutation = FireballMutationId.Detonation;
     [Parameter, SupplyParameterFromQuery(Name = "invulnerable")] public bool? InvulnerableQuery { get; set; }
     private bool invulnerable;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
@@ -121,6 +135,9 @@
         Casting = CastingQuery ?? true;
         invulnerable = InvulnerableQuery ?? !ManualControl;
         loadout = LoadoutQuery is "stress" or "fire-evolution" ? LoadoutQuery : "tier1";
+        reviewMutation = Enum.TryParse<FireballMutationId>(MutatorQuery, true, out var mutation)
+            && FireballCoreCatalog.Mutations.Any(known => known.Id == mutation && known.Playable)
+            ? mutation : FireballMutationId.Detonation;
         if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
         if (AscendantQuery is { } a) variant = a ? "ascendant" : "ordinary";
         if (PhaseQuery is 1 or 2) phase = PhaseQuery.Value;
@@ -177,7 +194,7 @@
             nodes = selection.Selected;
         }
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable) { ReviewFireEvolution = reviewFire, AdaptiveAgents = AdaptiveAgents, Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { ReviewFireEvolution = reviewFire, ReviewMutation = reviewMutation, AdaptiveAgents = AdaptiveAgents, Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
         simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(nodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";

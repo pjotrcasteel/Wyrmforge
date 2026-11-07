@@ -5,6 +5,7 @@ using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Progression.PassiveTree;
 
 namespace Wyrmforge.Application.Tests.Runs.Development;
@@ -33,25 +34,30 @@ public sealed class DevelopmentHuntTrialTests
     }
 
     [TestMethod]
-    [DataRow(2, 1337)]
-    public void FireEvolutionReview_PhaseTwoLiveCombatProducesField(int phase, int seed)
+    [DataRow(368, 597, .05, FireballMutationId.CinderNeedle, true)]
+    [DataRow(368, 597, .0166666667, FireballMutationId.CinderNeedle, false)]
+    [DataRow(298, 420, .05, FireballMutationId.CinderNeedle, true)]
+    [DataRow(298, 420, .0166666667, FireballMutationId.CinderNeedle, true)]
+    public void FireEvolutionReview_RespectsLiveKillConditions(int width, int height, double delta, FireballMutationId mutation, bool expectedField)
     {
         var selection = new PassiveTreeSelection();
         selection.SetActiveSchool(PassiveSchool.Fire);
         selection.SelectPath(PassiveTreePlanner.Plan(selection, "fire-long-pyre")!.NodeIds);
-        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, phase, SpellId.FireBolt, seed, 390, 844, true)
-        { ReviewFireEvolution = true, BossReadySpell = false, Environment = true };
+        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, 2, SpellId.FireBolt, 1337, width, height, true)
+        { ReviewFireEvolution = true, BossReadySpell = false, Environment = true, ReviewMutation = mutation };
         var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(selection.Selected, setup);
-        var agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, Build.PreferredSchool);
+        var agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, 1337, Build.PreferredSchool);
         var snapshot = run.CreateSnapshot();
         var sawField = false;
-        for (var step = 0; step < 2400 && snapshot.Dragon is not null && !run.IsEnded; step++)
+        for (var step = 0; step * delta < 120 && snapshot.Dragon is not null && !run.IsEnded; step++)
         {
             var observation = new RunAgentObservation(snapshot, [], [], [], [], [], run.Depth, 0, false);
-            snapshot = run.Tick(.05, agent.ChooseMovement(observation), 390, 844);
+            snapshot = run.Tick(delta, agent.ChooseMovement(observation), width, height);
             sawField |= snapshot.BurningGroundCount > 0;
         }
-        Assert.IsTrue(sawField, $"No field: time={snapshot.Hud.Seconds}, boss={snapshot.Dragon?.Health}, effects={run.SynergyEffectsResolved}");
+        // Different input timing can put the killing hit outside the burn window.
+        // Keep the negative encounter: the evolution must not turn every boss death into a guaranteed proc.
+        Assert.AreEqual(expectedField, sawField, $"time={snapshot.Hud.Seconds}, boss={snapshot.Dragon?.Health}, effects={run.SynergyEffectsResolved}");
     }
 
     [DataRow(DragonId.Ashfang, true, "Crownfall")]

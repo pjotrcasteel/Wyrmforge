@@ -109,14 +109,14 @@ public sealed class ProgressionV13Tests : BrowserTest
         Directory.CreateDirectory(folder);
         await using var context = await Browser.NewContextAsync(new()
         {
-            ViewportSize = new() { Width = 390, Height = 844 }, HasTouch = true, IsMobile = true,
-            RecordVideoDir = folder, RecordVideoSize = new() { Width = 390, Height = 844 },
+            ViewportSize = new() { Width = 320, Height = 568 }, HasTouch = true, IsMobile = true,
+            RecordVideoDir = folder, RecordVideoSize = new() { Width = 320, Height = 568 },
         });
         var page = await context.NewPageAsync();
         var url = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
         // Separate, explicitly invulnerable phase-two practice proves the conditional
         // effect's rendering; the full-damage encounter above remains the threat check.
-        await page.GotoAsync(url.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ascendant=false&phase=2&loadout=fire-evolution&invulnerable=true&seed=1337");
+        await page.GotoAsync(url.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ascendant=false&phase=2&loadout=fire-evolution&mutator=CinderNeedle&invulnerable=true&seed=1337");
         await Expect(page.Locator(".hunt-lab-canvas")).ToBeVisibleAsync();
         await Expect(page.GetByText("DEVELOPER FIXTURE", new() { Exact = false })).ToBeVisibleAsync();
         await page.EvaluateAsync(@"async () => {
@@ -126,10 +126,23 @@ public sealed class ProgressionV13Tests : BrowserTest
         await page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('.hunt-lab-canvas');
             const diagnostics = window.progressionRuntime.readArenaDiagnostics(canvas);
-            return diagnostics?.burningGroundCount > 0;
+            window.solarEvidence ??= { started: false, sawField: false, samples: [],
+                arena: { width: canvas.clientWidth, height: canvas.clientHeight } };
+            const evidence = window.solarEvidence;
+            evidence.started ||= diagnostics?.dragon != null;
+            evidence.sawField ||= diagnostics?.burningGroundCount > 0;
+            if (diagnostics?.hud?.seconds > (evidence.samples.at(-1)?.seconds ?? -1)) {
+                evidence.samples.push({ seconds: diagnostics.hud.seconds, dragon: diagnostics.dragon,
+                    fields: diagnostics.burningGroundCount, fireAreas: diagnostics.essenceBursts });
+            }
+            return evidence.sawField || (evidence.started && !diagnostics?.dragon) || diagnostics?.ended;
         }", null, new() { Timeout = 120000 });
         await page.GetByRole(AriaRole.Button, new() { Name = "Ⅱ Pause", Exact = true }).ClickAsync();
-        await Capture(page, "combat-390-solar-wake-triggered-practice");
+        await File.WriteAllTextAsync(Path.Combine(folder, "solar-wake-practice-diagnostics.json"),
+            await page.EvaluateAsync<string>("JSON.stringify(window.solarEvidence, null, 2)"));
+        var sawField = await page.EvaluateAsync<bool>("window.solarEvidence.sawField");
+        await Capture(page, sawField ? "combat-320-solar-wake-triggered-practice" : "combat-320-practice-no-trigger");
+        Assert.IsTrue(sawField, "The real Cinder Needle + Emberbrand II fight must trigger Solar Wake; see diagnostics and recording.");
         Assert.IsNull(await page.EvaluateAsync<string?>("localStorage.getItem('wyrmforge.arcaneBuild.v1')"));
     }
 
