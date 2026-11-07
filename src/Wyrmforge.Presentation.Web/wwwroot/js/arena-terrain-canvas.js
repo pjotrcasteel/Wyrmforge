@@ -919,7 +919,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                 ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
             if (!unchangedTop) painted++;
-            if (shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
+            if (layerLabEnabled('bakedShadows') && shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
                 for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
                     const level = shade[(microY * 2 + j) * SHADOW_SAMPLES + microX * 2 + i];
                     if (!level) continue;
