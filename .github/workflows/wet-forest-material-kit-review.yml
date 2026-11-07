@@ -12,7 +12,6 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js'
-      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js'
       - 'src/Wyrmforge.Application/Runs/Simulation/Environment/ArenaEnvironmentState.cs'
       - 'tests/Wyrmforge.Browser.Tests/WetForestPlayableMaterialBrowserTests.cs'
       - 'tests/javascript/arena-live-wet-forest-materials.test.mjs'
