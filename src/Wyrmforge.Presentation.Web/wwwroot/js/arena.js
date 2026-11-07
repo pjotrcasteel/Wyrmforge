@@ -1,4 +1,5 @@
-import { huntLayerCapture, huntLayerRevision, visibleHuntEnemyLayers, prepareHuntGpuScratch, HuntGpuScratchPool,
+import { huntLayerCapture, huntLayerRevision, visibleHuntEnemyLayers, reusableEnemyPoseRevision, alignedEnemyPoseRaster,
+    prepareHuntGpuScratch, HuntGpuScratchPool,
     prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261106-default-hunt1-gate-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
@@ -602,7 +603,7 @@ function draw(state, snapshot, width, height) {
             camera, worldWidth, worldHeight) : 0;
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
-        let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
+        let tile, tileX, tileY, tileSize, capture, revision, poseRevision, poseOcclusion, reuse = false;
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
         const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
         if (gpu) {
@@ -611,7 +612,17 @@ function draw(state, snapshot, width, height) {
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
-            revision = huntLayerRevision(layer, artReady(), artGeneration());
+            if (layer.kind === 'enemy' && authoredOn) {
+                const enemy = layer.enemy, pose = state.authored.enemies.get(enemy.entityId);
+                const loaded = Boolean(pose && authoredCharacter(pose.name)?.strips?.has(pose.action)) &&
+                    !enemyHasEmissivePose(state.authored, enemy.entityId);
+                const candidate = reusableEnemyPoseRevision(layer, pose, loaded);
+                if (candidate && state.terrainFrame)
+                    poseOcclusion = occludingTerrainCells(state.terrainFrame, enemy.x,
+                        enemy.y + (enemy.z || 0), enemy.z || 0, (enemy.radius || 16) * 1.25);
+                if (candidate && !poseOcclusion?.length) poseRevision = candidate;
+            }
+            revision = poseRevision ?? huntLayerRevision(layer, artReady(), artGeneration());
             reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize, pixelScale);
             // A reused capture never repaints, so it only needs a stand-in source; real scratch canvases are for layers that redraw.
             tile = reuse ? (state.gpuReuseStub ??= document.createElement('canvas')) : (state.gpuScratchPool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
@@ -635,8 +646,15 @@ function draw(state, snapshot, width, height) {
             } else if (layer.kind === 'enemy') {
                 const enemy = layer.enemy;
                 if (gpu) {
-                    drawEnemy(ctx, enemy, null,
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
+                    const aligned = poseRevision ? alignedEnemyPoseRaster(enemy) : null;
+                    if (aligned) {
+                        ctx.save();
+                        ctx.translate(aligned.offsetX, aligned.offsetY);
+                    }
+                    drawEnemy(ctx, aligned?.actor ?? enemy, null,
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),
+                        state.hollow, state.ashling, authoredOn ? state.authored : null);
+                    if (aligned) ctx.restore();
                 } else {
                     const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
                         enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
@@ -655,7 +673,8 @@ function draw(state, snapshot, width, height) {
             if (state.terrainFrame && (layer.kind === 'enemy' || layer.kind === 'mage')) {
                 // Raised rock in front of the actor hides it: the covered pixels fall away (GPU) or the rock is repainted (Canvas).
                 const body = layer.enemy ?? layer.player;
-                const cells = occludingTerrainCells(state.terrainFrame, body.x, body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25);
+                const cells = poseOcclusion ?? occludingTerrainCells(state.terrainFrame, body.x,
+                    body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25);
                 if (gpu) eraseTerrainOcclusion(ctx, state.terrainFrame, cells);
                 else repaintTerrainOcclusion(ctx, state.terrainFrame, huntBand(state, snapshot), cells);
             }
