@@ -446,7 +446,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const greybox = Boolean(snapshot.environment?.greybox);
-    let gpu = snapshot.lighting && state.gpuWorld;
+    let gpu = snapshot.lighting && state.gpuWorld && layerLabEnabled('gpu');
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
     // Retain it only as a diagnostic A/B switch; the default draws synchronously
