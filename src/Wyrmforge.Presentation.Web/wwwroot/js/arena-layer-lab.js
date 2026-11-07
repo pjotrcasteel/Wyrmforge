@@ -82,7 +82,8 @@ export function mountLayerLab(onChange) {
     panel.appendChild(details);
     let expanded = true;
     const refreshTitle = () => {
-        top.textContent = 'LAYERS · ' + (disabled.size ? disabled.size + ' hidden' : 'all on') + (expanded ? ' ▴' : ' ▾');
+        top.textContent = (disabled.size ? 'OFF: ' + [...disabled].join(', ') : 'LAYERS: all on') +
+            (view !== 'lit' ? ' · view=' + view : '') + (expanded ? ' ▴' : ' ▾');
         details.hidden = !expanded;
     };
     top.addEventListener('click', () => { expanded = !expanded; refreshTitle(); });
@@ -104,7 +105,7 @@ export function mountLayerLab(onChange) {
         select.appendChild(option);
     }
     select.value = view;
-    select.addEventListener('change', () => { setLayerLabView(select.value); onChange(); });
+    select.addEventListener('change', () => { setLayerLabView(select.value); onChange(); refreshTitle(); });
     gpuLabel.appendChild(select);
     details.appendChild(gpuLabel);
 
