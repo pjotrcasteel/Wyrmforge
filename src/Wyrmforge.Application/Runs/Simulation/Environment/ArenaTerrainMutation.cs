@@ -61,6 +61,15 @@ public static class ArenaTerrainMutation
             ? FaceHits(grid, impact, direction.Normalized(), power)
             : CraterHits(impact, power)).ToList();
         var perColumn = ArenaTerrainGrid.MicroPerColumn;
+        // Scripted ambush fissures must never tear up the authored route. Direct Fireballs
+        // still chip the road (down to its existing half-metre safety floor).
+        if (impact.FissureReach > 0 && protectedCells is { Length: > 0 })
+            hits.RemoveAll(hit =>
+            {
+                var column = (int)Math.Floor(hit.Gx / (double)perColumn);
+                var row = (int)Math.Floor(hit.Gy / (double)perColumn);
+                return grid.Contains(column, row) && protectedCells[row * grid.Columns + column];
+            });
         var touched = new List<(int Column, int Row, int Surface, ArenaTerrainMaterial Material, short[]? Fine, byte[]? Wear)>();
         var seen = new HashSet<int>();
         void Touch(int column, int row)
@@ -78,7 +87,7 @@ public static class ArenaTerrainMutation
                 ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
             grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor);
         }
-        Settle(grid, hits, protectedCells, Touch);
+        Settle(grid, hits, protectedCells, Touch, impact.FissureReach > 0);
 
         var changes = new List<ArenaTerrainChange>();
         foreach (var (column, row, surface, material, fine, oldWear) in touched)
@@ -107,13 +116,14 @@ public static class ArenaTerrainMutation
     /// at least <see cref="UnsupportedLimitMicrocells"/> lower) collapse to just above their highest support, rippling outward until stable.
     /// A heightfield cannot hold an overhang, so a side bite that undercuts a wall brings the unsupported rock down instead of hanging it.
     /// </summary>
-    private static void Settle(ArenaTerrainGrid grid, List<(int Gx, int Gy, int Depth)> hits, bool[]? protectedCells, Action<int, int> touch)
+    private static void Settle(ArenaTerrainGrid grid, List<(int Gx, int Gy, int Depth)> hits, bool[]? protectedCells, Action<int, int> touch,
+        bool preserveProtected)
     {
         var region = new SortedSet<(int Gy, int Gx)>();
         foreach (var (gx, gy, _) in hits)
             for (var dy = -1; dy <= 1; dy++)
                 for (var dx = -1; dx <= 1; dx++) region.Add((gy + dy, gx + dx));
-        SettleRegion(grid, region, protectedCells, touch);
+        SettleRegion(grid, region, protectedCells, touch, preserveProtected);
     }
 
     /// <summary>Generation-time stability: leaves no fin or spire anywhere among the subdivided columns, so the first impact never meets one.</summary>
@@ -151,7 +161,8 @@ public static class ArenaTerrainMutation
             if (!any) break;
         }
     }
-    private static void SettleRegion(ArenaTerrainGrid grid, SortedSet<(int Gy, int Gx)> region, bool[]? protectedCells, Action<int, int> touch)
+    private static void SettleRegion(ArenaTerrainGrid grid, SortedSet<(int Gy, int Gx)> region, bool[]? protectedCells, Action<int, int> touch,
+        bool preserveProtected)
     {
         var perColumn = ArenaTerrainGrid.MicroPerColumn;
         int? Height(int gx, int gy)
@@ -174,6 +185,7 @@ public static class ArenaTerrainMutation
                 var support = thinX && thinY ? Math.Max(Math.Max(west, east), Math.Max(north, south))
                     : thinX ? Math.Max(west, east) : Math.Max(north, south);
                 var (column, row) = ((int)Math.Floor(gx / (double)perColumn), (int)Math.Floor(gy / (double)perColumn));
+                if (preserveProtected && protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]) continue;
                 var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
                     ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
                 touch(column, row);
