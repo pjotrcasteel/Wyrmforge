@@ -95,6 +95,36 @@ export function visibleHuntEnemyLayers(enemies, camera, width, height, guard = 6
 }
 
 /**
+ * The unmodified 80px authored Fire foes have a position-independent painted pose.
+ * Their light and crossed shadow geometry still move every frame; only the unchanged
+ * Canvas albedo can be reused between moves and GPU uploads.
+ *
+ * Exclude any dynamic, augmented, emergent, faded, or terrain-occluded actor.
+ * Their original raster and upload path remains authoritative.
+ */
+export function reusableEnemyPoseRevision(layer, pose, loaded, occluded = false) {
+    const enemy = layer?.enemy;
+    if (layer?.kind !== 'enemy' || !enemy || !pose || !loaded || occluded || pose.emerge || enemy.elite || enemy.telegraph ||
+        enemy.shieldFacing != null || enemy.invulnerable || enemy.hitFlash || enemy.frozen ||
+        (enemy.rimeArmor ?? 0) > 0 || (enemy.opacity ?? 1) !== 1 || (enemy.healthRatio ?? 1) < 1 ||
+        !Number.isFinite(enemy.x) || !Number.isFinite(enemy.y) ||
+        !Number.isFinite(enemy.radius) || enemy.radius <= 0 ||
+        !Number.isInteger(Number(enemy.kind)) || Number(enemy.kind) < 0 || Number(enemy.kind) > 6 ||
+        !pose.name || !pose.action || !pose.direction || !Number.isInteger(pose.frame)) return undefined;
+    return JSON.stringify(['authored-horde-pose-v1', pose.name, pose.action, pose.direction, pose.frame, enemy.radius]);
+}
+
+/**
+ * Snap only the CPU drawing anchor, then restore its fractional offset via the scratch
+ * transform. The resulting local pixels stay attached to the same moving GPU quad.
+ * The C# position and the GPU quad's world position are never rounded or changed.
+ */
+export function alignedEnemyPoseRaster(enemy) {
+    const x = Math.round(enemy.x), y = Math.round(enemy.y);
+    return { actor: { ...enemy, x, y }, offsetX: enemy.x - x, offsetY: enemy.y - y };
+}
+
+/**
  * Explicit visual revisions for genuinely static legacy captures only.
  * Dynamic foliage, VFX and moving actors always redraw. No lighting behavior
  * depends on these names; the generic GPU engine accepts opaque revision keys.

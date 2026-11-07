@@ -54,10 +54,11 @@ test('performance readout shows GPU upload cost separately from the authoritativ
     sampler.record(20);
     const report = perfReport({ sampler, renderer: 'gpu', quality: 'mobile', heapMb: null,
         terrain: null, enemies: 600, projectiles: 2, gpuVisibleEnemies: 48,
-        gpuUploads: { dynamicTextures: 50, dynamicPixels: 1320000 } });
+        gpuUploads: { dynamicTextures: 50, dynamicPixels: 1320000 }, gpuReusedEnemies: 30 });
     assert.equal(report.enemies, 600, 'the authoritative simulation still owns every enemy');
     assert.equal(report.gpuVisibleEnemies, 48, 'visible GPU captures are counted separately');
     assert.equal(report.gpuUploadTextures, 50);
     assert.equal(report.gpuUploadPixels, 1320000);
-    assert.ok(perfLines(report)[4].includes('GPU 50 tex  1320000 px  visible 48/600'));
+    assert.equal(report.gpuReusedEnemies, 30, 'cache hits are measured independently of total enemies');
+    assert.ok(perfLines(report)[4].includes('GPU 50 tex  1320000 px  visible 48/600  reused 30'));
 });
