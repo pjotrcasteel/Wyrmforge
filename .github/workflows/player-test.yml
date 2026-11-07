@@ -1,0 +1,157 @@
+name: Deploy Wyrmforge player test
+
+# Only deliberate updates to the test branch may deploy the player build.
+# The workflow_dispatch option must be run against the test branch.
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: player-test
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/test'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout approved test commit
+        uses: actions/checkout@v6
+
+      - name: Restore runtime Git LFS art
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+
+      - name: Regenerate source-backed environment material candidates
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+
+      - name: Require .NET 10
+        run: |
+          dotnet --list-sdks
+          dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::.NET 10 SDK is required"; exit 1; }
+
+      - name: Restore
+        run: dotnet restore Wyrmforge.slnx
+
+      - name: Build
+        run: dotnet build Wyrmforge.slnx -c Release --no-restore -p:VersionSuffix=player-test -p:SourceRevisionId="$GITHUB_SHA"
+
+      - name: Test JavaScript
+        run: node --test tests/javascript/*.test.mjs
+
+      - name: Test .NET
+        run: dotnet test Wyrmforge.slnx -c Release --no-build --blame-hang-timeout 7m --blame-hang-dump-type none
+
+      - name: Publish isolated test game
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web -p:VersionSuffix=player-test -p:SourceRevisionId="$GITHUB_SHA"
+
+      - name: Prepare safe player-test configuration
+        env:
+          WYRMFORGE_TEST_FEEDBACK_ENDPOINT: ${{ vars.WYRMFORGE_TEST_FEEDBACK_ENDPOINT }}
+          FIREBASE_TEST_PROJECT_ID: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          root = Path("artifacts/web/wwwroot")
+          index = root / "index.html"
+          html = index.read_text(encoding="utf-8")
+          if '<base href="/" />' not in html:
+              raise SystemExit("Player-test hosting must use the site root base URL")
+          if "__WYRMFORGE_BUILD__" not in html:
+              raise SystemExit("Build revision marker missing")
+          html = html.replace("__WYRMFORGE_BUILD__", os.environ["GITHUB_SHA"])
+          index.write_text(html, encoding="utf-8")
+          (root / "404.html").write_text(html, encoding="utf-8")
+          (root / "build-id.txt").write_text(
+              "player-test " + os.environ["GITHUB_SHA"] + "\n", encoding="utf-8")
+
+          # Never silently send browser feedback to an origin-restricted collector.
+          endpoint = os.environ.get("WYRMFORGE_TEST_FEEDBACK_ENDPOINT", "").strip()
+          if endpoint:
+              url = urlsplit(endpoint)
+              if url.scheme != "https" or not url.hostname or url.username or url.password or url.query or url.fragment or url.path != "/v1/reports":
+                  raise SystemExit("WYRMFORGE_TEST_FEEDBACK_ENDPOINT must be an HTTPS /v1/reports URL")
+          (root / "playtest-collector-config.json").write_text(
+              json.dumps({"endpoint": endpoint}) + "\n", encoding="utf-8")
+
+          # Cloud backup must not accidentally share the dev Firebase project.
+          appsettings = root / "appsettings.json"
+          if appsettings.exists():
+              backup = json.loads(appsettings.read_text(encoding="utf-8")).get("HunterBackup") or {}
+              configured = str(backup.get("projectId") or backup.get("ProjectId") or "").strip()
+              expected = os.environ.get("FIREBASE_TEST_PROJECT_ID", "").strip()
+              if configured and configured != expected:
+                  raise SystemExit("HunterBackup points at a different Firebase project; refusing player-test deployment")
+          print("Player-test commit:", os.environ["GITHUB_SHA"])
+          print("Feedback configured:", bool(endpoint))
+          PY
+
+      - name: Verify standalone playable bundle
+        run: |
+          test -s artifacts/web/wwwroot/index.html
+          test -s artifacts/web/wwwroot/404.html
+          test -s artifacts/web/wwwroot/_framework/blazor.webassembly.js
+          grep -q "$GITHUB_SHA" artifacts/web/wwwroot/index.html
+          grep -q "$GITHUB_SHA" artifacts/web/wwwroot/build-id.txt
+
+      - name: Upload player-test bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-test-web
+          path: artifacts/web/wwwroot/
+          include-hidden-files: true
+          retention-days: 7
+
+  deploy:
+    if: github.ref == 'refs/heads/test'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: player-test
+    steps:
+      - name: Checkout hosting configuration
+        uses: actions/checkout@v6
+
+      - name: Download validated bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: player-test-web
+          path: artifacts/web/wwwroot
+
+      - name: Require owner-supplied test Firebase credentials
+        env:
+          PROJECT_ID: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TEST }}
+        run: |
+          test -n "$PROJECT_ID" || { echo "::error::Configure FIREBASE_TEST_PROJECT_ID as an Actions variable"; exit 1; }
+          test -n "$SERVICE_ACCOUNT" || { echo "::error::Configure FIREBASE_SERVICE_ACCOUNT_TEST in the player-test environment"; exit 1; }
+
+      - name: Deploy the approved test bundle to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TEST }}
+          projectId: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+          channelId: live
+
+      - name: Smoke-check live test version
+        env:
+          PROJECT_ID: ${{ vars.FIREBASE_TEST_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          base="https://$PROJECT_ID.web.app"
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "$base/" | grep -q "$GITHUB_SHA"
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "$base/build-id.txt" | grep -q "player-test $GITHUB_SHA"
+          echo "Player-test build $GITHUB_SHA is live at $base/"
