@@ -166,10 +166,12 @@ for (const size of [4800, 12000]) {
     test(`whole Web fits a phone as the authored graph grows to ${size}`, () => {
         const m = map(false, size);
         m.viewport.clientWidth = 320;
+        m.viewport.clientHeight = 305;
         m.api.overview(m.viewport);
         const { x, y, scale } = m.view();
         assert.ok(size * scale <= 320);
-        assert.ok(x >= 0 && y >= 0);
+        assert.ok(x >= 0 && y >= 64);
+        assert.ok(y + size * scale <= m.viewport.clientHeight - 16);
         m.api.zoom(m.viewport, -0.5);
         assert.ok(size * m.view().scale <= 320);
         m.api.reset(m.viewport);

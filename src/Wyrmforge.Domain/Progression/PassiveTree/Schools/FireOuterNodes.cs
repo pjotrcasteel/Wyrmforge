@@ -49,7 +49,7 @@ internal static class FireOuterNodes
         var effect = stat switch
         {
             BuildStatId.MutationDuration => "mutation duration",
-            BuildStatId.BurnDamage => "burning damage",
+            BuildStatId.BurnDamage => "burning-ground damage",
             BuildStatId.MaxHealth => "maximum health",
             _ => throw new ArgumentOutOfRangeException(nameof(stat)),
         };

@@ -7,7 +7,7 @@ internal static class FireSynergyNodes
     // Authored functional route. Costs and magnitudes are initial tuning.
     internal static IReadOnlyList<PassiveNodeDefinition> All { get; } =
     [
-        new("fire-cinder-thread", "Cinder Thread", "+2% burning damage.", PassiveNodeKind.Travel, PassiveSchool.Fire, 1, 0, 0,
+        new("fire-cinder-thread", "Cinder Thread", "+2% burning-ground damage.", PassiveNodeKind.Travel, PassiveSchool.Fire, 1, 0, 0,
             PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.BurnDamage, .02)), Tier: PassiveNodeTier.Minor),
         new("fire-ember-memory", "Ember Memory", "+5% mutation duration.", PassiveNodeKind.Notable, PassiveSchool.Fire, 2, 0, 0,
             PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationDuration, .05)), Tier: PassiveNodeTier.Medium),

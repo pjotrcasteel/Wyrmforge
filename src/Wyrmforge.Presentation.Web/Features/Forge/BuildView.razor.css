@@ -1880,5 +1880,3 @@
 .arcane-web-viewport[data-lod="overview"] .minor-node-effects { visibility: hidden; }
 .arcane-web-viewport[data-lod="paths"] .kind-travel:not(.focused):not(.preview) .node-label { visibility: hidden; }
 
-/* Distant commitments remain visible without suggesting they are allocatable. */
-.web-node.tier-major.locked, .web-node.tier-grand.locked, .web-node.tier-keystone.locked { opacity: .7; }

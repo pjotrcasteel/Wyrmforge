@@ -383,3 +383,8 @@
 .menu-nexus .atmosphere-arcane { --school-haze:#60347d; --school-vein:#c99ce9; }
 .menu-nexus .atmosphere-death { --school-haze:#315d51; --school-vein:#82ac8a; }
 .menu-nexus .atmosphere-binding { --school-haze:#72573a; --school-vein:#c6a66a; }
+
+/* Keep distant commitments visible under the Nexus school-wheel overrides. */
+.menu-nexus .school-wheel-view .web-node.tier-major.locked,
+.menu-nexus .school-wheel-view .web-node.tier-grand.locked,
+.menu-nexus .school-wheel-view .web-node.tier-keystone.locked { opacity:.85; }

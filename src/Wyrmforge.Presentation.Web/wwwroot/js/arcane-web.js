@@ -1,7 +1,10 @@
 (function () {
     const states = new WeakMap();
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-    const minimumScale = (viewport, state) => Math.min(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200));
+    // Reserve 64px above and 16px below the overview for the floating HUD.
+    // Fitting the raw viewport can hide far goals beneath the point counter.
+    const overviewScale = (viewport, state) => Math.max(1, Math.min(viewport.clientWidth, viewport.clientHeight - 80)) / (state.size + 200);
+    const minimumScale = (viewport, state) => Math.min(0.08, overviewScale(viewport, state));
     const readingScale = viewport => viewport.clientWidth < 700 ? 0.95 : 1;
     const distance = points => Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
     const midpoint = points => ({ x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 });
@@ -195,7 +198,8 @@
         const state = states.get(viewport);
         if (!state) return;
         state.x = state.y = state.size / 2;
-        state.scale = Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200);
+        state.scale = overviewScale(viewport, state);
+        state.y -= 24 / state.scale;
         render(viewport, state);
     }
 
