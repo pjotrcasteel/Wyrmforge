@@ -1,0 +1,71 @@
+using Microsoft.Playwright;
+using Microsoft.Playwright.MSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Wyrmforge.Browser.Tests;
+
+/// <summary>Pixel-exact proof that voxel damage does not restyle neighbouring grass, road or normal maps.</summary>
+[TestClass]
+public sealed class TerrainRepaintPixelBrowserTests : PageTest
+{
+    /// <summary>Full and incremental terrain rendering must produce identical pixels from the same C# snapshot.</summary>
+    [TestMethod]
+    public async Task DamagedTerrain_RegionalRepaintMatchesFreshFullPaintPixelForPixel()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+        var differences = await Page.EvaluateAsync<int[]>("""
+            async () => {
+                const { TerrainCanvasCache, mergeTerrainFrame, TERRAIN_MATERIAL } =
+                    await import('/js/arena-terrain-canvas.js');
+                const columns = 12, rows = 14, count = columns * rows;
+                const terrain = {
+                    revision: 1, columns, rows, visualSeed: 119,
+                    surface: Array(count).fill(0),
+                    material: Array.from({ length: count }, (_, i) =>
+                        i % columns === 2 ? TERRAIN_MATERIAL.Ash : TERRAIN_MATERIAL.Soil),
+                    fine: [],
+                    road: [6 * 16, 0, 6 * 16, rows * 16],
+                    cracks: []
+                };
+                const before = mergeTerrainFrame(null, terrain);
+                const regional = new TerrainCanvasCache();
+                regional.enableNormals();
+                regional.update(before, 0);
+
+                // A single Fireball excavation. All other surface data is identical.
+                const heights = Array(64).fill(0);
+                for (const [x, y] of [[2, 2], [3, 2], [2, 3], [3, 3]])
+                    heights[y * 8 + x] = -3;
+                const changed = mergeTerrainFrame(before, {
+                    ...terrain, revision: 2, fine: [
+                        { index: 6 * columns + 6, heights, topsoil: 0, stoneTop: -8 }
+                    ]
+                });
+                if (changed.changed.length !== 1) throw new Error('The crater must invalidate one source block');
+                regional.update(changed, 0);
+
+                const full = new TerrainCanvasCache();
+                full.enableNormals();
+                full.update({ ...changed, kindMaps: undefined }, 0);
+                const differences = [];
+                for (const channel of ['canvas', 'normalCanvas']) {
+                    const a = regional[channel], b = full[channel];
+                    if (a.width !== b.width || a.height !== b.height)
+                        throw new Error(channel + ': dimensions disagree');
+                    const pixels = canvas => canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+                    const left = pixels(a), right = pixels(b);
+                    let mismatches = 0;
+                    for (let i = 0; i < left.length; i++)
+                        if (left[i] !== right[i]) mismatches++;
+                    differences.push(mismatches);
+                }
+                return differences;
+            }
+            """);
+
+        CollectionAssert.AreEqual(new[] { 0, 0 }, differences,
+            "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
+    }
+}
