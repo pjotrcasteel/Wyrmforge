@@ -76,6 +76,15 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             "state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision;",
             150000, "three real kills with C# voxel and road updates");
         var thirdKill = await CaptureAsync($"{mode}-third-kill", output);
+        // The owner's worst screenshot was the final push after ten kills, not the opening.
+        // Capture actual crater and fissure appearance at that point for mandatory image review.
+        await ArenaBrowserWait.UntilAsync(Page,
+            $"return (state?.hud?.kills ?? 0) >= {initialKills + 10} && " +
+            "state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision;",
+            150000, "real final-push crater textures after ten kills");
+        var finalWave = await CaptureAsync($"{mode}-tenth-kill", output);
+        Assert.AreEqual(baseline.GetProperty("seed").GetInt32(), finalWave.GetProperty("seed").GetInt32(),
+            "the world seed must remain stable during the entire real encounter");
         Assert.IsEmpty(pageErrors, string.Join(Environment.NewLine, pageErrors));
 
         CompareUnexcavatedSourcePixels(baseline, firstKill);
