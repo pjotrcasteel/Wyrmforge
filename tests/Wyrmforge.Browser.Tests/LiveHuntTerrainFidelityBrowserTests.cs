@@ -80,6 +80,10 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             "the real Trail must keep its original regional Wyrm influence, not silently change palettes");
         Assert.AreEqual(baseline.GetProperty("seed").GetInt32(), thirdKill.GetProperty("seed").GetInt32(),
             "combat must not regenerate a different forest or road seed");
+        Assert.AreEqual(baseline.GetProperty("road").GetRawText(), thirdKill.GetProperty("road").GetRawText(),
+            "the C# authored road geometry must remain unchanged through enemy deaths and terrain damage");
+        Assert.IsGreaterThan(8, baseline.GetProperty("road").GetArrayLength(),
+            "the real first Trail must have the authored curving road, not a simplified replacement");
     }
 
     private async Task<JsonElement> CaptureAsync(string label, string directory)
@@ -115,8 +119,8 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
                     }
                 return JSON.stringify({ png: map.png, hashes, columns: map.columns, rows: map.rows,
                     kills: state.hud?.kills ?? 0, seconds: state.hud?.seconds ?? 0,
-                    seed: state.hunt1Terrain?.visualSeed ?? state?.world?.seed ?? 0,
-                    band: map.band, dug: map.dug, terrain: state.hunt1Terrain });
+                    seed: map.visualSeed, band: map.band, road: map.road,
+                    dug: map.dug, terrain: state.hunt1Terrain });
             }
             """);
         using var parsed = JsonDocument.Parse(json);
