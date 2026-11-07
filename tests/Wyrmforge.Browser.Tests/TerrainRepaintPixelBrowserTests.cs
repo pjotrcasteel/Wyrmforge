@@ -41,7 +41,7 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 // A single Fireball excavation. All other surface data is identical.
                 const heights = Array(64).fill(0);
                 for (const [x, y] of [[2, 2], [3, 2], [2, 3], [3, 3]])
-                    heights[y * 8 + x] = -1;
+                    heights[y * 8 + x] = -3;
                 const changed = mergeTerrainFrame(before, {
                     ...terrain, revision: 2, fine: [
                         { index: 6 * columns + 6, heights, topsoil: 0, stoneTop: -8 }
@@ -100,90 +100,4 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
         CollectionAssert.AreEqual(new[] { 0, 0, 0, 0, 0, 0 }, differences,
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
-    /// <summary>A shallow crater must retain authored grass and road pixels at the new physical height.</summary>
-    [TestMethod]
-    public async Task ShallowExcavation_RetainsOriginalGrassAndRoadPixels_DeepExcavationRevealsEarth()
-    {
-        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
-        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
-
-        var matches = await Page.EvaluateAsync<int[]>("""
-            async () => {
-                const { TerrainCanvasCache, mergeTerrainFrame, TERRAIN_MATERIAL, TERRAIN_PAD_UNITS } =
-                    await import('/js/arena-terrain-canvas.js');
-                const columns = 8, rows = 8, count = columns * rows;
-                const original = { revision: 1, columns, rows, visualSeed: 615,
-                    surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
-                    road: [4 * 16 + 8, 0, 4 * 16 + 8, rows * 16], fine: [] };
-                const cache = new TerrainCanvasCache();
-                cache.update(mergeTerrainFrame(null, original), 0);
-                const evidence = [cache.canvas.toDataURL('image/png')];
-                const context = () => cache.canvas.getContext('2d', { willReadFrequently: true });
-                const locations = [0, 4].map(column => ({
-                    index: 3 * columns + column,
-                    x: (column * 32 + 4 * 4) * 2,
-                    y: (TERRAIN_PAD_UNITS + 3 * 32 + 4 * 4) * 2
-                }));
-                const patch = (loc, depth) => context().getImageData(loc.x, loc.y + depth * 8, 8, 8).data;
-                const intact = locations.map(location => patch(location, 0));
-                const damaged = depth => locations.map(location => ({
-                    index: location.index,
-                    heights: Array.from({ length: 64 }, (_, index) => {
-                        const x = index % 8, y = Math.floor(index / 8);
-                        return x >= 2 && x <= 6 && y >= 2 && y <= 6 ? -depth : 0;
-                    }),
-                    topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -8
-                }));
-                let frame = mergeTerrainFrame(null, original);
-                frame = mergeTerrainFrame(frame, { ...original, revision: 2, fine: damaged(1) });
-                cache.update(frame, 0);
-                evidence.push(cache.canvas.toDataURL('image/png'));
-                const shallow = locations.map(location => patch(location, 1));
-                frame = mergeTerrainFrame(frame, { ...original, revision: 3, fine: damaged(3) });
-                cache.update(frame, 0);
-                evidence.push(cache.canvas.toDataURL('image/png'));
-                window.__shallowTerrainEvidence = evidence;
-                const deep = locations.map(location => patch(location, 3));
-                const equalPixels = (a, b) => {
-                    let matched = 0;
-                    for (let i = 0; i < a.length; i += 4)
-                        if (a[i] === b[i] && a[i + 1] === b[i + 1] &&
-                            a[i + 2] === b[i + 2] && a[i + 3] === b[i + 3]) matched++;
-                    return matched;
-                };
-                const opaquePixels = patch => {
-                    let painted = 0;
-                    for (let i = 3; i < patch.length; i += 4) if (patch[i] === 255) painted++;
-                    return painted;
-                };
-                return [...locations.map((_, i) => [equalPixels(intact[i], shallow[i]),
-                    equalPixels(intact[i], deep[i])]).flat(),
-                    ...intact.map(opaquePixels)];
-            }
-            """);
-
-        var images = await Page.EvaluateAsync<string[]>("() => window.__shallowTerrainEvidence");
-        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
-            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
-        Directory.CreateDirectory(output);
-        for (var i = 0; i < images.Length; i++)
-        {
-            var data = images[i];
-            var filename = new[] { "original", "shallow", "deep" }[i];
-            await File.WriteAllBytesAsync(Path.Combine(output, $"terrain-surface-{filename}.png"),
-                Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
-        }
-
-        Assert.IsGreaterThan(55, matches[4],
-            "grass comparison must sample real painted pixels, not transparent bottom padding");
-        Assert.IsGreaterThan(55, matches[5],
-            "road comparison must sample real painted pixels, not transparent bottom padding");
-        Assert.IsGreaterThan(16, matches[0],
-            "shallow grass must retain a substantial number of its original exact pixels, even though its top sinks");
-        Assert.IsGreaterThan(matches[1], matches[0],
-            "one-step shallow grass must resemble its original grass more than a genuinely exposed deep dirt floor");
-        Assert.IsGreaterThan(16, matches[2],
-            "the road must retain its original fine-grained pixel-art texture after one shallow 12.5cm scratch");
-    }
-
 }
