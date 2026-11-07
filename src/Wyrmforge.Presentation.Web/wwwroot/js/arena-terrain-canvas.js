@@ -374,8 +374,18 @@ function microDepthCues(ctx, frame, column, row, microX, microY, height, x, y) {
     const { north, south } = neighbourHeights(frame, column, row, microX, microY, height);
     let painted = 0;
     const step = shadowStep(north - height);
-    if (step) { ctx.fillStyle = CONTACT_SHADOW[step]; ctx.fillRect(x, y, MICRO_UNITS, MICRO_UNITS); painted++; }
-    if (height - south >= 3) { ctx.fillStyle = LIP_LIGHT; ctx.fillRect(x, y, MICRO_UNITS, MICRO_UNITS); painted++; }
+    if (step) {
+        // Shade the exposed edge, not the entire 4px micro-top: solid square shadow
+        // stamps make an excavated bowl look like unrelated terrain tiles replacing each other.
+        ctx.fillStyle = CONTACT_SHADOW[step];
+        ctx.fillRect(x, y, MICRO_UNITS, step === 2 ? 2 : 1);
+        painted++;
+    }
+    if (height - south >= 3) {
+        ctx.fillStyle = LIP_LIGHT;
+        ctx.fillRect(x, y + MICRO_UNITS - 1, MICRO_UNITS, 1);
+        painted++;
+    }
     return painted;
 }
 
