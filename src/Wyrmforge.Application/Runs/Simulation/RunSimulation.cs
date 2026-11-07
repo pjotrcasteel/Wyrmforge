@@ -190,6 +190,7 @@ public sealed partial class RunSimulation
         UpdateStatusDamage(delta);
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         UpdateDragonEncounter(delta, width, height);
+        UpdateAshfangGroundFires(delta);
         UpdateSpawn(delta, width, height);
         UpdateAim(movement);
         agentSpellSound = null;
@@ -410,6 +411,7 @@ public sealed partial class RunSimulation
             DamageNumbers = CreateDamageNumberSnapshots(),
             DragonDefeat = dragonDefeat,
             AshfangEffects = CreateAshfangEffects(),
+            AshfangGroundFires = CreateAshfangGroundFireSnapshots(),
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
