@@ -128,6 +128,15 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
         var dataUrl = sample.GetProperty("png").GetString()!;
         await File.WriteAllBytesAsync(Path.Combine(directory, $"live-ground-{label}.png"),
             Convert.FromBase64String(dataUrl[(dataUrl.IndexOf(',') + 1)..]));
+        await File.WriteAllTextAsync(Path.Combine(directory, $"live-ground-{label}.json"),
+            JsonSerializer.Serialize(new
+            {
+                Kills = sample.GetProperty("kills").GetInt32(),
+                Seconds = sample.GetProperty("seconds").GetInt32(),
+                SiteSeed = sample.GetProperty("seed").GetInt32(),
+                Excavated = sample.GetProperty("dug").Clone(),
+                RepaintDiagnostics = sample.GetProperty("terrain").Clone(),
+            }, new JsonSerializerOptions { WriteIndented = true }));
         await Page.ScreenshotAsync(new()
         {
             Path = Path.Combine(directory, $"live-hunt-{label}.png"),
@@ -146,10 +155,10 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
         var dug = new HashSet<int>(before.GetProperty("dug").EnumerateArray().Select(x => x.GetInt32()));
         dug.UnionWith(after.GetProperty("dug").EnumerateArray().Select(x => x.GetInt32()));
         var excluded = new HashSet<int>();
-        // Five-block halo includes cliff overdraw, microcolumn fronts, cast shadows and decals.
+        // Four-block halo includes the existing painter's conservative cliff/front and shadow overdraw.
         foreach (var changed in dug)
-            for (var dy = -5; dy <= 5; dy++)
-                for (var dx = -5; dx <= 5; dx++)
+            for (var dy = -4; dy <= 4; dy++)
+                for (var dx = -4; dx <= 4; dx++)
                 {
                     var row = changed / columns + dy;
                     var column = changed % columns + dx;
