@@ -534,7 +534,9 @@ function draw(state, snapshot, width, height) {
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const husk of snapshot.rimeHusks ?? []) drawRimeHusk(ctx, husk);
     drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
-    drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    // Canvas paints the ground under the actors; GPU replays this overlay after compositing
+    // because GPU terrain takes its albedo from the cached terrain surface, not this Canvas.
+    if (!gpu) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawWinterBellGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     drawGlassReliquaryGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
@@ -694,6 +696,9 @@ function draw(state, snapshot, width, height) {
         }
     }
     const glowOnGround = Boolean(emissive && gpu);
+    // Keep the Warden's authoritative ring and 37-frame impact visible above the GPU
+    // presentation. Doing this before gpu.render would discard the effect on 64px/m terrain.
+    if (gpu) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (state.terrainFrame && snapshot.environment?.terrain) {
