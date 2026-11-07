@@ -57,9 +57,8 @@ public sealed class AshfangGroundFirePatchTests
         Invoke(simulation, "BeginPlayerDamageFrame", 0.05d);
         Invoke(simulation, "UpdateAshfangGroundFires", 0.05d);
         Invoke(simulation, "ResolvePlayerDamage");
-        Assert.IsLessThan(startHealth, player.Health + 10,
-            "Even two overlapping patches cannot stack into a boss-sized hit.");
-        Assert.IsGreaterThan(startHealth, player.Health, "An active patch must do actual physical damage.");
+        Assert.IsTrue(startHealth - player.Health is > 0 and < 10,
+            "Active fire must damage the hunter once, without stacking into a boss-sized hit.");
 
         player.Position = new Vector2D(500, 400);
         Invoke(simulation, "BeginPlayerDamageFrame", 2.8d);
