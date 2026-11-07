@@ -36,10 +36,11 @@ gameplay, world save schema, or Cloudflare feedback collector.
    Keep Authentication and Firestore isolated too if cloud save is enabled.
 2. In GitHub repository Settings → Secrets and variables → Actions → Variables,
    add `FIREBASE_TEST_PROJECT_ID` equal to the exact project ID.
-3. Run the official Firebase CLI `firebase init hosting:github` or create a
-   limited-purpose Hosting deploy service account and securely add its JSON as
-   the `FIREBASE_SERVICE_ACCOUNT_TEST` secret to the `player-test`
-   GitHub Environment. Never commit or paste private keys.
+3. Create a limited-purpose Firebase Hosting deployment service account and
+   securely store its JSON as the `FIREBASE_SERVICE_ACCOUNT_TEST` secret in the
+   `player-test` GitHub Environment. Never commit or paste private keys.
+   Do **not** generate a second automatic Firebase GitHub workflow: the
+   checked-in `player-test.yml` is the single controlled release pipeline.
 4. In GitHub Settings → Environments → `player-test`, configure a required
    reviewer and restrict deployments to the `test` branch, where available.
 5. Enable Google Authentication in the **test project** only if the app needs
