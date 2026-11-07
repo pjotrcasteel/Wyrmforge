@@ -127,6 +127,7 @@ export function renderArenaMapOverview(canvas) {
     const fineStates = [...frame.fine].map(([index, block]) => [index,
         JSON.stringify([block.topsoil, block.stoneTop, block.heights, block.wear])]);
     return { png: out.toDataURL('image/png'), terrainPng: cache.canvas.toDataURL('image/png'),
+        normalPng: cache.normalCanvas?.toDataURL('image/png') ?? null,
         columns: frame.columns, rows: frame.rows, face: FACE_PIXELS,
         band, pad: TERRAIN_PAD_UNITS, scale: TERRAIN_ART_SCALE, visualSeed: frame.visualSeed,
         road: frame.road?.slice() ?? [], dug: [...frame.fine.keys()], fineStates,
