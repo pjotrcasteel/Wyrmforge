@@ -173,6 +173,9 @@ public static class ArenaTerrainGenerator
     private static bool TorchSpot(ArenaTerrainGrid grid, bool[] protectedCells, int column, int row)
     {
         if (!grid.Contains(column, row) || column < 2 || column >= grid.Columns - 2 || protectedCells[row * grid.Columns + column]) return false;
+        // Both Hunt entry and exit sit on the central axis. Keep a hunter-width open passage there even when
+        // the winding road approaches it: a solid post must never pin the hunter against the exit approach.
+        if (Math.Abs(column + .5 - grid.Columns / 2.0) < 1.5) return false;
         for (var dy = -1; dy <= 1; dy++)
             for (var dx = -1; dx <= 1; dx++)
             {
