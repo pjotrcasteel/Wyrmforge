@@ -33,6 +33,10 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 const regional = new TerrainCanvasCache();
                 regional.enableNormals();
                 regional.update(before, 0);
+                const pixels = canvas => canvas.getContext('2d')
+                    .getImageData(0, 0, canvas.width, canvas.height).data;
+                const baseline = Object.fromEntries(['canvas', 'normalCanvas']
+                    .map(channel => [channel, pixels(regional[channel])]));
 
                 // A single Fireball excavation. All other surface data is identical.
                 const heights = Array(64).fill(0);
@@ -55,8 +59,6 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                         const a = regional[channel], b = full[channel];
                         if (a.width !== b.width || a.height !== b.height)
                             throw new Error(channel + ': dimensions disagree');
-                        const pixels = canvas => canvas.getContext('2d')
-                            .getImageData(0, 0, canvas.width, canvas.height).data;
                         const left = pixels(a), right = pixels(b);
                         let mismatches = 0;
                         for (let i = 0; i < left.length; i++)
@@ -78,11 +80,24 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 });
                 regional.update(next, 0);
                 compareFull(next);
+                // The leftmost 1m column is outside both dirty regions. Every one of its
+                // pixels, including the normal map, must match the untouched initial terrain.
+                for (const channel of ['canvas', 'normalCanvas']) {
+                    const canvas = regional[channel], actual = pixels(canvas), original = baseline[channel];
+                    const untouchedWidth = 32 * 2;
+                    let mismatches = 0;
+                    for (let y = 0; y < canvas.height; y++)
+                        for (let x = 0; x < untouchedWidth * 4; x++) {
+                            const index = y * canvas.width * 4 + x;
+                            if (original[index] !== actual[index]) mismatches++;
+                        }
+                    differences.push(mismatches);
+                }
                 return differences;
             }
             """);
 
-        CollectionAssert.AreEqual(new[] { 0, 0, 0, 0 }, differences,
+        CollectionAssert.AreEqual(new[] { 0, 0, 0, 0, 0, 0 }, differences,
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
 }
