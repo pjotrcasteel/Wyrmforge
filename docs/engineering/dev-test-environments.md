@@ -7,7 +7,7 @@ The existing `main` branch automatically publishes to
 That address remains the **development** build for the immediate alpha.
 
 The **player-test** build is published independently to a Firebase Hosting
-project at `https://<FIREBASE_TEST_PROJECT_ID>.web.app/`.
+project at `https://wyrmforge-player-test.web.app/`.
 A separate browser origin prevents shared `localStorage`, service workers
 and other browser-origin state between builds. Two directories under the same
 GitHub Pages hostname would **not** provide that separation.
@@ -31,11 +31,17 @@ gameplay, world save schema, or Cloudflare feedback collector.
 
 ## One-time owner setup
 
-1. Create a **dedicated Firebase Spark project for player testing** (different
-   from the existing development/alpha Firebase project). Enable Hosting.
-   Keep Authentication and Firestore isolated too if cloud save is enabled.
-2. In GitHub repository Settings → Secrets and variables → Actions → Variables,
-   add `FIREBASE_TEST_PROJECT_ID` equal to the exact project ID.
+1. The **dedicated Firebase Spark player-test project** has been created with
+   ID `wyrmforge-player-test`. In Firebase Console enable Authentication
+   (Google sign-in, with support email). Since October 15, 2026 newly created
+   Firebase projects no longer automatically include a default Hosting site;
+   enabling Firebase Authentication creates that default site. Check Hosting
+   now lists `wyrmforge-player-test.web.app`. If not, create the default site
+   using Firebase's hosted Cloud Shell (`firebase hosting:sites:create
+   wyrmforge-player-test --project wyrmforge-player-test`); this runs in Google's
+   cloud, not on your personal computer. Keep Auth and Firestore isolated.
+2. The player-test workflow is already pinned to `wyrmforge-player-test`;
+   there is **no project ID variable** to enter or maintain.
 3. Create a limited-purpose Firebase Hosting deployment service account and
    securely store its JSON as the `FIREBASE_SERVICE_ACCOUNT_TEST` secret in the
    `player-test` GitHub Environment. Never commit or paste private keys.
@@ -48,7 +54,7 @@ gameplay, world save schema, or Cloudflare feedback collector.
    Ensure published `HunterBackup` settings use the test project. The workflow
    rejects a nonempty project ID that differs from `FIREBASE_TEST_PROJECT_ID`.
 6. For in-game remote feedback, add the exact test origin (e.g.
-   `https://<FIREBASE_TEST_PROJECT_ID>.web.app`, no trailing slash) as the
+   `https://wyrmforge-player-test.web.app`, no trailing slash) as the
    `WYRMFORGE_TEST_ORIGIN` variable in the GitHub `playtest-collector`
    environment. Run **Deploy private playtest collector** and validate a
    consented POST from the test browser; the existing Pages origin remains
@@ -62,7 +68,7 @@ gameplay, world save schema, or Cloudflare feedback collector.
    defined in the repository and its release requires the environment approval.
    Creating the branch in advance is optional.
 8. Inspect the workflow's live smoke result and
-   `https://<FIREBASE_TEST_PROJECT_ID>.web.app/build-id.txt`; then share the
+   `https://wyrmforge-player-test.web.app/build-id.txt`; then share the
    test URL.
 
 ### Promote a tested commit
