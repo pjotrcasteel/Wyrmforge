@@ -152,6 +152,12 @@ jobs:
         run: |
           set -euo pipefail
           base="https://$PROJECT_ID.web.app"
-          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "$base/" | grep -q "$GITHUB_SHA"
-          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "$base/build-id.txt" | grep -q "player-test $GITHUB_SHA"
+          # Download first: grep -q closes a pipe early when it finds its match.
+          # Under pipefail this makes curl exit 23, even when Hosting is healthy.
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors \
+            --output "$RUNNER_TEMP/player-test-index.html" "$base/"
+          grep -Fq "$GITHUB_SHA" "$RUNNER_TEMP/player-test-index.html"
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors \
+            --output "$RUNNER_TEMP/player-test-build-id.txt" "$base/build-id.txt"
+          grep -Fq "player-test $GITHUB_SHA" "$RUNNER_TEMP/player-test-build-id.txt"
           echo "Player-test build $GITHUB_SHA is live at $base/"
