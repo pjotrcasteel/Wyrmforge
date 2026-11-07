@@ -49,3 +49,13 @@ test('enabled layer lab independently isolates named layers and resets without a
         globalThis.location = previous;
     }
 });
+
+test('GPU selection keeps the renderer instance rather than coercing it to a boolean', async () => {
+    const { selectHuntGpuWorld } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-layer-lab.js');
+    const world = { begin() {}, render() {}, engine: { setDebugView() {} } };
+    const lighting = { lights: [] };
+    assert.strictEqual(selectHuntGpuWorld(lighting, world, true), world, 'begin/render must remain callable');
+    assert.strictEqual(selectHuntGpuWorld(lighting, world, false), null, 'switching off GPU uses Canvas fallback');
+    assert.strictEqual(selectHuntGpuWorld(null, world, true), null, 'missing authoritative lighting uses Canvas fallback');
+    assert.strictEqual(selectHuntGpuWorld(lighting, null, true), null, 'GPU not loaded yet uses Canvas fallback');
+});
