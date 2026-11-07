@@ -18,12 +18,12 @@ test('live Hunt cards use only the temporary upgrade overlay without old Rank II
     assert.match(css, /\.fateweave-reroll/, 'Temporary card rerolls must keep their mobile styling');
 });
 
-test('canonical Hunt reward service never drafts spell ranks or evolutions', () => {
+test('canonical Hunt reward service keeps permanent spell ranks separate from gated temporary evolutions', () => {
     const service = source('src/Wyrmforge.Application/Runs/LevelUp/LevelChoiceService.cs');
     const start = service.indexOf('public IReadOnlyList<LevelChoice> RollForProgression(');
     const end = service.indexOf('public bool ApplyForProgression(', start);
     const roll = service.slice(start, end);
-    assert.match(roll, /CreateMajorPool\(build\)/);
+    assert.match(roll, /CreateMajorPool\(build, rewardLevel\)/);
     assert.match(roll, /DraftRefinements\(/);
     assert.doesNotMatch(roll, /CreateEvolutionDraft|spell:\{|SpellUpgrade|NewSpell/);
 

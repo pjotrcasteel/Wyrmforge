@@ -13,6 +13,9 @@ public sealed record DevelopmentHuntSetup(
     double Height,
     bool Invulnerable = false)
 {
+    public bool ReviewFireEvolution { get; init; }
+    public Wyrmforge.Domain.Progression.Signature.FireballMutationId ReviewMutation { get; init; } =
+        Wyrmforge.Domain.Progression.Signature.FireballMutationId.Detonation;
     public bool AdaptiveAgents { get; init; }
     public bool BossReadySpell { get; init; } = true;
     public bool Environment { get; init; }

@@ -17,7 +17,7 @@ internal sealed class BurningGroundState(Vector2D position, double damagePerTick
 
     public double DamagePerTick { get; } = damagePerTick;
 
-    public double EffectiveRadius { get; } = Radius * Math.Clamp(radiusMultiplier, 1, 2);
+    public double EffectiveRadius { get; } = Radius * Math.Clamp(radiusMultiplier, 0.5, 2);
 
     public double RemainingSeconds { get; private set; } = DurationSeconds * Math.Clamp(durationMultiplier, 1, 2);
 

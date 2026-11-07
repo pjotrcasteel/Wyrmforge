@@ -14,12 +14,36 @@ public partial class BuildView : IAsyncDisposable
 {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
+    [Parameter] public EventCallback<DivineArchetype> OnSwitchSchool { get; set; }
+    private PassiveSchool? inspectedSchool;
+
+    private async Task SwitchInspectedSchoolAsync()
+    {
+        if (inspectedSchool is not { } school || !ArcaneSchoolCatalog.Get(school).Authored) return;
+        await OnSwitchSchool.InvokeAsync(ArcaneSchoolCatalog.Get(school).Archetype);
+        inspectedSchool = null;
+        inspectorOpen = false;
+        await ResetViewAsync();
+    }
+
     [Parameter] public FireballCoreState? FireballCore { get; set; }
     [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
     [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
 
 
     private PassiveSchool ActiveSchool => ArcaneSchoolCatalog.For(CharacterSchool);
+
+    private int SchoolInvestment(PassiveSchool school) => Selection.Selected.Select(PassiveTreeCatalog.Get)
+        .Where(node => ArcaneSchoolCatalog.Owner(node) == school).Sum(node => node.Cost);
+
+    private string AtmosphereStyle(PassiveSchool school)
+    {
+        var invested = SchoolInvestment(school);
+        var opacity = .12 + .28 * invested / (invested + 12d);
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 930);
+        return PointStyle(point) + FormattableString.Invariant($"opacity:{opacity:0.###};");
+    }
+
 
     protected override void OnParametersSet()
     {
@@ -248,7 +272,7 @@ public partial class BuildView : IAsyncDisposable
         _ => ArcaneNodePresentation.SchoolIcon(node),
     };
 
-    private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
+    private static string KindLabel(PassiveNodeDefinition node) => node.Tier is { } tier ? tier.ToString().ToUpperInvariant() : node.Kind switch
     {
         PassiveNodeKind.Origin => "ORIGIN",
         PassiveNodeKind.Travel => "MINOR · PASSIVE BONUS",
@@ -273,7 +297,7 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task Reset()
     {
-        if (!refundWarningAccepted && Selection.Selected.Any(id => ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) != ActiveSchool))
+        if (!refundWarningAccepted && Selection.Selected.Count > 0)
         {
             pendingReset = true;
             showRefundDialog = true;
@@ -291,6 +315,7 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task FocusSchoolAsync(PassiveSchool school)
     {
+        inspectedSchool = school;
         var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 740);
         inspectorOpen = false;
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);

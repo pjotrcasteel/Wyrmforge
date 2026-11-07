@@ -35,7 +35,7 @@ public sealed class ArcaneWebTierTests
         {
             PassiveNodeTier.Minor => node.Cost == 1,
             PassiveNodeTier.Medium => node.Cost == 2,
-            PassiveNodeTier.Major => node.Cost == 3,
+            PassiveNodeTier.Major or PassiveNodeTier.Grand or PassiveNodeTier.Keystone => node.Cost == 3,
             _ => false,
         }));
     }

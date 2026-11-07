@@ -52,6 +52,18 @@ public partial class Home
 
     private bool CanSelectOffering(DragonEssenceId id) => essenceVault.Count(id) > 0 && RunOfferingCatalog.CanOffer(id, forgeProgression);
 
+    private async Task SwitchCharacterSchoolAsync(DivineArchetype school)
+    {
+        if (characterSchool is null || !Enum.IsDefined(school)) return;
+        var definition = DivineArchetypeCatalog.Get(school);
+        if (definition.ExistingSignature is not { } signature) return;
+        characterSchool = school;
+        selection.SetActiveSchool(ArcaneSchoolCatalog.For(school));
+        await SetPreferredPrimaryAsync(signature);
+        await SaveCharacterSchoolAsync();
+        await SaveArcaneBuildAsync();
+    }
+
     private async Task ChooseCharacterSchoolAsync(DivineArchetype school)
     {
         if (characterSchool is not null || !DivineArchetypeCatalog.CanCreateCharacter(school)) return;

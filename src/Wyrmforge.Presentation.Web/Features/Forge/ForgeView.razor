@@ -154,12 +154,12 @@
                 }
                 else if (SpellcraftOpen)
                 {
-                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                    <BuildView OnSwitchSchool="OnSwitchSchool" CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
                         FocusNodeId="@nexusFocus" />
                 }
                 else
                 {
-                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
+                    <BuildView OnSwitchSchool="OnSwitchSchool" CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
                 }
                 break;
             case ShellSection.Forge:
@@ -208,6 +208,7 @@
 @code {
     [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
     [Parameter] public DivineArchetype? CharacterSchool { get; set; }
+    [Parameter] public EventCallback<DivineArchetype> OnSwitchSchool { get; set; }
     [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;

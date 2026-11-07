@@ -4105,7 +4105,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".web-node[aria-label^='Surge.']").EvaluateAsync("el => el.click()");
         await Page.Locator(".route-action.refund").ClickAsync();
         await Expect(warning).ToHaveCountAsync(0);
-        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("2 reserved");
+        await Expect(Page.Locator(".web-points-hud")).ToContainTextAsync("6");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Research" }).ClickAsync();
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         await Page.Locator(".web-node[aria-label^='Static.']").EvaluateAsync("el => el.click()");
@@ -4122,18 +4122,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".route-action.refund").ClickAsync();
         await warning.GetByRole(AriaRole.Button, new() { Name = "Refund points", Exact = true }).ClickAsync();
         await Expect(warning).ToHaveCountAsync(0);
-        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("3 reserved");
+        await Expect(Page.Locator(".web-points-hud")).ToContainTextAsync("7");
+        await Expect(Page.Locator(".reserved-points")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".web-node[aria-label^='Spark.']")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("selected"));
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
-        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("3 reserved");
+        await Expect(Page.Locator(".web-points-hud")).ToContainTextAsync("7");
+        await Expect(Page.Locator(".reserved-points")).ToHaveCountAsync(0);
         await Page.Locator(".web-node[aria-label^='Surge.']").EvaluateAsync("el => el.click()");
         await Expect(Page.Locator(".node-inspector")).ToContainTextAsync("OTHER SCHOOL");
         await Expect(Page.Locator(".route-action.allocate")).ToHaveCountAsync(0);
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 1"));
-        await ScreenshotAsync($"arcane-wheel-reserved-{width}.png");
+        await ScreenshotAsync($"arcane-wheel-refunded-{width}.png");
     }
 
     [TestMethod]

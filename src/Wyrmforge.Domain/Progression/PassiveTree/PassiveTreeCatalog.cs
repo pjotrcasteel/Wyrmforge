@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Wyrmforge.Domain.Progression.PassiveTree.Schools;
 
 namespace Wyrmforge.Domain.Progression.PassiveTree;
@@ -14,6 +15,7 @@ public static class PassiveTreeCatalog
     [
         Origin,
         .. FirePassiveNodes.All,
+        .. FireSynergyNodes.All,
         .. FrostPassiveNodes.All,
         .. StormPassiveNodes.All,
         .. ArcanePassiveNodes.All,
@@ -27,6 +29,11 @@ public static class PassiveTreeCatalog
         new(OriginId, "storm-start"),
         new(OriginId, "arcane-start"),
 
+        new("fire-2", "fire-cinder-thread"),
+        new("fire-cinder-thread", "fire-ember-memory"),
+        new("fire-ember-memory", "fire-crucible"),
+        new("fire-crucible", "fire-ember-covenant"),
+        new("fire-ember-covenant", "fire-long-pyre"),
         new("fire-start", "fire-1"),
         new("fire-1", "fire-needle-practice"),
         new("fire-1", "fire-molten-density"),
@@ -107,10 +114,19 @@ public static class PassiveTreeCatalog
         new("hybrid-arcane-frost-2", "frost-arcane-gate"),
     ];
 
-    public static PassiveNodeDefinition Get(string id) => All.Single(node => node.Id == id);
+    // Stable indexes keep route planning and inspection proportional to the visited
+    // graph, rather than scanning the entire eventual six-school catalog per edge.
+    private static readonly FrozenDictionary<string, PassiveNodeDefinition> NodesById =
+        All.ToFrozenDictionary(node => node.Id, StringComparer.Ordinal);
 
-    public static IReadOnlyList<string> Neighbors(string id) => Connections
-        .Where(connection => connection.From == id || connection.To == id)
-        .Select(connection => connection.From == id ? connection.To : connection.From)
-        .ToArray();
+    private static readonly FrozenDictionary<string, IReadOnlyList<string>> AdjacentNodes = Connections
+        .SelectMany(edge => new[] { (Node: edge.From, Neighbor: edge.To), (Node: edge.To, Neighbor: edge.From) })
+        .GroupBy(edge => edge.Node, StringComparer.Ordinal)
+        .ToFrozenDictionary(group => group.Key,
+            group => (IReadOnlyList<string>)Array.AsReadOnly(group.Select(edge => edge.Neighbor).ToArray()), StringComparer.Ordinal);
+
+    public static PassiveNodeDefinition Get(string id) => NodesById.TryGetValue(id, out var node)
+        ? node : throw new InvalidOperationException($"Unknown Arcane Web node '{id}'.");
+
+    public static IReadOnlyList<string> Neighbors(string id) => AdjacentNodes.GetValueOrDefault(id) ?? Array.Empty<string>();
 }

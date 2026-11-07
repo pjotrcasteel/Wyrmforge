@@ -22,6 +22,14 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
     {
         ArgumentNullException.ThrowIfNull(setup);
         var simulation = Create(selectedNodes, seed: setup.Seed, ascendantWyrm: setup.Ascendant ? setup.Wyrm : null);
+        if (setup.ReviewFireEvolution)
+        {
+            if (setup.Spell != Wyrmforge.Domain.Spells.SpellId.FireBolt || setup.BossReadySpell)
+                throw new ArgumentException("Fire evolution review uses the crafted rank-one Fireball.", nameof(setup));
+            simulation.PrepareFireballCoreLevel(5);
+            simulation.PrepareFireballMutations([setup.ReviewMutation]);
+            simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt);
+        }
         simulation.StartDevelopmentHunt(setup);
         return simulation;
     }

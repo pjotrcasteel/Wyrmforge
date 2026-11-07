@@ -27,6 +27,8 @@ public sealed record RunRenderSnapshot(
     public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
 
     public IReadOnlyList<DamageNumberRenderSnapshot> DamageNumbers { get; init; } = [];
+    /// <summary>Live damaging fields rendered through EssenceBursts; read-only evidence without duplicating geometry.</summary>
+    public int BurningGroundCount { get; init; }
     public bool PresentationPaused { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
     public GpuLightingFrame? Lighting { get; init; }

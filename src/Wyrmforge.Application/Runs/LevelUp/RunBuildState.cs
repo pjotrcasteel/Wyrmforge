@@ -10,6 +10,10 @@ namespace Wyrmforge.Application.Runs.LevelUp;
 
 public sealed class RunBuildState
 {
+    public int PreparedFireballLevel { get; internal set; } = 1;
+    public IReadOnlySet<Wyrmforge.Domain.Progression.Signature.FireballMutationId> PreparedFireballMutations { get; internal set; } =
+        new HashSet<Wyrmforge.Domain.Progression.Signature.FireballMutationId>();
+
     private readonly Dictionary<SpellSchool, int> schoolPower = [];
 
     public int SchoolPower(SpellSchool school) => schoolPower.GetValueOrDefault(school);

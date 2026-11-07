@@ -14,4 +14,6 @@ public enum RunUpgradeId
     Velocity,
     Emberbrand,
     StaticCharge,
+    CinderCascade,
+    SolarWake,
 }

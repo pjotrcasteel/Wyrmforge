@@ -152,7 +152,7 @@ export function readArenaDiagnostics(canvas) {
         // These never modify the original scene, C# simulation, or VFX renderer.
         fireballVisual: state.latestSnapshot?.fireballVisual ?? null,
         elementalImpacts: state.latestSnapshot?.elementalImpacts ?? [],
-        burningGrounds: state.latestSnapshot?.burningGrounds ?? [],
+        burningGroundCount: state.latestSnapshot?.burningGroundCount ?? 0,
         essenceBursts: state.latestSnapshot?.essenceBursts ?? [],
         castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,

@@ -36,33 +36,32 @@ public sealed class SchoolLearningTests
     }
 
     [TestMethod]
-    public void Remove_InactiveNode_ReservesRefundUntilItsSchoolReturns()
+    public void Remove_InactiveNode_ReturnsSharedPointsExactlyOnce()
     {
         var selection = new PassiveTreeSelection(2);
         selection.SetActiveSchool(PassiveSchool.Storm);
-        selection.Select("storm-start");
+        Assert.IsTrue(selection.Select("storm-start"));
         selection.SetActiveSchool(PassiveSchool.Fire);
-        selection.Select("fire-start");
+        Assert.IsTrue(selection.Select("fire-start"));
         Assert.IsTrue(selection.Remove("storm-start"));
-        Assert.AreEqual(1, selection.Reserved[PassiveSchool.Storm]);
-        Assert.AreEqual(0, selection.AvailablePoints);
-        Assert.IsFalse(selection.Select("fire-1"));
-        selection.SetActiveSchool(PassiveSchool.Storm);
+        Assert.IsFalse(selection.Remove("storm-start"));
         Assert.AreEqual(0, selection.ReservedPoints);
         Assert.AreEqual(1, selection.AvailablePoints);
-        Assert.IsTrue(selection.Select("storm-start"));
+        Assert.IsTrue(selection.Select("fire-1"));
+        selection.SetActiveSchool(PassiveSchool.Storm);
+        Assert.AreEqual(0, selection.AvailablePoints);
     }
 
     [TestMethod]
-    public void Reset_MixedSchoolInvestments_PreservesInactiveReservations()
+    public void Reset_MixedSchoolInvestments_ReturnsAllEarnedPoints()
     {
         var selection = new PassiveTreeSelection(2);
         selection.RestoreNodes(["storm-start", "fire-start"]);
         selection.SetActiveSchool(PassiveSchool.Fire);
         selection.Reset();
         Assert.AreEqual(0, selection.SpentPoints);
-        Assert.AreEqual(1, selection.ReservedPoints);
-        Assert.AreEqual(1, selection.AvailablePoints);
+        Assert.AreEqual(0, selection.ReservedPoints);
+        Assert.AreEqual(2, selection.AvailablePoints);
     }
 
     [TestMethod]
@@ -73,7 +72,7 @@ public sealed class SchoolLearningTests
         selection.RestoreNodes(["storm-start", "storm-1", "fire-start"]);
         selection.RestoreReserved(new Dictionary<PassiveSchool, int> { [PassiveSchool.Frost] = 1 });
         Assert.AreEqual(3, selection.Selected.Count);
-        Assert.AreEqual(0, selection.AvailablePoints);
+        Assert.AreEqual(1, selection.AvailablePoints);
         Assert.IsFalse(selection.Select("storm-2"));
         Assert.IsTrue(PassiveCombatProfile.Create(selection.Selected).CastIntervalMultiplier < 1);
     }
@@ -107,8 +106,8 @@ public sealed class SchoolLearningTests
             [PassiveSchool.Frost] = -1,
             [(PassiveSchool)999] = 10,
         });
-        Assert.AreEqual(1, selection.ReservedPoints);
-        Assert.AreEqual(0, selection.AvailablePoints);
+        Assert.AreEqual(0, selection.ReservedPoints);
+        Assert.AreEqual(1, selection.AvailablePoints);
         Assert.AreEqual(2, selection.PointBudget);
     }
     [TestMethod]
