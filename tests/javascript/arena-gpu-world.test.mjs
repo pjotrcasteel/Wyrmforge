@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { huntLightFrame, HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
+import { huntLightFrame, HuntGpuWorld, canDirectUploadHuntGround, GROUND_NORMAL_ID, GROUND_EMISSIVE_ID } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 
 test('terrain albedo and normal maps share a stable capture revision; animated emissive remains live', () => {
     const uploads = [], captures = [];
@@ -19,6 +19,46 @@ test('terrain albedo and normal maps share a stable capture revision; animated e
     HuntGpuWorld.prototype.begin.call(world, ctx, { x: 10, y: 20 }, 320, 390, {}, {}, null);
     assert.equal(uploads[1][4], undefined, 'legacy dynamic ground remains uncached');
     assert.equal(captures[0][8].revision, undefined);
+});
+
+test('iPhone ground uploads use the painted Canvas directly while Chrome and actor captures retain the copy path', () => {
+    const ground = { width: 640, height: 780, getContext() { throw new Error('Ground must never be copied'); } };
+    for (const id of ['hunt-ground', GROUND_NORMAL_ID, GROUND_EMISSIVE_ID]) {
+        assert.equal(canDirectUploadHuntGround(id, ground, 640, 780, true), true);
+        assert.equal(canDirectUploadHuntGround(id, ground, 640, 780, false), false);
+        assert.equal(canDirectUploadHuntGround(id, ground, 639, 780, true), false);
+    }
+    assert.equal(canDirectUploadHuntGround('hunt-mage:primary', ground, 640, 780, true), false);
+    assert.equal(canDirectUploadHuntGround('hunt-ground', {}, 640, 780, true), false);
+
+    const registered = [];
+    const world = {
+        directGroundCanvasUpload: true, used: new Set(), dirtyTextures: new Set(), layers: new Map(),
+        engine: { registerTexture(...args) { registered.push(args); } },
+        canReuseCapture: HuntGpuWorld.prototype.canReuseCapture,
+    };
+    const upload = (id, source, revision) => HuntGpuWorld.prototype.uploadLayer.call(
+        world, id, source, 320, 390, revision, id !== GROUND_NORMAL_ID, 2);
+    assert.equal(upload('hunt-ground', ground, 'revision-1'), true);
+    const layer = world.layers.get('hunt-ground');
+    assert.equal(layer.pixels, ground, 'the source should be the texture image, without another GPU-sized canvas');
+    assert.equal(layer.texture.image, ground);
+    assert.equal(registered.length, 1);
+    world.dirtyTextures.clear();
+    assert.equal(upload('hunt-ground', ground, 'revision-1'), false, 'unchanged ground needs no GPU upload');
+    assert.equal(world.dirtyTextures.size, 0);
+    assert.equal(upload('hunt-ground', ground, 'revision-2'), true, 'a crater must upload the new ground');
+    assert.equal(layer.texture.image, ground);
+    assert.equal(world.dirtyTextures.has('hunt-ground'), true);
+    const replacement = { ...ground };
+    assert.equal(upload('hunt-ground', replacement, 'revision-2'), true,
+        'a replacement viewport canvas must not be mistaken for the cached source');
+    assert.equal(layer.texture.image, replacement);
+    assert.equal(upload(GROUND_NORMAL_ID, ground, 'revision-2'), true);
+    assert.equal(world.layers.get(GROUND_NORMAL_ID).texture.image, ground);
+    assert.equal(upload(GROUND_EMISSIVE_ID, ground, undefined), true);
+    assert.equal(upload(GROUND_EMISSIVE_ID, ground, undefined), true,
+        'animated impact emission still refreshes on every frame');
 });
 
 test('Hunt lights track camera with the same world scale and handedness as receivers', () => {
