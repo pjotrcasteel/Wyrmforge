@@ -1,6 +1,7 @@
 // Opt-in, read-only renderer diagnostics for physical iPhone Safari Hunts.
 // ?layerLab=1 shows independent render-layer switches. Never changes C# game or voxel data.
 export const LAYER_OPTIONS = Object.freeze([
+    ['gpu', 'WebGL GPU composite', 'Turn off the GPU renderer and use the existing Canvas2D fallback'],
     ['excavation', 'Excavated microvoxels', 'Repaint original grass/road instead of post-impact terrain'],
     ['faces', 'Voxel side faces', 'Hide vertical dirt/stone cliff and crater faces'],
     ['decals', 'Baked ground decals', 'Hide authored litter, roots and ground decoration'],
