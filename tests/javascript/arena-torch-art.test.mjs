@@ -35,6 +35,19 @@ test('a torch draws a post and a flickering flame from fills only', () => {
     assert.notEqual(JSON.stringify(fills), before, 'the flame moves between frames');
 });
 
+test('torch bases have a small planted contact shadow without making the flame opaque', () => {
+    const fills = [];
+    const ctx = { fillStyle: '', fillRect(x, y, w, h) { fills.push({ x, y, w, h, color: this.fillStyle }); } };
+    const torch = collectTorches(frame)[0];
+    drawTorch(ctx, torch, 0, 'post');
+    assert.ok(fills.some(f => f.color === 'rgba(8,6,6,.42)' && f.x === torch.x - 7 && f.w === 14),
+        'contact shadow fits the C# 6-unit physical radius, not a full voxel tile');
+    fills.length = 0;
+    drawTorch(ctx, torch, 0, 'flame');
+    assert.ok(!fills.some(f => f.color === 'rgba(8,6,6,.42)'),
+        'the independent emissive flame does not paint or duplicate the solid foot shadow');
+});
+
 test('the road line and torches arrive once and survive later terrain deltas', () => {
     const first = mergeTerrainFrame(null, { revision: 1, columns: 2, rows: 2, surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [], road: [8, 8, 24, 40], torches: [40, 40] });
     assert.deepEqual(first.road, [8, 8, 24, 40]);
