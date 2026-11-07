@@ -151,7 +151,8 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
             for (var dy = -5; dy <= 5; dy++)
                 for (var dx = -5; dx <= 5; dx++)
                 {
-                    var row = changed / columns + dy, column = changed % columns + dx;
+                    var row = changed / columns + dy;
+                    var column = changed % columns + dx;
                     if (row >= 0 && row < rows && column >= 0 && column < columns)
                         excluded.Add(row * columns + column);
                 }
