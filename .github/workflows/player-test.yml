@@ -1,10 +1,10 @@
 name: Deploy Wyrmforge player test
 
-# Only deliberate updates to the test branch may deploy the player build.
-# The workflow_dispatch option must be run against the test branch.
+# Only deliberate updates to the dedicated release/player-test branch may deploy the player build.
+# The workflow_dispatch option must be run against the dedicated release/player-test branch.
 on:
   push:
-    branches: [test]
+    branches: [release/player-test]
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/test'
+    if: github.ref == 'refs/heads/release/player-test'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout approved test commit
@@ -116,7 +116,7 @@ jobs:
           retention-days: 7
 
   deploy:
-    if: github.ref == 'refs/heads/test'
+    if: github.ref == 'refs/heads/release/player-test'
     needs: build
     runs-on: ubuntu-latest
     environment:
