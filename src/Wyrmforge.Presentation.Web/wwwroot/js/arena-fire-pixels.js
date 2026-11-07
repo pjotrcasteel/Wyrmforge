@@ -53,7 +53,7 @@ export function fireBurstProfile(impact){
     const t=clamp(Number(impact?.progress)||0,0,1);
     return {rank,progress:t,segments:5+rank*2+(impact?.surge?5:0),
         radius:(11+rank*6)*(.45+t*.84)*(impact?.surge?1.36:1),
-        alpha:1-t,surge:impact?.surge===true};
+        alpha:1-t,flash:clamp(1-t/.32,0,1),surge:impact?.surge===true};
 }
 export function drawFirePixelImpact(ctx,impact,reducedMotion=false){
     if(!impact)return;
@@ -67,6 +67,29 @@ export function drawFirePixelImpact(ctx,impact,reducedMotion=false){
     ctx.fillStyle='#78382d';ctx.fillRect(-radius*.38,-radius*.3,radius*.76,radius*.6);
     ctx.fillStyle='#c95f35';ctx.fillRect(-radius*.27,-radius*.25,radius*.54,radius*.5);
     ctx.fillStyle='#f6ad61';ctx.fillRect(-radius*.14,-radius*.15,radius*.28,radius*.3);
+    // Even a first-rank Fireball lands with a fierce but very brief white-hot snap.
+    // The hot flash is transient VFX, NOT a larger/deeper physical crater.
+    // Use a few faceted whole-pixel shards rather than a costly fullscreen bloom.
+    if(profile.flash>0){
+        ctx.save();
+        ctx.globalAlpha*=profile.flash;
+        const core=Math.max(5,Math.round(radius*.48));
+        ctx.fillStyle='#ffcf86';ctx.fillRect(-core*.75,-core*.75,core*1.5,core*1.5);
+        ctx.fillStyle='#fff2cb';ctx.fillRect(-core*.5,-core*.5,core,core);
+        if(!reducedMotion){
+            const reach=radius*.78;
+            ctx.fillStyle='#ffa54f';
+            ctx.fillRect(-reach-2,-2,Math.max(3,core*.55),4);
+            ctx.fillRect(reach-core*.3,-2,Math.max(3,core*.55),4);
+            ctx.fillRect(-2,-reach-1,4,Math.max(3,core*.55));
+            ctx.fillRect(-2,reach-core*.3,4,Math.max(3,core*.55));
+            ctx.fillStyle='#ffe0a0';
+            ctx.fillRect(-reach*.6,-reach*.6,3,3);
+            ctx.fillRect(reach*.55,-reach*.48,3,3);
+            ctx.fillRect(-reach*.48,reach*.58,3,3);
+        }
+        ctx.restore();
+    }
     // Faceted scatter reads as a collision rather than an unrelated glowing ring.
     const count=reducedMotion?Math.max(5,rank+4):segments;
     for(let i=0;i<count;i++){

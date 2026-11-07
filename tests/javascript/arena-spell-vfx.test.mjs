@@ -70,6 +70,27 @@ test('earned fourth-cast surge is visibly distinct but remains one attack', () =
     assert.doesNotThrow(() => drawSpellImpact(fakeContext(), { ...impact, surge: true }, true));
 });
 
+test('rank-one Fireball gets a vivid but fleeting hit flash without enlarging terrain damage', async () => {
+    const { fireBurstProfile } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-fire-pixels.js');
+    assert.equal(fireBurstProfile({ rank: 1, progress: 0 }).flash, 1);
+    assert.equal(fireBurstProfile({ rank: 1, progress: .5 }).flash, 0);
+
+    const paint = (progress, reducedMotion = false) => {
+        const calls = [];
+        const ctx = fakeContext();
+        ctx.fillRect = (x, y, width, height) => calls.push({ color: ctx.fillStyle, x, y, width, height });
+        drawSpellImpact(ctx, { x: 60, y: 70, spell: 1, rank: 1, progress }, reducedMotion);
+        return calls;
+    };
+    const start = paint(.05), cooling = paint(.5), reduced = paint(.05, true);
+    assert.ok(start.some(call => call.color === '#fff2cb'), 'the first-rank impact has a white-hot core');
+    assert.ok(!cooling.some(call => call.color === '#fff2cb'), 'the flash goes away quickly, not a permanent glowing disc');
+    assert.ok(start.length > cooling.length, 'short-lived shards make even the first Fireball feel punchy');
+    assert.ok(reduced.some(call => call.color === '#fff2cb'), 'reduced motion keeps a readable hit response');
+    assert.ok(reduced.length < start.length, 'reduced motion suppresses the outward kinetic shards');
+});
+
 test('only canonical fire events create pixel impacts and rank/Surge change output', async () => {
     const { firePixelProfile, fireBurstProfile } =
         await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-fire-pixels.js');
