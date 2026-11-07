@@ -41,7 +41,7 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 // A single Fireball excavation. All other surface data is identical.
                 const heights = Array(64).fill(0);
                 for (const [x, y] of [[2, 2], [3, 2], [2, 3], [3, 3]])
-                    heights[y * 8 + x] = -3;
+                    heights[y * 8 + x] = -1;
                 const changed = mergeTerrainFrame(before, {
                     ...terrain, revision: 2, fine: [
                         { index: 6 * columns + 6, heights, topsoil: 0, stoneTop: -8 }
