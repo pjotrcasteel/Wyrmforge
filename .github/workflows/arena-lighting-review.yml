@@ -10,7 +10,6 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-night-lighting.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lighting-calibration.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-l3-material-atmosphere.js'
-      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js'
       - 'tests/Wyrmforge.Browser.Tests/ArenaLightingBrowserTests.cs'
       - '.github/workflows/arena-lighting-review.yml'
   workflow_dispatch:
