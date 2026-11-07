@@ -102,29 +102,36 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
                 const state = module.readArenaDiagnostics(element);
                 const map = module.renderArenaMapOverview(element);
                 if (!map || !state?.hunt1Terrain) throw new Error('No authoritative terrain overview');
-                const image = new Image();
-                image.src = map.terrainPng;
-                await image.decode();
-                const canvas = document.createElement('canvas');
-                canvas.width = image.naturalWidth;
-                canvas.height = image.naturalHeight;
-                const context = canvas.getContext('2d', { willReadFrequently: true });
-                context.drawImage(image, 0, 0);
+                if (!map.normalPng) throw new Error('No real terrain normal-map capture');
                 const pixelWidth = map.face * map.scale;
                 const pixelPad = map.pad * map.scale;
-                const hashes = [];
-                for (let row = 0; row < map.rows; row++)
-                    for (let column = 0; column < map.columns; column++) {
-                        const pixels = context.getImageData(column * pixelWidth,
-                            pixelPad + row * pixelWidth, pixelWidth, pixelWidth).data;
-                        let hash = 2166136261 >>> 0;
-                        for (let index = 0; index < pixels.length; index++) {
-                            hash ^= pixels[index];
-                            hash = Math.imul(hash, 16777619) >>> 0;
+                const hashColumns = async url => {
+                    const image = new Image();
+                    image.src = url;
+                    await image.decode();
+                    const canvas = document.createElement('canvas');
+                    canvas.width = image.naturalWidth;
+                    canvas.height = image.naturalHeight;
+                    const context = canvas.getContext('2d', { willReadFrequently: true });
+                    context.drawImage(image, 0, 0);
+                    const hashes = [];
+                    for (let row = 0; row < map.rows; row++)
+                        for (let column = 0; column < map.columns; column++) {
+                            const pixels = context.getImageData(column * pixelWidth,
+                                pixelPad + row * pixelWidth, pixelWidth, pixelWidth).data;
+                            let hash = 2166136261 >>> 0;
+                            for (let index = 0; index < pixels.length; index++) {
+                                hash ^= pixels[index];
+                                hash = Math.imul(hash, 16777619) >>> 0;
+                            }
+                            hashes.push(hash);
                         }
-                        hashes.push(hash);
-                    }
-                return JSON.stringify({ png: map.png, groundPng: map.terrainPng, hashes,
+                    return hashes;
+                };
+                const hashes = await hashColumns(map.terrainPng);
+                const normalHashes = await hashColumns(map.normalPng);
+                return JSON.stringify({ png: map.png, groundPng: map.terrainPng,
+                    groundNormalPng: map.normalPng, hashes, normalHashes,
                     columns: map.columns, rows: map.rows, fineStates: map.fineStates,
                     kills: state.hud?.kills ?? 0, seconds: state.hud?.seconds ?? 0,
                     seed: map.visualSeed, band: map.band, road: map.road,
@@ -139,6 +146,9 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
         var groundUrl = sample.GetProperty("groundPng").GetString()!;
         await File.WriteAllBytesAsync(Path.Combine(directory, $"live-ground-{label}.png"),
             Convert.FromBase64String(groundUrl[(groundUrl.IndexOf(',') + 1)..]));
+        var normalUrl = sample.GetProperty("groundNormalPng").GetString()!;
+        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-normal-{label}.png"),
+            Convert.FromBase64String(normalUrl[(normalUrl.IndexOf(',') + 1)..]));
         await File.WriteAllTextAsync(Path.Combine(directory, $"live-ground-{label}.json"),
             JsonSerializer.Serialize(new
             {
@@ -188,23 +198,26 @@ public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
                         excluded.Add(row * columns + column);
                 }
 
-        var earlier = before.GetProperty("hashes").EnumerateArray().Select(x => x.GetUInt32()).ToArray();
-        var later = after.GetProperty("hashes").EnumerateArray().Select(x => x.GetUInt32()).ToArray();
-        Assert.HasCount(columns * rows, earlier);
-        Assert.HasCount(columns * rows, later);
-        var mismatches = new List<int>();
-        var examined = 0;
-        for (var index = 0; index < earlier.Length; index++)
+        foreach (var channel in new[] { "hashes", "normalHashes" })
         {
-            if (excluded.Contains(index)) continue;
-            examined++;
-            if (earlier[index] != later[index]) mismatches.Add(index);
+            var earlier = before.GetProperty(channel).EnumerateArray().Select(x => x.GetUInt32()).ToArray();
+            var later = after.GetProperty(channel).EnumerateArray().Select(x => x.GetUInt32()).ToArray();
+            Assert.HasCount(columns * rows, earlier);
+            Assert.HasCount(columns * rows, later);
+            var mismatches = new List<int>();
+            var examined = 0;
+            for (var index = 0; index < earlier.Length; index++)
+            {
+                if (excluded.Contains(index)) continue;
+                examined++;
+                if (earlier[index] != later[index]) mismatches.Add(index);
+            }
+            Assert.IsGreaterThan(900, examined,
+                "more than 900 unaffected source cells must be compared, including unchanged old craters");
+            Assert.IsEmpty(mismatches,
+                $"The real Hunt restyled {mismatches.Count} undamaged {channel} 1m cells after " +
+                $"{after.GetProperty("kills").GetInt32()} kills. First cells: {string.Join(",", mismatches.Take(20))}. " +
+                $"Terrain: {after.GetProperty("terrain")}");
         }
-        Assert.IsGreaterThan(900, examined,
-            "more than 900 unaffected source cells must be compared, including unchanged old craters");
-        Assert.IsEmpty(mismatches,
-            $"The real Hunt restyled {mismatches.Count} undamaged 1m cells after " +
-            $"{after.GetProperty("kills").GetInt32()} kills. First cells: {string.Join(",", mismatches.Take(20))}. " +
-            $"Terrain: {after.GetProperty("terrain")}");
     }
 }
