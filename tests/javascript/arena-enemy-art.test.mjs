@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { footDrop } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-grounding.js';
 import { enemyPixelFrames, enemyWalkLegs, drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-art.js';
 
@@ -35,6 +36,22 @@ test('lighting colors a side of the enemy without changing one sprite per actual
     } finally {
         globalThis.document=oldDocument;
     }
+});
+
+test('fallback Hollowed, Ashling and Bell Warden feet land at their C# footprint for every body scale', () => {
+    const original=globalThis.document;
+    try {
+        globalThis.document={createElement:()=>({width:36,height:44,getContext:()=>({fillRect(){}})})};
+        for (const [kind, radius] of [[0,12], [2,17], [9,30]]) {
+            let bounds;
+            const ctx={save(){},restore(){},drawImage(image,x,y,width,height){bounds={x,y,width,height};}};
+            const enemy={entityId:kind+1,x:100,y:200,kind,radius,healthRatio:1};
+            drawEnemyPixelArt(ctx,enemy);
+            assert.ok(bounds, `kind ${kind} must produce an actual fallback capture`);
+            assert.equal(bounds.y+bounds.height,enemy.y+footDrop(radius),
+                `kind ${kind}: front feet must not sink below the real ground`);
+        }
+    } finally { globalThis.document=original; }
 });
 
 test('actual stable enemy identity animates only when the corresponding C# actor has moved', () => {
