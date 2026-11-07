@@ -54,6 +54,8 @@ public static class ArenaTerrainGenerator
         var rng = new Random(unchecked(seed * (int)0x9E3779B1 ^ 0x5EED7E44));
         var grid = new ArenaTerrainGrid(columns, rows);
         grid.SetVisualSeed(seed);
+        // Deterministic gameplay moisture, wholly separate from terrain skin variation.
+        grid.SetFireMoistureSeed(unchecked(seed ^ 0x3A51F22D));
         var (route, roadLine) = Rasterize(rng, columns, rows, spawn, exit);
         var protectedCells = new bool[columns * rows];
         foreach (var (rc, rr) in route)

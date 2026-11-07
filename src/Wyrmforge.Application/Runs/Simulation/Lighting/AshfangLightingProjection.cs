@@ -7,10 +7,11 @@ namespace Wyrmforge.Application.Runs.Simulation.Lighting;
 public static class AshfangLightingProjection
 {
     public static IReadOnlyList<LightingEmitter> Capture(DragonRenderSnapshot? dragon,
-        IReadOnlyList<AshfangEffectRenderSnapshot> effects)
+        IReadOnlyList<AshfangEffectRenderSnapshot> effects,
+        IReadOnlyList<AshfangGroundFireRenderSnapshot>? groundFires = null)
     {
         var lights = new List<LightingEmitter>();
-        if (dragon is { School: SpellSchool.Fire, Health: > 0, FlightStage: "ground", Action: "breath" }
+        if (dragon is { School: SpellSchool.Fire, Health: > 0, FlightStage: "ground", Action: "breath" or "breath_sweep" }
             && dragon.ActionPhase is "windup" or "strike")
         {
             var scale = dragon.Radius / 60;
@@ -25,6 +26,14 @@ public static class AshfangLightingProjection
             if (effect.Kind is not ("meteor" or "cinder") || effect.Progress >= .16) continue;
             lights.Add(new LightingEmitter($"ashfang-effect:{effect.Id}", $"ashfang-effect:{effect.Id}", "point",
                 effect.X, effect.Y, 8, "#f8a368", .65 * (1 - Math.Clamp(effect.Progress, 0, .16) / .16), effect.Radius * 2.4));
+        }
+        // A limited set of true GPU light emitters makes the scorched floor illuminate nearby actors.
+        // Static atlas pixels stay unchanged; only these tiny C#-owned lights move/fade.
+        foreach (var patch in (groundFires ?? []).Where(patch => patch.Burning)
+            .OrderByDescending(patch => patch.Fuel == "wood").ThenBy(patch => patch.Id).Take(6))
+        {
+            lights.Add(new LightingEmitter($"ashfang-ground-fire:{patch.Id}", $"ashfang-ground-fire:{patch.Id}", "point",
+                patch.X, patch.Y, patch.Z + 6, "#e87a43", patch.Fuel == "wood" ? .28 : .19, patch.Radius * 1.8));
         }
         return lights;
     }
