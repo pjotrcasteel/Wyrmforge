@@ -577,14 +577,25 @@ test('depth cues: a contact shadow at the foot of a raised face and a lit lip al
     assert.equal(gentle.cues.length, 0, 'a one-step rise is too small to shade');
 });
 
-test('depth cues work per microcolumn inside a dug block: crater walls are shadowed where they rise', () => {
+test('depth cues feather crater rims without painting solid dark or bright 4px squares', () => {
     const heights = new Array(64).fill(0);
     for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) heights[y * 8 + x] = -4;
     const ctx = recorder();
-    paintTerrain(ctx, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) }, 0, 0, false);
-    const shadowed = ctx.cues.filter(call => call[5].includes('.15)') && call[3] === 4 && call[4] === 4);
-    assert.ok(shadowed.length >= 4, 'the floor microcells under the far wall are shadowed');
-    for (const call of ctx.cues) assert.ok(call[3] % 4 === 0 && call[4] % 4 === 0, 'cues are whole microcells');
+    paintTerrain(ctx, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0],
+        fine: new Map([[0, block(heights)]]) }, 0, 0, false);
+    const shadows = ctx.cues.filter(call => call[5].includes('.15)') && call[3] === 4 && call[4] === 1);
+    assert.ok(shadows.length >= 4, 'the far rim shades the first art-pixel row, not the entire dug microtile');
+    const lips = ctx.cues.filter(call => call[5].includes('.12') && call[3] === 4 && call[4] === 1);
+    assert.ok(lips.length >= 4, 'the near rim has a narrow lit edge');
+    assert.ok(ctx.cues.every(call => call[3] === 4 && call[4] <= 2),
+        'all micro-rim cues must be crisp one- or two-pixel strips, not 4px tile-sized overlays');
+    const strong = new Array(64).fill(0);
+    for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) strong[y * 8 + x] = -6;
+    const high = recorder();
+    paintTerrain(high, { revision: 2, columns: 1, rows: 1, surface: [0], material: [0],
+        fine: new Map([[0, block(strong)]]) }, 0, 0, false);
+    assert.ok(high.cues.some(call => call[5].includes('.26') && call[3] === 4 && call[4] === 2),
+        'taller crater walls retain a stronger, but still limited, two-pixel shadow');
 });
 
 test('raised soil is grass-capped, not bare ground', () => {
