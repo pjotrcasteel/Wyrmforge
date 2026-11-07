@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-function map(touchEvents = false) {
+function map(touchEvents = false, worldSize = 3200) {
     const listeners = new Map(), frames = new Map(), captures = new Set();
     let nextFrame = 0, disconnected = false;
     const canvas = { style: { setProperty(name, value) { this[name] = value; } } };
     const viewport = {
         clientWidth: 340, clientHeight: 500,
-        dataset: { worldSize: '3200', startX: '1600', startY: '1200' },
+        dataset: { worldSize: String(worldSize), startX: '1600', startY: '1200' },
         querySelector: () => canvas,
         classList: { toggle() {}, remove() {} },
         getBoundingClientRect: () => ({ left: 0, top: 0 }),
@@ -161,3 +161,18 @@ test('Safari pinch followed by one-finger panning stays continuous and never sel
     assert.equal(m.listeners.size, 0);
     assert.equal(m.windowListeners.size, 0);
 });
+
+for (const size of [4800, 12000]) {
+    test(`whole Web fits a phone as the authored graph grows to ${size}`, () => {
+        const m = map(false, size);
+        m.viewport.clientWidth = 320;
+        m.api.overview(m.viewport);
+        const { x, y, scale } = m.view();
+        assert.ok(size * scale <= 320);
+        assert.ok(x >= 0 && y >= 0);
+        m.api.zoom(m.viewport, -0.5);
+        assert.ok(size * m.view().scale <= 320);
+        m.api.reset(m.viewport);
+        assert.equal(m.view().scale, .95);
+    });
+}

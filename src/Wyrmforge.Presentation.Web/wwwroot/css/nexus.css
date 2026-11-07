@@ -249,7 +249,7 @@
 .menu-nexus .school-wheel-view .web-pan-space { position:static; width:100%; height:100%; }
 .menu-nexus .school-wheel-view .arcane-web-canvas,
 .menu-nexus .school-wheel-view .web-connections,
-.menu-nexus .school-wheel-rings { width:3200px; height:3200px; }
+.menu-nexus .school-wheel-rings { width:var(--web-world-size,3200px); height:var(--web-world-size,3200px); }
 .menu-nexus .school-wheel-view .arcane-web-canvas { will-change:transform; }
 .menu-nexus .school-wheel-rings { position:absolute; inset:0; pointer-events:none; }
 .menu-nexus .school-wheel-rings circle { fill:none; stroke:#b4864e40; stroke-width:2; }

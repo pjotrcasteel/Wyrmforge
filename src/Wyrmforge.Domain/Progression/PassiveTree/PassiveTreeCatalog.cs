@@ -16,6 +16,7 @@ public static class PassiveTreeCatalog
         Origin,
         .. FirePassiveNodes.All,
         .. FireSynergyNodes.All,
+        .. FireOuterNodes.All,
         .. FrostPassiveNodes.All,
         .. StormPassiveNodes.All,
         .. ArcanePassiveNodes.All,
@@ -24,6 +25,7 @@ public static class PassiveTreeCatalog
 
     public static IReadOnlyList<PassiveTreeConnection> Connections { get; } =
     [
+        .. FireOuterNodes.Connections,
         new(OriginId, "fire-start"),
         new(OriginId, "frost-start"),
         new(OriginId, "storm-start"),

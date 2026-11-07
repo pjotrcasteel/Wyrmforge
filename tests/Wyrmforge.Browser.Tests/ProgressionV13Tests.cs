@@ -36,6 +36,15 @@ public sealed class ProgressionV13Tests : BrowserTest
         await Capture(page, $"web-{width}-grand-goal");
         await page.GetByRole(AriaRole.Button, new() { Name = "Close node inspector" }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
+        foreach (var (id, name) in new[] { ("fire-enduring-5", "Undying Hearth"),
+            ("fire-furnace-5", "Heart of Cinders"), ("fire-shelter-5", "Shelter in the Pyre") })
+        {
+            await page.Locator($"[data-node-id='{id}']").ClickAsync();
+            await Expect(page.Locator(".node-inspector.open")).ToContainTextAsync(name);
+            await Capture(page, $"web-{width}-{id}");
+            await page.GetByRole(AriaRole.Button, new() { Name = "Close node inspector" }).ClickAsync();
+            await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
+        }
         await page.GetByRole(AriaRole.Button, new() { Name = "Inspect Cryomancer sector", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Activate school", Exact = true }).ClickAsync();
         await Expect(page.Locator("[data-school='Frost']")).ToHaveAttributeAsync("data-active", "true");

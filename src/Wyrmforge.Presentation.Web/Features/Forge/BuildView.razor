@@ -41,9 +41,9 @@
                  data-start-x="@Coordinate(ArcaneWheelLayout.Center)" data-start-y="@Coordinate(ArcaneWheelLayout.Center - 400)"
                  role="region" aria-label="Arcane specialization map" tabindex="0" @ref="viewport">
                 <div class="web-pan-space">
-                    <div class="arcane-web-canvas">
-                        <svg class="school-wheel-rings" viewBox="0 0 3200 3200" aria-hidden="true">
-                            <circle cx="1600" cy="1600" r="1500" />
+                    <div class="arcane-web-canvas" style="--web-world-size:@(ArcaneWheelLayout.Size)px">
+                        <svg class="school-wheel-rings" viewBox="@($"0 0 {ArcaneWheelLayout.Size} {ArcaneWheelLayout.Size}")" aria-hidden="true">
+                            <circle cx="@ArcaneWheelLayout.Center" cy="@ArcaneWheelLayout.Center" r="1500" />
                         </svg>
                         @foreach (var school in ArcaneSchoolCatalog.All)
                         {
@@ -65,7 +65,7 @@
                         <span class="web-region-label region-immolation" aria-hidden="true"
                               style="@PointStyle(ArcaneWheelLayout.RegionLabel(PassiveSchool.Fire, ActiveSchool, 1050, 980))">IMMOLATION</span>
 
-                        <svg class="web-connections" viewBox="0 0 3200 3200" aria-hidden="true">
+                        <svg class="web-connections" viewBox="@($"0 0 {ArcaneWheelLayout.Size} {ArcaneWheelLayout.Size}")" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
                                 <path class="@ConnectionClass(connection)" data-from="@connection.From" data-to="@connection.To"

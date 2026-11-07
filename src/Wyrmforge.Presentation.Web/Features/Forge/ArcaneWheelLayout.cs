@@ -7,7 +7,7 @@ namespace Wyrmforge.Presentation.Web.Features.Forge;
 // ownership and connections remain domain data; these are presentation routes.
 internal static class ArcaneWheelLayout
 {
-    internal const double Size = 3200;
+    internal const double Size = 4800;
     internal const double Center = Size / 2;
     internal readonly record struct Point(double X, double Y);
     private static readonly PassiveSchool[] Order =
@@ -26,6 +26,22 @@ internal static class ArcaneWheelLayout
     private static readonly IReadOnlyDictionary<string, (double Side, double Radius)> Landmarks =
         new Dictionary<string, (double, double)>
         {
+            ["fire-pyre-crossroads"] = (-350, 1560),
+            ["fire-enduring-1"] = (-650, 1720),
+            ["fire-enduring-2"] = (-650, 1850),
+            ["fire-enduring-3"] = (-650, 1980),
+            ["fire-enduring-4"] = (-650, 2110),
+            ["fire-enduring-5"] = (-650, 2240),
+            ["fire-furnace-1"] = (-350, 1720),
+            ["fire-furnace-2"] = (-350, 1850),
+            ["fire-furnace-3"] = (-350, 1980),
+            ["fire-furnace-4"] = (-350, 2110),
+            ["fire-furnace-5"] = (-350, 2240),
+            ["fire-shelter-1"] = (-50, 1720),
+            ["fire-shelter-2"] = (-50, 1850),
+            ["fire-shelter-3"] = (-50, 1980),
+            ["fire-shelter-4"] = (-50, 2110),
+            ["fire-shelter-5"] = (-50, 2240),
             ["fire-cinder-thread"] = (-90, 700),
             ["fire-ember-memory"] = (-130, 830),
             ["fire-crucible"] = (-240, 960),

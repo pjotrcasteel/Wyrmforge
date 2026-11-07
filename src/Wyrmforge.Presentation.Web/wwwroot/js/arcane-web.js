@@ -1,6 +1,7 @@
 (function () {
     const states = new WeakMap();
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const minimumScale = (viewport, state) => Math.min(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200));
     const readingScale = viewport => viewport.clientWidth < 700 ? 0.95 : 1;
     const distance = points => Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
     const midpoint = points => ({ x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 });
@@ -22,7 +23,7 @@
 
     function applyScale(viewport, state, scale, point = { x: viewport.clientWidth / 2, y: viewport.clientHeight / 2 }) {
         const world = worldPoint(viewport, state, point);
-        state.scale = clamp(scale, 0.08, 1.6);
+        state.scale = clamp(scale, minimumScale(viewport, state), 1.6);
         state.x = world.x - (point.x - viewport.clientWidth / 2) / state.scale;
         state.y = world.y - (point.y - viewport.clientHeight / 2) / state.scale;
         render(viewport, state);
@@ -58,7 +59,7 @@
                 render(viewport, state);
             } else if (points.length === 2 && state.pinch) {
                 const middle = midpoint(points);
-                state.scale = clamp(state.pinch.scale * distance(points) / state.pinch.distance, 0.08, 1.6);
+                state.scale = clamp(state.pinch.scale * distance(points) / state.pinch.distance, minimumScale(viewport, state), 1.6);
                 state.x = state.pinch.world.x - (middle.x - viewport.clientWidth / 2) / state.scale;
                 state.y = state.pinch.world.y - (middle.y - viewport.clientHeight / 2) / state.scale;
                 render(viewport, state);
@@ -194,7 +195,7 @@
         const state = states.get(viewport);
         if (!state) return;
         state.x = state.y = state.size / 2;
-        state.scale = Math.max(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200));
+        state.scale = Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200);
         render(viewport, state);
     }
 
