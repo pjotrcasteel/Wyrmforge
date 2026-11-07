@@ -342,7 +342,8 @@ public sealed class ArenaTerrainExcavationTests
         var fissure = new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(8, 8), 1)
         {
             FissureReach = 16,
-            FissureSeed = 73
+            FissureSeed = 73,
+            PreserveProtectedRoute = true
         };
         var changes = ArenaTerrainMutation.Apply(grid, fissure, guarded);
 
@@ -352,6 +353,12 @@ public sealed class ArenaTerrainExcavationTests
             Assert.AreEqual(0, grid.Surface(8, row), $"the authored road at row {row} must remain level");
             Assert.IsFalse(grid.IsSubdivided(8, row), $"the scripted fissure must not subdivide road at row {row}");
         }
+
+        var bossGrid = FlatSoil(16);
+        var bossFissure = fissure with { PreserveProtectedRoute = false };
+        var bossChanges = ArenaTerrainMutation.Apply(bossGrid, bossFissure, guarded);
+        Assert.IsTrue(bossChanges.Any(change => change.Column == 8),
+            "boss fissures must retain their original ability to destroy protected road columns");
 
         var shot = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, ArenaTerrainGrid.CenterOf(8, 8), 1), guarded);
         Assert.IsTrue(shot.Any(change => change.Column == 8), "direct Fireballs must still damage protected road safely");
