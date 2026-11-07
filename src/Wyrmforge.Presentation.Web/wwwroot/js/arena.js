@@ -559,7 +559,7 @@ function draw(state, snapshot, width, height) {
     drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready(), authoredKinds);
     drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
     if (!authoredKinds.has(2)) ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
-    if (authoredOn) drawAuthoredCorpses(ctx, state.authored);
+    if (authoredOn) drawAuthoredCorpses(ctx, state.authored, { x: camera.x, y: camera.y, width, height });
     // The Mire Hound now uses authored pixel poses, including a real collapse.
     // Only C# identity-bearing death bursts create these bodies.
     for (const corpse of state.paintedCorpses.corpses?.values() ?? [])
