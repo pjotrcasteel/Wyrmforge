@@ -31,6 +31,11 @@ export function layerLabEnabled(key) {
     return !active || !disabled.has(key);
 }
 
+/** Preserve the actual GPU instance: using && with a final boolean turns the renderer into true. */
+export function selectHuntGpuWorld(lighting, gpuWorld) {
+    return lighting && layerLabEnabled('gpu') ? gpuWorld ?? null : null;
+}
+
 export function layerLabView() { return active ? view : 'lit'; }
 export function layerLabGeneration() { return generation; }
 
