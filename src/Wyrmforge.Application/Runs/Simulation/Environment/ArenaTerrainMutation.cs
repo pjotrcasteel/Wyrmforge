@@ -28,6 +28,8 @@ public sealed record ArenaTerrainImpact(long Id, Vector2D Position, int Power, V
     public int FissureReach { get; init; }
     /// <summary>Gives every stage of one cleft the same arms, so it only lengthens as it is re-applied.</summary>
     public long FissureSeed { get; init; }
+    /// <summary>Protects the authored road from ambient field-ambush cracks; boss and player attacks remain destructible.</summary>
+    public bool PreserveProtectedRoute { get; init; }
 }
 
 /// <summary>Progressive excavation rules. Proposed values: tune in playtests.</summary>
@@ -61,9 +63,9 @@ public static class ArenaTerrainMutation
             ? FaceHits(grid, impact, direction.Normalized(), power)
             : CraterHits(impact, power)).ToList();
         var perColumn = ArenaTerrainGrid.MicroPerColumn;
-        // Scripted ambush fissures must never tear up the authored route. Direct Fireballs
-        // still chip the road (down to its existing half-metre safety floor).
-        if (impact.FissureReach > 0 && protectedCells is { Length: > 0 })
+        // Ambient field-ambush fissures must not tear up the authored route. Fireballs and
+        // boss fissures still chip it down to its existing half-metre safety floor.
+        if (impact.PreserveProtectedRoute && protectedCells is { Length: > 0 })
         {
             hits.RemoveAll(hit =>
             {
@@ -89,7 +91,7 @@ public static class ArenaTerrainMutation
                 ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
             grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor);
         }
-        Settle(grid, hits, protectedCells, Touch, impact.FissureReach > 0);
+        Settle(grid, hits, protectedCells, Touch, impact.PreserveProtectedRoute);
 
         var changes = new List<ArenaTerrainChange>();
         foreach (var (column, row, surface, material, fine, oldWear) in touched)
