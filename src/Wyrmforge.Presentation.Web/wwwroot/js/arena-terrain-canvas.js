@@ -320,6 +320,16 @@ export function microMaterial(block, height) {
     return height <= block.stoneTop ? TERRAIN_MATERIAL.Stone : block.topsoil;
 }
 
+/**
+ * A first 12.5 cm scrape is displaced turf or road, not a bare-earth pit.
+ * Keep the exact authored splat pixels on its lowered top; the exposed sides and
+ * deeper impacts still use the physical dirt/stone material. This is visual only.
+ */
+export function retainsShallowSurface(baseMaterial, coarseHeight, height, block) {
+    return (baseMaterial === TERRAIN_MATERIAL.Soil || baseMaterial === TERRAIN_MATERIAL.Ash) &&
+        height === coarseHeight - 1 && microMaterial(block, height) === baseMaterial;
+}
+
 export const CRACK_DARK = '#17100d';
 export const CRACK_HOT = '#ff7a14';
 
@@ -883,6 +893,51 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             painted += wholeDepthCues(ctx, frame, column, row, coarseHeight, originalTop);
         }
         ctx.restore();
+        // Keep the original road/grass mask where a single microcell of topsoil was scraped.
+        // Draw it once, clipped to ONLY those lowered 4px micro-tops. All deep holes remain
+        // genuine exposed earth/rock; the neighbouring original art is never regenerated.
+        if (baseMaterial === TERRAIN_MATERIAL.Soil || baseMaterial === TERRAIN_MATERIAL.Ash) {
+            ctx.save();
+            ctx.beginPath();
+            let hasScrapes = false;
+            for (let my = 0; my < MICRO_PER_COLUMN; my++) {
+                let run = -1;
+                for (let mx = 0; mx <= MICRO_PER_COLUMN; mx++) {
+                    const height = mx < MICRO_PER_COLUMN ? block.heights[my * MICRO_PER_COLUMN + mx] : null;
+                    const shallow = retainsShallowSurface(baseMaterial, coarseHeight, height, block);
+                    if (shallow && run < 0) run = mx;
+                    if (!shallow && run >= 0) {
+                        ctx.rect(column * FACE_PIXELS + run * MICRO_UNITS,
+                            row * FACE_PIXELS + my * MICRO_UNITS - (coarseHeight - 1) * MICROCELL_UNITS,
+                            (mx - run) * MICRO_UNITS, MICRO_UNITS);
+                        run = -1;
+                        hasScrapes = true;
+                    }
+                }
+            }
+            if (hasScrapes) {
+                ctx.clip();
+                const original = blockTopRect(column, row, coarseHeight);
+                const top = { ...original, y: original.y + MICROCELL_UNITS };
+                if (baseMap) painted += drawSplat(ctx, atlas, baseMap, column, row, top.x, top.y);
+                else {
+                    ctx.drawImage(atlas[baseKind][0], texX(column), texY(row), TILE, TILE,
+                        top.x, top.y, top.width, top.height);
+                    painted++;
+                }
+                const tint = heightTint(coarseHeight);
+                if (tint) {
+                    ctx.fillStyle = tint;
+                    ctx.fillRect(top.x, top.y, top.width, top.height);
+                    painted++;
+                }
+                if (baseKind !== 'lavaTop') {
+                    painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, top);
+                    painted += paintShadow(ctx, cellShadow(frame, column, row, coarseHeight), top.x, top.y);
+                }
+            }
+            ctx.restore();
+        }
     }
     for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
@@ -892,9 +947,10 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
             // Preserve every original art pixel unless this individual microcolumn lost height or changed material.
             const unchangedTop = preserveTop && height === coarseHeight && material === baseMaterial;
+            const shallowTop = preserveTop && retainsShallowSurface(baseMaterial, coarseHeight, height, block);
             const tileKind = !atlas ? null : topTileKind(band, material, height, frame, column, row, false);
-            if (unchangedTop) {
-                // The exact original pixel mask is already on the canvas, including decals and normal maps.
+            if (unchangedTop || shallowTop) {
+                // Both unchanged and 12.5 cm scraped tops reuse the exact authored art above.
             } else if (tileKind) {
                 ctx.drawImage(atlas[tileKind][0], texX(column) + microX * microArt, texY(row) + microY * microArt, microArt, microArt,
                     x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
@@ -905,7 +961,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                     : scaleHex(heightShade(topFaceColor(band, material, height), height), 1);
                 ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
-            if (!unchangedTop) painted++;
+            if (!unchangedTop && !shallowTop) painted++;
             if (shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
                 for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
                     const level = shade[(microY * 2 + j) * SHADOW_SAMPLES + microX * 2 + i];
