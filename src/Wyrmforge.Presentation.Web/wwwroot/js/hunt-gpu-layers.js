@@ -104,7 +104,7 @@ export function visibleHuntEnemyLayers(enemies, camera, width, height, guard = 6
  */
 export function reusableEnemyPoseRevision(layer, pose, loaded, occluded = false) {
     const enemy = layer?.enemy;
-    if (!enemy || !pose || !loaded || occluded || pose.emerge || enemy.elite || enemy.telegraph ||
+    if (layer?.kind !== 'enemy' || !enemy || !pose || !loaded || occluded || pose.emerge || enemy.elite || enemy.telegraph ||
         enemy.shieldFacing != null || enemy.invulnerable || enemy.hitFlash || enemy.frozen ||
         (enemy.rimeArmor ?? 0) > 0 || (enemy.opacity ?? 1) !== 1 || (enemy.healthRatio ?? 1) < 1 ||
         !Number.isFinite(enemy.x) || !Number.isFinite(enemy.y) ||
