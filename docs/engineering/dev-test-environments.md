@@ -47,12 +47,16 @@ gameplay, world save schema, or Cloudflare feedback collector.
    it; authorize the test `*.web.app` hostname for Google sign-in.
    Ensure published `HunterBackup` settings use the test project. The workflow
    rejects a nonempty project ID that differs from `FIREBASE_TEST_PROJECT_ID`.
-6. If using in-game remote feedback, first configure the Cloudflare collector
-   to allow the test site origin and verify a consented POST end-to-end.
-   Then set repository variable `WYRMFORGE_TEST_FEEDBACK_ENDPOINT` to an
-   HTTPS endpoint ending in `/v1/reports`. Until explicitly configured,
-   the test bundle exposes no remote collector; local feedback still works.
-   Never put private tokens in the browser.
+6. For in-game remote feedback, add the exact test origin (e.g.
+   `https://<FIREBASE_TEST_PROJECT_ID>.web.app`, no trailing slash) as the
+   `WYRMFORGE_TEST_ORIGIN` variable in the GitHub `playtest-collector`
+   environment. Run **Deploy private playtest collector** and validate a
+   consented POST from the test browser; the existing Pages origin remains
+   accepted. Then set the repository Actions variable
+   `WYRMFORGE_TEST_FEEDBACK_ENDPOINT` to
+   `https://wyrmforge-feedback-collector.pjotr-2.workers.dev/v1/reports`.
+   Until explicitly configured, the test bundle has no remote collector;
+   local feedback still works. Never put private tokens in the browser.
 7. Once a candidate has passed CI and device checks, create the `test` branch
    from that *exact* approved `main` commit. Push it. The workflow is already
    defined in the repository and its release requires the environment approval.
