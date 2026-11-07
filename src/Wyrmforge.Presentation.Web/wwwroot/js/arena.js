@@ -36,6 +36,7 @@ import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAsh
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawFieldAmbushTell } from './arena-field-ambush-vfx.js';
+import { preloadMireHoundVfx, drawMireHoundGround, drawMireHoundContact } from './arena-mire-hound-vfx.js';
 import { drawTransformations } from './arena-transformation-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
@@ -71,6 +72,7 @@ export function initializeArena(canvas, dotNetReference) {
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
     preloadFireballV5();
+    preloadMireHoundVfx();
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
@@ -634,6 +636,8 @@ function draw(state, snapshot, width, height) {
                 if (!(authoredOn && drawAuthoredAshfangDeath(ctx, state.ashfang))) drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
                 const enemy = layer.enemy;
+                // One atlas, two C#-timed halves: ground dust behind the actor, bite contact above.
+                drawMireHoundGround(ctx, enemy, state.reducedMotion.matches);
                 if (gpu) {
                     drawEnemy(ctx, enemy, null,
                         enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
@@ -642,6 +646,7 @@ function draw(state, snapshot, width, height) {
                         enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
                     drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
                 }
+                drawMireHoundContact(ctx, enemy, state.reducedMotion.matches);
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {
                 drawMage(ctx, layer.player ?? snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,

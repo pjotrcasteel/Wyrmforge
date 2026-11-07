@@ -40,4 +40,10 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
 
     /// <summary>Hoarfrost Cantor frost armour left, as a fraction of a full Rime Hymn crust; 0 when bare.</summary>
     public double RimeArmor { get; init; }
+
+    /// <summary>Authoritative Mire Hound attack-phase presentation; no separate VFX damage or collider.</summary>
+    public MireHoundVfxRenderSnapshot? MireHoundVfx { get; init; }
 }
+
+/// <summary>The C#-committed Hound charge phase and contact result, used only to time existing artist frames.</summary>
+public sealed record MireHoundVfxRenderSnapshot(string Phase, double Progress, double DirectionX, double DirectionY, bool PounceLanded);
