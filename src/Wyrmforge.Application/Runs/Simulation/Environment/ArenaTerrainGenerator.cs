@@ -138,7 +138,7 @@ public static class ArenaTerrainGenerator
 
     /// <summary>
     /// Torch posts along the road, one about every nine cells on alternating sides, three to five cells from its centre line (outside the flat
-    /// protected corridor), on open level ground with no tree or boulder beside it. Static and non-colliding: a light and a post for the dark road.
+    /// protected corridor), on open level ground with no tree or boulder beside it. Each base has a small physical footprint, beyond the safe road.
     /// Returns x, y pairs in 1/16 cell units.
     /// </summary>
     private static int[] PlaceTorches(ArenaTerrainGrid grid, List<(double X, double Y)> line, bool[] protectedCells)
