@@ -56,6 +56,8 @@ public sealed class AshfangTerrainFireTests
             .GetField("ashfangGroundFires", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(simulation)!;
         patches.Add(new AshfangGroundFirePatch(1, origin));
+        typeof(RunSimulation).GetField("ashfangGroundFireSequence", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(simulation, 1);
         var revision = grid.Revision;
 
         patches[0].Advance(.75);
