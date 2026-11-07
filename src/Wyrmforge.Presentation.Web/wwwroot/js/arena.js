@@ -34,6 +34,7 @@ import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHoll
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
+import { preloadAshfangGroundFlames, drawAshfangGroundFires } from './arena-ashfang-ground-flames.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawFieldAmbushTell } from './arena-field-ambush-vfx.js';
 import { preloadMireHoundVfx, drawMireHoundGround, drawMireHoundContact } from './arena-mire-hound-vfx.js';
@@ -75,6 +76,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadFireballV5();
     preloadMireHoundVfx();
     preloadBellWardenImpact();
+    preloadAshfangGroundFlames();
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
@@ -529,6 +531,8 @@ function draw(state, snapshot, width, height) {
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
+    // In the Canvas path, physical fire decals belong under actor feet and existing telegraphs.
+    if (!gpu) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
@@ -699,6 +703,9 @@ function draw(state, snapshot, width, height) {
     // Keep the Warden's authoritative ring and 37-frame impact visible above the GPU
     // presentation. Doing this before gpu.render would discard the effect on 64px/m terrain.
     if (gpu) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    // The GPU composites the terrain/actors after its ground pass; replay only these bounded
+    // fire patches after that composite, never as a dirty full-terrain texture upload.
+    if (gpu) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (state.terrainFrame && snapshot.environment?.terrain) {

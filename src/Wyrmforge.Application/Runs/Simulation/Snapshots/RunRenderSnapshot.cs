@@ -26,6 +26,9 @@ public sealed record RunRenderSnapshot(
 {
     public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
 
+    /// <summary>Authoritative active Ashfang breath-fire patches and their harmless cooling scars.</summary>
+    public IReadOnlyList<AshfangGroundFireRenderSnapshot> AshfangGroundFires { get; init; } = [];
+
     public IReadOnlyList<DamageNumberRenderSnapshot> DamageNumbers { get; init; } = [];
     public bool PresentationPaused { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
