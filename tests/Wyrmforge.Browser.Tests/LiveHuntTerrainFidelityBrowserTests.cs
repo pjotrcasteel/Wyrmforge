@@ -1,0 +1,223 @@
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Playwright;
+using Microsoft.Playwright.MSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Wyrmforge.Browser.Tests;
+
+/// <summary>
+/// Runs the actual C# Hunt with authored terrain and enemies, then checks source pixels rather than
+/// trusting a synthetic crater. The static road, grass splats and normal-looking world ground
+/// must survive combat outside the physical damage and shadow neighbourhood.
+/// </summary>
+[TestClass]
+public sealed class LiveHuntTerrainFidelityBrowserTests : PageTest
+{
+    /// <summary>
+    /// Repeat the owner's iPhone sequence: enter Trail 1, observe combat, then compare source
+    /// terrain before and after the first and third additional kill.
+    /// </summary>
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task LiveTrail_ThreeKillsDoNotRetextureUnaffectedRoadOrForest(bool bright)
+    {
+        const int width = 390, height = 844;
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var pageErrors = new List<string>();
+        Page.PageError += (_, error) => pageErrors.Add(error);
+        var lighting = bright ? "&bright=1" : "";
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&testSeed=1204&speed=3&perf=1" + lighting,
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // Wait for the real late-loaded forest art, otherwise the legitimate initial art transition
+        // would be misclassified as a combat repaint.
+        await ArenaBrowserWait.UntilAsync(Page, """
+            const kit = (await import('/js/forest-kit.js')).forestKit();
+            return Boolean(kit && state?.worldReady && state?.hunt1Terrain?.paintedRevision ===
+                state?.hunt1Terrain?.snapshotRevision && state?.greyboxLighting === 'shared-gpu');
+            """, 90000, "the real Hunt has painted terrain and decoded forest art");
+
+        var mode = bright ? "bright" : "night";
+        var baseline = await CaptureAsync($"{mode}-start", output);
+        var initialKills = baseline.GetProperty("kills").GetInt32();
+        await ArenaBrowserWait.UntilAsync(Page,
+            $"return (state?.hud?.kills ?? 0) >= {initialKills + 1} && " +
+            "state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision;",
+            120000, "an actual Fireball kill with the updated C# voxel frame");
+        var firstKill = await CaptureAsync($"{mode}-first-kill", output);
+
+        await ArenaBrowserWait.UntilAsync(Page,
+            $"return (state?.hud?.kills ?? 0) >= {initialKills + 3} && " +
+            "state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision;",
+            150000, "three real kills with C# voxel and road updates");
+        var thirdKill = await CaptureAsync($"{mode}-third-kill", output);
+        // Assert while the three-kill evidence is still available. The road-bot can stall
+        // around six kills on a dense field ambush, so an unreachable tenth-kill gate
+        // must not mask the initial terrain-stability regression.
+        Assert.IsEmpty(pageErrors, string.Join(Environment.NewLine, pageErrors));
+
+        CompareUnexcavatedSourcePixels(baseline, firstKill);
+        CompareUnexcavatedSourcePixels(baseline, thirdKill);
+        Assert.AreEqual(baseline.GetProperty("band").GetInt32(), thirdKill.GetProperty("band").GetInt32(),
+            "the real Trail must keep its original regional Wyrm influence, not silently change palettes");
+        Assert.AreEqual(baseline.GetProperty("seed").GetInt32(), thirdKill.GetProperty("seed").GetInt32(),
+            "combat must not regenerate a different forest or road seed");
+        Assert.AreEqual(baseline.GetProperty("road").GetRawText(), thirdKill.GetProperty("road").GetRawText(),
+            "the C# authored road geometry must remain unchanged through enemy deaths and terrain damage");
+        Assert.IsGreaterThan(8, baseline.GetProperty("road").GetArrayLength(),
+            "the real first Trail must have the authored curving road, not a simplified replacement");
+    }
+
+    private async Task<JsonElement> CaptureAsync(string label, string directory)
+    {
+        var json = await Page.EvaluateAsync<string>("""
+            async () => {
+                const module = await import('/js/arena-performance.js');
+                const element = document.querySelector('canvas.game-canvas');
+                const state = module.readArenaDiagnostics(element);
+                const map = module.renderArenaMapOverview(element);
+                if (!map || !state?.hunt1Terrain) throw new Error('No authoritative terrain overview');
+                if (!map.normalPng) throw new Error('No real terrain normal-map capture');
+                const pixelWidth = map.face * map.scale;
+                const pixelPad = map.pad * map.scale;
+                const hashColumns = async url => {
+                    const image = new Image();
+                    image.src = url;
+                    await image.decode();
+                    const canvas = document.createElement('canvas');
+                    canvas.width = image.naturalWidth;
+                    canvas.height = image.naturalHeight;
+                    const context = canvas.getContext('2d', { willReadFrequently: true });
+                    context.drawImage(image, 0, 0);
+                    const hashes = [];
+                    for (let row = 0; row < map.rows; row++)
+                        for (let column = 0; column < map.columns; column++) {
+                            const pixels = context.getImageData(column * pixelWidth,
+                                pixelPad + row * pixelWidth, pixelWidth, pixelWidth).data;
+                            let hash = 2166136261 >>> 0;
+                            for (let index = 0; index < pixels.length; index++) {
+                                hash ^= pixels[index];
+                                hash = Math.imul(hash, 16777619) >>> 0;
+                            }
+                            hashes.push(hash);
+                        }
+                    return hashes;
+                };
+                const hashes = await hashColumns(map.terrainPng);
+                const normalHashes = await hashColumns(map.normalPng);
+                return JSON.stringify({ png: map.png, groundPng: map.terrainPng,
+                    groundNormalPng: map.normalPng, hashes, normalHashes,
+                    columns: map.columns, rows: map.rows, fineStates: map.fineStates,
+                    kills: state.hud?.kills ?? 0, seconds: state.hud?.seconds ?? 0,
+                    seed: map.visualSeed, band: map.band, road: map.road,
+                    dug: map.dug, terrain: state.hunt1Terrain });
+            }
+            """);
+        using var parsed = JsonDocument.Parse(json);
+        var sample = parsed.RootElement.Clone();
+        var dataUrl = sample.GetProperty("png").GetString()!;
+        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-overview-{label}.png"),
+            Convert.FromBase64String(dataUrl[(dataUrl.IndexOf(',') + 1)..]));
+        var groundUrl = sample.GetProperty("groundPng").GetString()!;
+        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-ground-{label}.png"),
+            Convert.FromBase64String(groundUrl[(groundUrl.IndexOf(',') + 1)..]));
+        var normalUrl = sample.GetProperty("groundNormalPng").GetString()!;
+        await File.WriteAllBytesAsync(Path.Combine(directory, $"live-normal-{label}.png"),
+            Convert.FromBase64String(normalUrl[(normalUrl.IndexOf(',') + 1)..]));
+        await File.WriteAllTextAsync(Path.Combine(directory, $"live-ground-{label}.json"),
+            JsonSerializer.Serialize(new
+            {
+                Kills = sample.GetProperty("kills").GetInt32(),
+                Seconds = sample.GetProperty("seconds").GetInt32(),
+                SiteSeed = sample.GetProperty("seed").GetInt32(),
+                Excavated = sample.GetProperty("dug").Clone(),
+                RepaintDiagnostics = sample.GetProperty("terrain").Clone(),
+            }, new JsonSerializerOptions { WriteIndented = true }));
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(directory, $"live-hunt-{label}.png"),
+            FullPage = false,
+        });
+        return sample;
+    }
+
+    private static void CompareUnexcavatedSourcePixels(JsonElement before, JsonElement after)
+    {
+        var columns = before.GetProperty("columns").GetInt32();
+        var rows = before.GetProperty("rows").GetInt32();
+        Assert.AreEqual(columns, after.GetProperty("columns").GetInt32());
+        Assert.AreEqual(rows, after.GetProperty("rows").GetInt32());
+
+        var oldFine = before.GetProperty("fineStates").EnumerateArray().ToDictionary(
+            pair => pair[0].GetInt32(), pair => pair[1].GetString());
+        var newFine = after.GetProperty("fineStates").EnumerateArray().ToDictionary(
+            pair => pair[0].GetInt32(), pair => pair[1].GetString());
+        var altered = oldFine.Keys.Union(newFine.Keys).Where(index =>
+            !oldFine.TryGetValue(index, out var earlier) ||
+            !newFine.TryGetValue(index, out var later) || earlier != later).ToHashSet();
+        Assert.IsNotEmpty(altered, "the live combat replay must actually modify terrain");
+        var excluded = new HashSet<int>();
+        // A metre column's top/wall can project as far as four screen rows vertically
+        // (raised cliffs to the north, deep pits to the south). Those are legitimately
+        // changed *visible* pixels even when their screen row belongs to another column.
+        // Keep the horizontal exclusion to one neighbour; unlike the former 5x5
+        // square, this narrow footprint follows the actual 2.5D projection.
+        // Old craters beyond this footprint must remain pixel-identical.
+        foreach (var changed in altered)
+            for (var dy = -4; dy <= 4; dy++)
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var row = changed / columns + dy;
+                    var column = changed % columns + dx;
+                    if (row >= 0 && row < rows && column >= 0 && column < columns)
+                        excluded.Add(row * columns + column);
+                }
+
+        foreach (var channel in new[] { "hashes", "normalHashes" })
+        {
+            var earlier = before.GetProperty(channel).EnumerateArray().Select(x => x.GetUInt32()).ToArray();
+            var later = after.GetProperty(channel).EnumerateArray().Select(x => x.GetUInt32()).ToArray();
+            Assert.HasCount(columns * rows, earlier);
+            Assert.HasCount(columns * rows, later);
+            var mismatches = new List<int>();
+            var examined = 0;
+            for (var index = 0; index < earlier.Length; index++)
+            {
+                if (excluded.Contains(index)) continue;
+                examined++;
+                if (earlier[index] != later[index]) mismatches.Add(index);
+            }
+            Assert.IsGreaterThan(900, examined,
+                "more than 900 unaffected source cells must be compared, including unchanged old craters");
+            Assert.IsEmpty(mismatches,
+                $"The real Hunt restyled {mismatches.Count} undamaged {channel} 1m cells after " +
+                $"{after.GetProperty("kills").GetInt32()} kills. First cells: {string.Join(",", mismatches.Take(20))}. " +
+                $"Terrain: {after.GetProperty("terrain")}");
+        }
+    }
+}
