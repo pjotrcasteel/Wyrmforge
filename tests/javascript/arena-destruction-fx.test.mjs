@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { craterEvents, createDestructionFx, observeTerrain, heatStrength, heatColor, chipPosition, pruneDestructionFx, drawDestructionFx, drawBedrockGlow,
-    fireZoneIntensity, drawFireZoneVignette, drawCrackGlow, paintGroundEmissive, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
+    fireZoneIntensity, drawFireZoneVignette, drawCrackGlow, hasGroundEmission, paintGroundEmissive, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-destruction-fx.js';
-import { mergeTerrainFrame, crackCells, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT, topFaceColor, BEDROCK_MICROCELLS, BEDROCK_TOP } from
+import { mergeTerrainFrame, crackCells, paintTerrain, paintLavaEmissive, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT, topFaceColor, BEDROCK_MICROCELLS, BEDROCK_TOP } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { readArenaDebugFlags } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
@@ -243,6 +243,26 @@ test('heat and debris can be drawn apart: the glow goes to the emissive map, the
     assert.ok(heat > 0 && chips > 0);
     assert.equal(chips, fx.chips.length, 'only the airborne chips');
     assert.equal(heat + chips, drawDestructionFx(recorder(), fx, .1, view, 'all'));
+});
+
+test('calm wet forest skips per-frame emission while real heat, fissures, lava and bedrock remain visible', () => {
+    const frame = { ...whole(8, 8), cracks: network() };
+    const view = { x: 0, y: 0, width: 256, height: 256 };
+    assert.equal(hasGroundEmission(frame, null, 0, view, 1), false);
+    assert.equal(paintGroundEmissive({}, frame, null, 0, view, 1), null, 'no black canvas is allocated');
+    assert.equal(paintLavaEmissive({}, frame, 0, view), 0, 'no lava atlas/masks are generated');
+    assert.equal(hasGroundEmission(frame, { heat: [], chips: [{}] }, 0, view, 1), false, 'chips are not ground emission');
+    const heat = { heat: [{ born: 0, life: 5, x: 20, y: 20, radius: 16 }] };
+    assert.equal(hasGroundEmission(frame, heat, 0, view, 1), true, 'a crater emits immediately');
+    assert.equal(hasGroundEmission(frame, heat, 0, view, 6), false, 'cool craters no longer emit');
+    assert.equal(hasGroundEmission(frame, { heat: [{ ...heat.heat[0], x: 2000, y: 2000 }] }, 0, view, 1), false);
+    assert.equal(hasGroundEmission(frame, null, 1, view, 1), true, 'scorched fissures still emit');
+    assert.equal(hasGroundEmission({ ...frame, material: frame.material.map((m, i) => i === 0 ? TERRAIN_MATERIAL.Lava : m) },
+        null, 0, view, 1), true, 'lava emits in the wet band too');
+    const heights = new Array(64).fill(0);
+    heights[5] = BEDROCK_MICROCELLS;
+    assert.equal(hasGroundEmission({ ...frame, fine: new Map([[0, { heights }]]) }, null, 0, view, 1), true);
+    assert.equal(hasGroundEmission(null, null, 0, view, 1), false);
 });
 
 test('the ground emissive map is an opaque black canvas with the glows drawn in world coordinates', () => {

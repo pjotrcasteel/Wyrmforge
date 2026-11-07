@@ -585,7 +585,7 @@ function draw(state, snapshot, width, height) {
     const emissive = gpu && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
             view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
-    if (emissive) state.veinSeams = emissive.seams;
+    state.veinSeams = emissive?.seams ?? 0;
     const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
         groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
