@@ -123,8 +123,14 @@ export function renderArenaMapOverview(canvas) {
     const props = [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band),
         ...collectTorches(frame).map(torch => ({ torch, depth: torch.y + 2 }))].sort((a, b) => a.depth - b.depth);
     for (const prop of props) { if (prop.torch) drawTorch(g, prop.torch, 0); else drawTree(g, prop); }
-    return { png: out.toDataURL('image/png'), columns: frame.columns, rows: frame.rows, face: FACE_PIXELS, band, pad: TERRAIN_PAD_UNITS, scale: TERRAIN_ART_SCALE,
-        dug: [...frame.fine.keys()], stoneExposed: stoneExposedBlocks(frame) };
+    // Read-only visual proof: never influence rendering or the authoritative damage simulation.
+    const fineStates = [...frame.fine].map(([index, block]) => [index,
+        JSON.stringify([block.topsoil, block.stoneTop, block.heights, block.wear])]);
+    return { png: out.toDataURL('image/png'), terrainPng: cache.canvas.toDataURL('image/png'),
+        columns: frame.columns, rows: frame.rows, face: FACE_PIXELS,
+        band, pad: TERRAIN_PAD_UNITS, scale: TERRAIN_ART_SCALE, visualSeed: frame.visualSeed,
+        road: frame.road?.slice() ?? [], dug: [...frame.fine.keys()], fineStates,
+        stoneExposed: stoneExposedBlocks(frame) };
 }
 
 /** Indices of soil-topped blocks that have been dug down to their rock: evidence that excavation reached the strata. Read-only. */
