@@ -572,6 +572,7 @@ function draw(state, snapshot, width, height) {
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     const visibleGpuEnemyLayers = gpu ? visibleHuntEnemyLayers(snapshot.enemies, camera, width, height) : null;
     state.visibleGpuEnemyCount = visibleGpuEnemyLayers?.length ?? null;
+    state.reusedGpuEnemyCaptures = 0;
     const depthLayers = [
         ...exitLayers.map(layer => ({ ...layer, depth: layer.exit.y + layer.exit.radius })),
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
@@ -624,6 +625,7 @@ function draw(state, snapshot, width, height) {
             }
             revision = poseRevision ?? huntLayerRevision(layer, artReady(), artGeneration());
             reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize, pixelScale);
+            if (reuse && poseRevision) state.reusedGpuEnemyCaptures++;
             // A reused capture never repaints, so it only needs a stand-in source; real scratch canvases are for layers that redraw.
             tile = reuse ? (state.gpuReuseStub ??= document.createElement('canvas')) : (state.gpuScratchPool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
             if (!reuse) {
@@ -1260,6 +1262,7 @@ function arenaPerfReport(state) {
         terrain: state.terrainCache, heapMb: readHeapMegabytes(), enemies: snapshot?.enemies?.length ?? 0,
         gpuVisibleEnemies: state.gpuWorld ? state.visibleGpuEnemyCount : null,
         gpuUploads: state.gpuWorld?.lastFrameUploads ?? null,
+        gpuReusedEnemies: state.gpuWorld ? state.reusedGpuEnemyCaptures : null,
         projectiles: snapshot?.projectiles?.length ?? 0, devicePixelRatio: window.devicePixelRatio || 1 });
 }
 
