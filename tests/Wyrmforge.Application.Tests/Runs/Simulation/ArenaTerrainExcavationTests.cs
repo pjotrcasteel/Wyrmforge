@@ -31,10 +31,11 @@ public sealed class ArenaTerrainExcavationTests
         var grid = FlatSoil();
         var centre = ArenaTerrainGrid.CenterOf(6, 6);
         var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 1), null);
-        Assert.AreEqual(-1, grid.Surface(6, 6), "the whole block under the impact loses one microcell");
+        Assert.AreEqual(0, grid.Surface(6, 6), "a first-rank Fireball should not sink a whole metre column");
         Assert.AreEqual(ArenaTerrainMaterial.Soil, grid.Material(6, 6));
         Assert.IsTrue(grid.IsSubdivided(6, 6));
-        Assert.IsLessThanOrEqualTo(5, changes.Count, "a 0.75 m bowl reaches at most the four neighbouring edges");
+        Assert.AreEqual(-1, grid.FineHeights(6, 6)!.Min(), "rank I chips at most one 12.5 cm microcell");
+        Assert.HasCount(1, changes, "a first-rank Fireball should not dig into neighbouring metre columns");
         Assert.AreEqual(0, grid.Surface(8, 6));
         Assert.IsFalse(grid.IsSubdivided(8, 6), "ground beyond the radius is never subdivided");
         Assert.IsFalse(grid.IsSubdivided(2, 2));
@@ -146,7 +147,58 @@ public sealed class ArenaTerrainExcavationTests
         Assert.IsLessThan(splash.Surface(6, 6), meteor.Surface(6, 6));
         Assert.IsGreaterThan(1, splashChanges.Count);
         Assert.IsGreaterThan(splashChanges.Count, meteorChanges.Count);
-        Assert.AreEqual(-3, meteor.Surface(6, 6));
+        Assert.AreEqual(-6, meteor.FineHeights(6, 6)!.Min(), "a higher-power impact must remove several real microcell layers");
+    }
+
+    [TestMethod]
+    public void UpgradedFireballs_MakeDeepIrregularCratersInsteadOfPerfectCircularDecals()
+    {
+        var centre = ArenaTerrainGrid.CenterOf(6, 6);
+        var scratch = FlatSoil(16);
+        var upgraded = FlatSoil(16);
+        var lateGame = FlatSoil(16);
+        ArenaTerrainMutation.Apply(scratch, new ArenaTerrainImpact(77, centre, 1), null);
+        ArenaTerrainMutation.Apply(upgraded, new ArenaTerrainImpact(77, centre, 3), null);
+        ArenaTerrainMutation.Apply(lateGame, new ArenaTerrainImpact(77, centre, 5), null);
+
+        Assert.AreEqual(-1, scratch.FineHeights(6, 6)!.Min(), "an unupgraded Fireball is only a small chip");
+        Assert.IsLessThan(scratch.FineHeights(6, 6)!.Min(), upgraded.FineHeights(6, 6)!.Min(),
+            "upgraded Fireballs excavate multiple 12.5 cm layers");
+        Assert.IsLessThan(-ArenaTerrainGrid.SoilDepthMicrocells, lateGame.FineHeights(6, 6)!.Min(),
+            "late-game fire must actually break through soil and expose stone");
+        Assert.IsTrue(lateGame.IsSubdivided(8, 6), "late-game craters must span several metre columns");
+        Assert.IsFalse(scratch.IsSubdivided(7, 6), "the starting Fireball must not damage neighbouring metre columns");
+
+        // Sample the perimeter at a fixed distance: a circular crater would give the same
+        // result at every bearing, while this deterministic broken rim has inlets and projections.
+        var samplesInside = 0;
+        const int sampleCount = 32;
+        var ringRadius = ArenaTerrainMutation.RadiusUnits(3) * .85;
+        for (var sample = 0; sample < sampleCount; sample++)
+        {
+            var angle = sample * Math.PI * 2 / sampleCount;
+            var position = centre + new Vector2D(Math.Cos(angle) * ringRadius, Math.Sin(angle) * ringRadius);
+            var (column, row) = ArenaTerrainGrid.ColumnOf(position);
+            var x = (int)((position.X - column * ArenaTerrainGrid.CellUnits) / ArenaTerrainGrid.MicroUnits);
+            var y = (int)((position.Y - row * ArenaTerrainGrid.CellUnits) / ArenaTerrainGrid.MicroUnits);
+            if (upgraded.MicroSurface(column, row, x, y) < 0)
+            {
+                samplesInside++;
+            }
+        }
+        Assert.IsGreaterThan(0, samplesInside, "the chosen rim must still contain excavated soil");
+        Assert.IsLessThan(sampleCount, samplesInside, "the rim must have gaps rather than a perfect circle");
+
+        var replay = FlatSoil(16);
+        ArenaTerrainMutation.Apply(replay, new ArenaTerrainImpact(77, centre, 3), null);
+        for (var row = 0; row < upgraded.Rows; row++)
+        {
+            for (var column = 0; column < upgraded.Columns; column++)
+            {
+                CollectionAssert.AreEqual(upgraded.FineHeights(column, row), replay.FineHeights(column, row),
+                    $"terrain deformation must replay exactly at {column},{row}");
+            }
+        }
     }
 
     [TestMethod]
