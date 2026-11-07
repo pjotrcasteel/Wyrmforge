@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, retainsShallowSurface, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -499,6 +499,26 @@ test('a microcolumn is stone at or below the stone line, otherwise its topsoil; 
     assert.equal(microMaterial(block([], 1, -8), -3), TERRAIN_MATERIAL.Ash);
     assert.equal(microMaterial(block([], 2, 16), 16), TERRAIN_MATERIAL.Stone);
     assert.equal(microMaterial(block([], 3, -8), -20), TERRAIN_MATERIAL.Lava);
+});
+
+test('shallow 12.5cm soil and ash scratches keep the original pixel-art surface, but deeper craters expose earth', () => {
+    const soil = block(Array(64).fill(0), TERRAIN_MATERIAL.Soil, -8);
+    const ash = block(Array(64).fill(0), TERRAIN_MATERIAL.Ash, -8);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -1, soil), true);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Ash, 0, -1, ash), true);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -2, soil), false);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, 0, soil), false);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -8, soil), false,
+        'exposed bedrock never gets its grass lid back');
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Stone, 8, 7,
+        block(Array(64).fill(8), TERRAIN_MATERIAL.Stone, 0)), false);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Lava, 0, -1,
+        block(Array(64).fill(0), TERRAIN_MATERIAL.Lava, -8)), false);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Wood, 0, -1,
+        block(Array(64).fill(0), TERRAIN_MATERIAL.Wood, -8)), false);
+    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -1,
+        block(Array(64).fill(0), TERRAIN_MATERIAL.Stone, -8)), false,
+        'a genuinely changed material must remain visible');
 });
 
 test('a subdivided column paints 64 four-pixel microcolumn tops, round craters exposing dirt inside one block', () => {
