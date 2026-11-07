@@ -45,6 +45,24 @@ test('the Bell Warden intro and mark project to the same authoritative raised gr
     assert.equal(bellWardenSurfaceY({ ...bell, z: undefined }), 180, 'legacy snapshots stay level');
 });
 
+test('the Bell Warden entrance pixel art is elevated, not clipped below raised voxel ground', () => {
+    const originalDocument = globalThis.document;
+    try {
+        globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: mockContext }) };
+        const render = z => {
+            const ctx = mockContext();
+            drawBellWardenEntrance(ctx, { stage: 'tolling', variant: 'fire', x: 320, y: 180, z, progress: 1 });
+            const draw = ctx.calls.find(c => c[0] === 'drawImage');
+            assert.ok(draw, 'a real entrance sprite is submitted');
+            return draw[3];
+        };
+        assert.equal(render(64), render(0) - 64, 'the same 64-unit rise applies to the sprite and its intro mark');
+    } finally {
+        if (originalDocument === undefined) delete globalThis.document;
+        else globalThis.document = originalDocument;
+    }
+});
+
 test('a charging shockwave shows the crater and its farthest reach, never the band', () => {
     const ctx = mockContext();
     drawBellWardenGround(ctx, { bellShockwaves: [{ x: 10, y: 20, radius: 95, impactRadius: 95, maxRadius: 300, charge: .5, expanding: false }] });
