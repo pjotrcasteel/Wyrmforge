@@ -37,6 +37,12 @@ export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemie
         frameMaxMs: round(frames.max), longFrames: frames.longFrames, samples: frames.samples,
         terrainRepaints: terrain?.repaints ?? 0, terrainRepaintMaxMs: round(terrain?.maxRepaintMs ?? 0),
         terrainRepaintAvgMs: round(terrain?.repaints ? terrain.totalRepaintMs / terrain.repaints : 0),
+        terrainFullRepaints: terrain?.fullRepaints ?? 0,
+        terrainRegionalRepaints: terrain?.regionalRepaints ?? 0,
+        terrainArtKitRepaints: terrain?.artKitRepaints ?? 0,
+        terrainUnchangedRevisionSkips: terrain?.unchangedRevisionSkips ?? 0,
+        terrainLastDirtyBlocks: terrain?.lastDirtyBlocks ?? 0,
+        terrainLastPaintReason: terrain?.lastPaintReason ?? null,
         heapMb: heapMb === null ? null : round(heapMb), enemies, projectiles,
     };
 }
@@ -46,6 +52,7 @@ export function perfLines(report) {
         `FPS ${report.fps}  p50 ${report.frameP50Ms}  p95 ${report.frameP95Ms}  max ${report.frameMaxMs} ms`,
         `>33ms ${report.longFrames}/${report.samples}  ${report.renderer}/${report.quality ?? '-'}  dpr ${report.devicePixelRatio}`,
         `terrain ${report.terrainRepaints} repaints  avg ${report.terrainRepaintAvgMs}  max ${report.terrainRepaintMaxMs} ms`,
+        `ground full ${report.terrainFullRepaints} local ${report.terrainRegionalRepaints} kit ${report.terrainArtKitRepaints} skip ${report.terrainUnchangedRevisionSkips} dirty ${report.terrainLastDirtyBlocks}`,
         `heap ${report.heapMb === null ? 'n/a' : `${report.heapMb} MB`}  foes ${report.enemies}  shots ${report.projectiles}`,
     ];
 }
