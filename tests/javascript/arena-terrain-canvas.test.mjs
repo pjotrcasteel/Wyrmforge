@@ -312,18 +312,21 @@ test('the original road stays a continuous fine-grained path rather than a chain
     assert.ok(largestStep <= 12,
         `road edges must flow smoothly, not jump in 32px block-sized steps (measured ${largestStep}px)`);
 
-    const chipped = Array(64).fill(0);
-    chipped[18] = -2;
-    chipped[19] = -2;
-    const next = mergeTerrainFrame(original, {
-        revision: 1, columns, rows, visualSeed: seed,
-        surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
-        road: [], fine: [{ index: 8 * columns + 16, heights: chipped, topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -8 }],
-    });
-    // The immutable art pattern must be identical even for a block containing genuine fine-grained damage.
-    for (const [index, originalMask] of reference) {
-        const current = terrainBaseKindMap(next, 0, index % columns, Math.floor(index / columns));
-        assert.deepEqual(current, originalMask, `road splat changed in original block ${index}`);
+    // The original road masks remain stable when a one-step scratch becomes a deep crater.
+    for (const depth of [1, 2, 3]) {
+        const chipped = Array(64).fill(0);
+        chipped[18] = -depth;
+        chipped[19] = -depth;
+        const next = mergeTerrainFrame(original, {
+            revision: depth, columns, rows, visualSeed: seed,
+            surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
+            road: [], fine: [{ index: 8 * columns + 16, heights: chipped, topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -8 }],
+        });
+        for (const [index, originalMask] of reference) {
+            const current = terrainBaseKindMap(next, 0, index % columns, Math.floor(index / columns));
+            assert.deepEqual(current, originalMask,
+                `road splat changed at depth ${depth} in original block ${index}`);
+        }
     }
 });
 
