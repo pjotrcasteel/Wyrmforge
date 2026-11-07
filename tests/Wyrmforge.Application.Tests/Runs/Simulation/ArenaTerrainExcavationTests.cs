@@ -345,14 +345,19 @@ public sealed class ArenaTerrainExcavationTests
             FissureSeed = 73,
             PreserveProtectedRoute = true
         };
-        var changes = ArenaTerrainMutation.Apply(grid, fissure, guarded);
-
-        Assert.IsTrue(changes.Any(change => change.Column != 8), "the ambush must still fracture ground beside the road");
-        for (var row = 0; row < grid.Rows; row++)
+        var offRoadChanged = false;
+        foreach (var reach in new[] { 6, 11, 16 })
         {
-            Assert.AreEqual(0, grid.Surface(8, row), $"the authored road at row {row} must remain level");
-            Assert.IsFalse(grid.IsSubdivided(8, row), $"the scripted fissure must not subdivide road at row {row}");
+            // Exactly the three increasing reaches used during the real ambush tell.
+            var changes = ArenaTerrainMutation.Apply(grid, fissure with { FissureReach = reach }, guarded);
+            offRoadChanged |= changes.Any(change => change.Column != 8);
+            for (var row = 0; row < grid.Rows; row++)
+            {
+                Assert.AreEqual(0, grid.Surface(8, row), $"the authored road at row {row} must remain level");
+                Assert.IsFalse(grid.IsSubdivided(8, row), $"stage {reach} must not subdivide road at row {row}");
+            }
         }
+        Assert.IsTrue(offRoadChanged, "the ambush must still fracture ground beside the road");
 
         var bossGrid = FlatSoil(16);
         var bossFissure = fissure with { PreserveProtectedRoute = false };
