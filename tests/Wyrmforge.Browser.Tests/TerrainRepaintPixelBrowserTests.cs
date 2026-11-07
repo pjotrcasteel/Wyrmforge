@@ -117,6 +117,7 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                     road: [4 * 16 + 8, 0, 4 * 16 + 8, rows * 16], fine: [] };
                 const cache = new TerrainCanvasCache();
                 cache.update(mergeTerrainFrame(null, original), 0);
+                const evidence = [cache.canvas.toDataURL('image/png')];
                 const context = () => cache.canvas.getContext('2d', { willReadFrequently: true });
                 const locations = [0, 4].map(column => ({
                     index: (rows - 1) * columns + column,
@@ -133,9 +134,12 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 let frame = mergeTerrainFrame(null, original);
                 frame = mergeTerrainFrame(frame, { ...original, revision: 2, fine: damaged(1) });
                 cache.update(frame, 0);
+                evidence.push(cache.canvas.toDataURL('image/png'));
                 const shallow = locations.map(location => patch(location, 1));
                 frame = mergeTerrainFrame(frame, { ...original, revision: 3, fine: damaged(3) });
                 cache.update(frame, 0);
+                evidence.push(cache.canvas.toDataURL('image/png'));
+                window.__shallowTerrainEvidence = evidence;
                 const deep = locations.map(location => patch(location, 3));
                 const equalPixels = (a, b) => {
                     let matched = 0;
@@ -148,6 +152,18 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                     equalPixels(intact[i], deep[i])]).flat();
             }
             """);
+
+        var images = await Page.EvaluateAsync<string[]>("() => window.__shallowTerrainEvidence");
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        for (var i = 0; i < images.Length; i++)
+        {
+            var data = images[i];
+            var filename = new[] { "original", "shallow", "deep" }[i];
+            await File.WriteAllBytesAsync(Path.Combine(output, $"terrain-surface-{filename}.png"),
+                Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
+        }
 
         Assert.IsGreaterThan(8, matches[0],
             "shallow grass must retain a substantial number of its original exact pixels, even though its top sinks");
