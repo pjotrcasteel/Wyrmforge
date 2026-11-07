@@ -272,6 +272,58 @@ test('a changed authoritative road never uses the no-op or local damage path', (
     assert.equal(clears.length, baseline + 1, 'road changes clear and repaint the full source canvas');
 });
 
+test('the original road stays a continuous fine-grained path rather than a chain of rectangular blocks', () => {
+    const columns = 32, rows = 60, count = columns * rows;
+    const seed = 1204;
+    const original = mergeTerrainFrame(null, {
+        revision: 0, columns, rows, visualSeed: seed,
+        surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
+        road: [16 * 16 + 8, 0, 16 * 16 + 8, rows * 16], fine: [],
+    });
+    const reference = new Map();
+    const leftEdges = [];
+    for (let row = 5; row < 11; row++) {
+        const masks = [];
+        for (let column = 12; column <= 20; column++) {
+            const map = terrainBaseKindMap(original, 0, column, row);
+            masks.push(map);
+            reference.set(row * columns + column, map ? Uint8Array.from(map) : null);
+        }
+        for (let pixelY = 0; pixelY < 64; pixelY += 2) {
+            let first = -1, last = -1;
+            for (let c = 0; c < masks.length; c++) {
+                const mask = masks[c];
+                if (!mask) continue;
+                for (let pixelX = 0; pixelX < 64; pixelX++) {
+                    if (mask[pixelY * 64 + pixelX] !== 9) continue; // TOP_KINDS.pathTop
+                    const x = (12 + c) * 64 + pixelX;
+                    if (first < 0) first = x;
+                    last = x;
+                }
+            }
+            if (first < 0) continue;
+            leftEdges.push(first);
+            assert.ok(last - first > 90 && last - first < 210, 'the authored road is a proper dirt strip');
+        }
+    }
+    assert.ok(new Set(leftEdges).size >= 5, 'road edges vary smoothly at art-pixel resolution');
+    assert.ok(leftEdges.some(x => x % 64 !== 0), 'road edges must not snap to whole 1m voxel boundaries');
+
+    const chipped = Array(64).fill(0);
+    chipped[18] = -2;
+    chipped[19] = -2;
+    const next = mergeTerrainFrame(original, {
+        revision: 1, columns, rows, visualSeed: seed,
+        surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
+        road: [], fine: [{ index: 8 * columns + 16, heights: chipped, topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -8 }],
+    });
+    // The immutable art pattern must be identical even for a block containing genuine fine-grained damage.
+    for (const [index, originalMask] of reference) {
+        const current = terrainBaseKindMap(next, 0, index % columns, Math.floor(index / columns));
+        assert.deepEqual(current, originalMask, `road splat changed in original block ${index}`);
+    }
+});
+
 test('a new site with the same terrain revision replaces the entire cached image', () => {
     const clears = [];
     const ctx = { ...recorder(), clearRect(...rectangle) { clears.push(rectangle); } };
