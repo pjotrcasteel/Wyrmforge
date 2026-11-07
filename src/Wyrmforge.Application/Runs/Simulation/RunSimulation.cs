@@ -366,6 +366,16 @@ public sealed partial class RunSimulation
                 Empowered = IsWardEmpowered(enemy),
                 EmergeProgress = enemy.EmergeRemaining > 0 && enemy.EmergeTotal > 0 ? 1 - enemy.EmergeRemaining / enemy.EmergeTotal : null,
                 EmergeClip = enemy.EmergeTotal >= CrawlOutPullSeconds - .001 ? 0 : 1,
+                MireHoundVfx = enemy.MireHound is { } hound ? new MireHoundVfxRenderSnapshot(
+                    hound.Phase.ToString(),
+                    hound.Phase switch
+                    {
+                        MireHoundPhase.Windup => hound.WindupProgress,
+                        MireHoundPhase.Pounce => Math.Clamp(1 - hound.PhaseRemaining / MireHoundBehaviorState.PounceSeconds, 0, 1),
+                        MireHoundPhase.Recover => Math.Clamp(1 - hound.PhaseRemaining / MireHoundBehaviorState.RecoverSeconds, 0, 1),
+                        _ => 0,
+                    },
+                    hound.PounceDirection.X, hound.PounceDirection.Y, hound.PounceLanded) : null,
                 Invulnerable = IsTransforming(enemy),
                 Recovering = enemy is { BellWarden.Phase: BellWardenPhase.Recover } or { Reliquary.Phase: ReliquaryPhase.Recover },
             }).ToArray(),
