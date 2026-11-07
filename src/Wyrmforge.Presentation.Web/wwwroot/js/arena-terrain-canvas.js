@@ -631,7 +631,7 @@ function kindMap(frame, band, column, row, ownKind, height) {
         if (segments) {
             let nearest = Infinity;
             for (const segment of segments) nearest = Math.min(nearest, segmentDistance(wx, wy, segment));
-            const edge = ROAD_HALF_WIDTH + (sample(NOISE_BROAD, wx, wy, 59 * ART) - .5) * 52 + (sample(NOISE_FINE, wx, wy, 23 * ART) - .5) * 16;
+            const edge = ROAD_HALF_WIDTH + (sample(NOISE_BROAD, wx, wy, 59 * ART) - .5) * 40 + (sample(NOISE_FINE, wx, wy, 23 * ART) - .5) * 12;
             if (nearest < edge && best !== KIND_INDEX.lavaTop) best = KIND_INDEX.pathTop;
         }
         map[py * TILE + px] = best;
