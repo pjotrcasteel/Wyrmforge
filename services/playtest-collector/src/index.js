@@ -20,6 +20,11 @@ function cors(origin) {
     return { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Headers': 'content-type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Max-Age': '600', Vary: 'Origin' };
 }
+// Accept the legacy Pages origin and an explicitly configured, exact player-test origin.
+function isAllowedOrigin(origin, env) {
+    return !!origin && (origin === env.PUBLIC_ORIGIN ||
+        (!!env.PUBLIC_TEST_ORIGIN && origin === env.PUBLIC_TEST_ORIGIN));
+}
 function int(value, max = 1000000) { return Number.isInteger(value) && value >= 0 ? Math.min(value, max) : 0; }
 function string(value, max) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }
 function rating(value) { return Number.isInteger(value) && value >= 1 && value <= 5 ? value : null; }
@@ -179,9 +184,9 @@ async function leaderboard(request, env, origin) {
         const results = await env.DB.prepare('SELECT nickname,score,game_version FROM leaderboard_entries ORDER BY score DESC,created_at ASC LIMIT 20').all();
         return json({ entries: results.results.filter(entry => !validateName(entry.nickname)).map(entry => ({ name: entry.nickname, score: entry.score,
             version: entry.game_version, type: 'community', verified: false })) }, 200,
-            origin === env.PUBLIC_ORIGIN ? cors(origin) : {});
+            isAllowedOrigin(origin, env) ? cors(origin) : {});
     }
-    if (!origin || origin !== env.PUBLIC_ORIGIN) return reject(403, 'origin_not_allowed');
+    if (!isAllowedOrigin(origin, env)) return reject(403, 'origin_not_allowed');
     const headers = cors(origin);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     if (request.method !== 'POST') return reject(405, 'method_not_allowed', headers);
@@ -271,7 +276,7 @@ export default {
         }
         if (url.pathname !== '/v1/reports') return reject(404, 'not_found');
         const origin = request.headers.get('origin');
-        if (!origin || origin !== env.PUBLIC_ORIGIN) return reject(403, 'origin_not_allowed');
+        if (!isAllowedOrigin(origin, env)) return reject(403, 'origin_not_allowed');
         const headers = cors(origin);
         if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
         if (request.method !== 'POST') return reject(405, 'method_not_allowed', headers);
