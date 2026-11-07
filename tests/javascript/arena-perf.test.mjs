@@ -38,12 +38,18 @@ test('the report and panel lines carry the renderer, terrain repaint cost and an
     const sampler = createFrameSampler();
     sampler.record(16);
     const report = perfReport({ sampler, renderer: 'gpu', quality: 'mobile', heapMb: null, devicePixelRatio: 3,
-        terrain: { repaints: 4, totalRepaintMs: 20, maxRepaintMs: 9.26 }, enemies: 7, projectiles: 2 });
+        terrain: { repaints: 4, fullRepaints: 1, regionalRepaints: 3, artKitRepaints: 0,
+            unchangedRevisionSkips: 5, lastDirtyBlocks: 2, lastPaintReason: 'voxel-changes',
+            totalRepaintMs: 20, maxRepaintMs: 9.26 }, enemies: 7, projectiles: 2 });
     assert.equal(report.terrainRepaintAvgMs, 5);
     assert.equal(report.terrainRepaintMaxMs, 9.3);
     assert.equal(report.heapMb, null);
     const lines = perfLines(report);
-    assert.equal(lines.length, 4);
+    assert.equal(lines.length, 5);
+    assert.equal(report.terrainRegionalRepaints, 3);
+    assert.equal(report.terrainUnchangedRevisionSkips, 5);
+    assert.equal(report.terrainLastPaintReason, 'voxel-changes');
+    assert.match(lines[3], /ground full 1 local 3 kit 0 skip 5 dirty 2/);
     assert.match(lines[1], /gpu\/mobile/);
-    assert.match(lines[3], /heap n\/a/);
+    assert.match(lines[4], /heap n\/a/);
 });
