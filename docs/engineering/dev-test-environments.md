@@ -18,15 +18,15 @@ gameplay, world save schema, or Cloudflare feedback collector.
 ## Release rules
 
 - `main`: fast development; existing Pages CI/CD stays automatic.
-- `test`: deliberately promoted, reviewed commit; only this branch can publish
-  to Firebase Hosting, either on push or by manual workflow_dispatch on `test`.
-- Never automatically sync `main` into `test`.
-- Require review or branch protection for `test` and approval on GitHub
+- `release/player-test`: deliberately promoted, reviewed commit; only this branch can publish
+  to Firebase Hosting, either on push or by manual workflow_dispatch on `release/player-test`.
+- Never automatically sync `main` into `release/player-test`.
+- Require review or branch protection for `release/player-test` and approval on GitHub
   Environment `player-test`; do not enable unattended deployments for testers.
 - Share only the test Firebase URL with external players.
 - Every player-test bundle contains `build-id.txt` with its source SHA.
 - When a test build must be rolled back, restore a known-good Firebase Hosting
-  release in the console, then reconcile `test` with a reviewed revert before
+  release in the console, then reconcile `release/player-test` with a reviewed revert before
   its next deployment. No force-push is required.
 
 ## One-time owner setup
@@ -48,7 +48,7 @@ gameplay, world save schema, or Cloudflare feedback collector.
    Do **not** generate a second automatic Firebase GitHub workflow: the
    checked-in `player-test.yml` is the single controlled release pipeline.
 4. In GitHub Settings → Environments → `player-test`, configure a required
-   reviewer and restrict deployments to the `test` branch, where available.
+   reviewer and restrict deployments to the `release/player-test` branch, where available.
 5. Enable Google Authentication in the **test project** only if the app needs
    it; authorize the test `*.web.app` hostname for Google sign-in.
    Ensure published `HunterBackup` settings use the test project. The workflow
@@ -63,29 +63,33 @@ gameplay, world save schema, or Cloudflare feedback collector.
    `https://wyrmforge-feedback-collector.pjotr-2.workers.dev/v1/reports`.
    Until explicitly configured, the test bundle has no remote collector;
    local feedback still works. Never put private tokens in the browser.
-7. Once a candidate has passed CI and device checks, create the `test` branch
-   from that *exact* approved `main` commit. Push it. The workflow is already
-   defined in the repository and its release requires the environment approval.
-   Creating the branch in advance is optional.
+7. The dedicated `release/player-test` branch has already been created from
+   the pinned environment-setup commit. Promote subsequent approved `main`
+   commits deliberately, after CI and device checks. An environment approval
+   gate is recommended before deployment.
 8. Inspect the workflow's live smoke result and
    `https://wyrmforge-player-test.web.app/build-id.txt`; then share the
    test URL.
 
 ### Promote a tested commit
 
-On your workstation, start from the existing `test` branch and fast-forward
-it to a specific reviewed commit that is a descendant of the current `test`
+On your workstation, start from the existing `release/player-test` branch and fast-forward
+it to a specific reviewed commit that is a descendant of the current `release/player-test`
 head:
 
 ```bash
 git fetch origin
-git switch test
+git switch release/player-test
 git merge --ff-only <approved-main-commit-sha>
-git push origin test
+git push origin release/player-test
 ```
 
 If the SHA is not a descendant, review a cherry-pick/release PR instead of
-force-updating `test`.
+force-updating `release/player-test`.
+
+The exact `test` branch name could not be created via GitHub API (422), while
+`release/player-test` was allowed. Avoid renaming the protected release branch
+without updating the workflow and GitHub Environment deployment restrictions.
 
 ### Monday player-test acceptance
 
