@@ -64,12 +64,14 @@ public static class ArenaTerrainMutation
         // Scripted ambush fissures must never tear up the authored route. Direct Fireballs
         // still chip the road (down to its existing half-metre safety floor).
         if (impact.FissureReach > 0 && protectedCells is { Length: > 0 })
+        {
             hits.RemoveAll(hit =>
             {
                 var column = (int)Math.Floor(hit.Gx / (double)perColumn);
                 var row = (int)Math.Floor(hit.Gy / (double)perColumn);
                 return grid.Contains(column, row) && protectedCells[row * grid.Columns + column];
             });
+        }
         var touched = new List<(int Column, int Row, int Surface, ArenaTerrainMaterial Material, short[]? Fine, byte[]? Wear)>();
         var seen = new HashSet<int>();
         void Touch(int column, int row)
@@ -185,7 +187,10 @@ public static class ArenaTerrainMutation
                 var support = thinX && thinY ? Math.Max(Math.Max(west, east), Math.Max(north, south))
                     : thinX ? Math.Max(west, east) : Math.Max(north, south);
                 var (column, row) = ((int)Math.Floor(gx / (double)perColumn), (int)Math.Floor(gy / (double)perColumn));
-                if (preserveProtected && protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]) continue;
+                if (preserveProtected && protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column])
+                {
+                    continue;
+                }
                 var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
                     ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
                 touch(column, row);
