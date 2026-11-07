@@ -16,6 +16,9 @@ test('Hunt layer lab is opt-in and cannot alter normal gameplay', async () => {
         lab.setLayerLabView('albedo');
         assert.equal(lab.layerLabView(), 'lit');
         assert.equal(lab.layerLabSnapshot().active, false);
+        const renderer = { begin() {}, render() {} };
+        assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, renderer), renderer,
+            'Ordinary Hunts must keep the renderer object, not a boolean');
     } finally {
         globalThis.location = previous;
     }
@@ -28,6 +31,16 @@ test('enabled layer lab independently isolates named layers and resets without a
         const lab = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-layer-lab.js?enabled-unit');
         assert.equal(lab.layerLabSnapshot().active, true);
         assert.equal(lab.LAYER_OPTIONS.length, 13);
+        const renderer = { begin() {}, render() {}, dispose() {} };
+        assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, renderer), renderer,
+            'Layer Lab GPU on must return the renderer instance, not true');
+        assert.strictEqual(lab.selectHuntGpuWorld(null, renderer), null);
+        assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, null), null);
+        lab.setLayerLabEnabled('gpu', false);
+        assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, renderer), null);
+        lab.setLayerLabEnabled('gpu', true);
+        assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, renderer), renderer,
+            'Toggling WebGL back on must recover the same GPU object');
         assert.equal(new Set(lab.LAYER_OPTIONS.map(option => option[0])).size, 13);
         const generation = lab.layerLabGeneration();
         lab.setLayerLabEnabled('excavation', false);
