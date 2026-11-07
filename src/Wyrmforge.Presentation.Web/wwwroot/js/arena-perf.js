@@ -52,7 +52,8 @@ export function perfLines(report) {
         `FPS ${report.fps}  p50 ${report.frameP50Ms}  p95 ${report.frameP95Ms}  max ${report.frameMaxMs} ms`,
         `>33ms ${report.longFrames}/${report.samples}  ${report.renderer}/${report.quality ?? '-'}  dpr ${report.devicePixelRatio}`,
         `terrain ${report.terrainRepaints} repaints  avg ${report.terrainRepaintAvgMs}  max ${report.terrainRepaintMaxMs} ms`,
-        `ground full ${report.terrainFullRepaints} local ${report.terrainRegionalRepaints} kit ${report.terrainArtKitRepaints} skip ${report.terrainUnchangedRevisionSkips} dirty ${report.terrainLastDirtyBlocks}`,
+        `ground full ${report.terrainFullRepaints} local ${report.terrainRegionalRepaints} ` +
+            `kit ${report.terrainArtKitRepaints} skip ${report.terrainUnchangedRevisionSkips} dirty ${report.terrainLastDirtyBlocks}`,
         `heap ${report.heapMb === null ? 'n/a' : `${report.heapMb} MB`}  foes ${report.enemies}  shots ${report.projectiles}`,
     ];
 }
