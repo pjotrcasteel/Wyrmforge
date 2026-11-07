@@ -46,26 +46,43 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 if (changed.changed.length !== 1) throw new Error('The crater must invalidate one source block');
                 regional.update(changed, 0);
 
-                const full = new TerrainCanvasCache();
-                full.enableNormals();
-                full.update({ ...changed, kindMaps: undefined }, 0);
                 const differences = [];
-                for (const channel of ['canvas', 'normalCanvas']) {
-                    const a = regional[channel], b = full[channel];
-                    if (a.width !== b.width || a.height !== b.height)
-                        throw new Error(channel + ': dimensions disagree');
-                    const pixels = canvas => canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
-                    const left = pixels(a), right = pixels(b);
-                    let mismatches = 0;
-                    for (let i = 0; i < left.length; i++)
-                        if (left[i] !== right[i]) mismatches++;
-                    differences.push(mismatches);
-                }
+                const compareFull = snapshot => {
+                    const full = new TerrainCanvasCache();
+                    full.enableNormals();
+                    full.update({ ...snapshot, kindMaps: undefined }, 0);
+                    for (const channel of ['canvas', 'normalCanvas']) {
+                        const a = regional[channel], b = full[channel];
+                        if (a.width !== b.width || a.height !== b.height)
+                            throw new Error(channel + ': dimensions disagree');
+                        const pixels = canvas => canvas.getContext('2d')
+                            .getImageData(0, 0, canvas.width, canvas.height).data;
+                        const left = pixels(a), right = pixels(b);
+                        let mismatches = 0;
+                        for (let i = 0; i < left.length; i++)
+                            if (left[i] !== right[i]) mismatches++;
+                        differences.push(mismatches);
+                    }
+                };
+                compareFull(changed);
+
+                // Consecutive hits, including a distant crater, must not alter untouched terrain
+                // or make neighbouring dirty clips produce a different result from a fresh paint.
+                const moreHeights = Array(64).fill(0);
+                for (const [x, y] of [[4, 4], [5, 4]]) moreHeights[y * 8 + x] = -2;
+                const next = mergeTerrainFrame(changed, {
+                    ...terrain, revision: 3, fine: [
+                        { index: columns + 2, heights: moreHeights, topsoil: 0, stoneTop: -8 },
+                        { index: 12 * columns + 9, heights: moreHeights, topsoil: 0, stoneTop: -8 }
+                    ]
+                });
+                regional.update(next, 0);
+                compareFull(next);
                 return differences;
             }
             """);
 
-        CollectionAssert.AreEqual(new[] { 0, 0 }, differences,
+        CollectionAssert.AreEqual(new[] { 0, 0, 0, 0 }, differences,
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
 }
