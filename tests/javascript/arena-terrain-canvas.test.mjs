@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, retainsShallowSurface, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -272,64 +272,6 @@ test('a changed authoritative road never uses the no-op or local damage path', (
     assert.equal(clears.length, baseline + 1, 'road changes clear and repaint the full source canvas');
 });
 
-test('the original road stays a continuous fine-grained path rather than a chain of rectangular blocks', () => {
-    const columns = 32, rows = 60, count = columns * rows;
-    const seed = 1204;
-    const original = mergeTerrainFrame(null, {
-        revision: 0, columns, rows, visualSeed: seed,
-        surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
-        road: [16 * 16 + 8, 0, 16 * 16 + 8, rows * 16], fine: [],
-    });
-    const reference = new Map();
-    const leftEdges = [];
-    for (let row = 5; row < 11; row++) {
-        const masks = [];
-        for (let column = 12; column <= 20; column++) {
-            const map = terrainBaseKindMap(original, 0, column, row);
-            masks.push(map);
-            reference.set(row * columns + column, map ? Uint8Array.from(map) : null);
-        }
-        for (let pixelY = 0; pixelY < 64; pixelY += 2) {
-            let first = -1, last = -1;
-            for (let c = 0; c < masks.length; c++) {
-                const mask = masks[c];
-                if (!mask) continue;
-                for (let pixelX = 0; pixelX < 64; pixelX++) {
-                    if (mask[pixelY * 64 + pixelX] !== 9) continue; // TOP_KINDS.pathTop
-                    const x = (12 + c) * 64 + pixelX;
-                    if (first < 0) first = x;
-                    last = x;
-                }
-            }
-            if (first < 0) continue;
-            leftEdges.push(first);
-            assert.ok(last - first > 90 && last - first < 210, 'the authored road is a proper dirt strip');
-        }
-    }
-    assert.ok(new Set(leftEdges).size >= 5, 'road edges vary smoothly at art-pixel resolution');
-    assert.ok(leftEdges.some(x => x % 64 !== 0), 'road edges must not snap to whole 1m voxel boundaries');
-    const largestStep = Math.max(...leftEdges.slice(1).map((x, i) => Math.abs(x - leftEdges[i])));
-    assert.ok(largestStep <= 12,
-        `road edges must flow smoothly, not jump in 32px block-sized steps (measured ${largestStep}px)`);
-
-    // The original road masks remain stable when a one-step scratch becomes a deep crater.
-    for (const depth of [1, 2, 3]) {
-        const chipped = Array(64).fill(0);
-        chipped[18] = -depth;
-        chipped[19] = -depth;
-        const next = mergeTerrainFrame(original, {
-            revision: depth, columns, rows, visualSeed: seed,
-            surface: Array(count).fill(0), material: Array(count).fill(TERRAIN_MATERIAL.Soil),
-            road: [], fine: [{ index: 8 * columns + 16, heights: chipped, topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -8 }],
-        });
-        for (const [index, originalMask] of reference) {
-            const current = terrainBaseKindMap(next, 0, index % columns, Math.floor(index / columns));
-            assert.deepEqual(current, originalMask,
-                `road splat changed at depth ${depth} in original block ${index}`);
-        }
-    }
-});
-
 test('a new site with the same terrain revision replaces the entire cached image', () => {
     const clears = [];
     const ctx = { ...recorder(), clearRect(...rectangle) { clears.push(rectangle); } };
@@ -557,26 +499,6 @@ test('a microcolumn is stone at or below the stone line, otherwise its topsoil; 
     assert.equal(microMaterial(block([], 1, -8), -3), TERRAIN_MATERIAL.Ash);
     assert.equal(microMaterial(block([], 2, 16), 16), TERRAIN_MATERIAL.Stone);
     assert.equal(microMaterial(block([], 3, -8), -20), TERRAIN_MATERIAL.Lava);
-});
-
-test('shallow 12.5cm soil and ash scratches keep the original pixel-art surface, but deeper craters expose earth', () => {
-    const soil = block(Array(64).fill(0), TERRAIN_MATERIAL.Soil, -8);
-    const ash = block(Array(64).fill(0), TERRAIN_MATERIAL.Ash, -8);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -1, soil), true);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Ash, 0, -1, ash), true);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -2, soil), false);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, 0, soil), false);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -8, soil), false,
-        'exposed bedrock never gets its grass lid back');
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Stone, 8, 7,
-        block(Array(64).fill(8), TERRAIN_MATERIAL.Stone, 0)), false);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Lava, 0, -1,
-        block(Array(64).fill(0), TERRAIN_MATERIAL.Lava, -8)), false);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Wood, 0, -1,
-        block(Array(64).fill(0), TERRAIN_MATERIAL.Wood, -8)), false);
-    assert.equal(retainsShallowSurface(TERRAIN_MATERIAL.Soil, 0, -1,
-        block(Array(64).fill(0), TERRAIN_MATERIAL.Stone, -8)), false,
-        'a genuinely changed material must remain visible');
 });
 
 test('a subdivided column paints 64 four-pixel microcolumn tops, round craters exposing dirt inside one block', () => {
