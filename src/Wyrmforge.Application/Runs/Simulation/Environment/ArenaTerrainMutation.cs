@@ -50,6 +50,18 @@ public static class ArenaTerrainMutation
     }) * ArenaTerrainGrid.CellUnits;
 
     /// <summary>
+    /// Fireball upgrade ranks increase terrain power independently of their combat damage.
+    /// Detonation and Meteor Heart add further power and are capped at five by the caller.
+    /// </summary>
+    public static int FireballPowerForRank(int rank) => Math.Clamp(rank, 1, 5) switch
+    {
+        1 => 1,
+        2 or 3 => 2,
+        4 => 3,
+        _ => 4,
+    };
+
+    /// <summary>
     /// Maximum impact depth in 12.5 cm microcells before stone wear. Level-one impacts scratch
     /// the soil; late-game Fireballs reach below the one-metre topsoil layer into the stone.
     /// </summary>
