@@ -235,11 +235,20 @@ export function mergeTerrainFrame(previous, incoming) {
     const sameSite = previous && previous.columns === incoming.columns && previous.rows === incoming.rows &&
         previous.visualSeed === visualSeed && incoming.revision >= previous.revision;
     const fine = new Map(sameSite ? previous.fine : []);
+    const changed = new Set();
     for (const block of incoming.fine ?? []) {
-        if (!block.heights?.length) fine.delete(block.index);
-        else if (isUprightProp(incoming.material?.[block.index]))
-            fine.set(block.index, { heights: block.heights.map(h => Math.min(h, TRUNK_MOUND_MICROCELLS)), topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
-        else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
+        if (!Number.isInteger(block.index) || block.index < 0 || block.index >= incoming.columns * incoming.rows) continue;
+        const before = fine.get(block.index);
+        if (!block.heights?.length) {
+            fine.delete(block.index);
+            if (before) changed.add(block.index);
+            continue;
+        }
+        const next = { heights: isUprightProp(incoming.material?.[block.index])
+            ? block.heights.map(height => Math.min(height, TRUNK_MOUND_MICROCELLS)) : block.heights,
+            topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null };
+        if (!terrainFineEqual(before, next)) changed.add(block.index);
+        fine.set(block.index, next);
     }
     // Trees and boulders are drawn as upright sprites; the terrain itself only shows a low mound under them. The real height (the coarse
     // height C# collides with) stays in `trunks` / `boulders`, and a boulder paints as stone.
@@ -256,6 +265,12 @@ export function mergeTerrainFrame(previous, incoming) {
             material[index] = TERRAIN_MATERIAL.Stone;
         }
     }
+    // Fine deltas are not the only way to change a column: coarse material or height replacements
+    // must still invalidate their faces (and neighbours), even when the server reports no fine blocks.
+    if (sameSite) {
+        for (let i = 0; i < surface.length; i++)
+            if (surface[i] !== previous.surface[i] || material[i] !== previous.material[i]) changed.add(i);
+    }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface, material, fine, trunks, boulders,
         // Damage changes physical heights, not the authored ground's splat/blend pattern. Capture it once for this site.
@@ -266,12 +281,31 @@ export function mergeTerrainFrame(previous, incoming) {
         roadNear: sameSite ? previous.roadNear : undefined,
         rockNear: sameSite ? previous.rockNear : undefined,
         visualSeed,
-        // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
-        changed: (incoming.fine ?? []).map(block => block.index),
+        // A reliable visual delta: retransmitted but identical heights/stone wear must never redraw or reupload
+        // distant undamaged terrain. A new site always repaints fully regardless of this list.
+        changed: [...changed],
+        // Road edits require a whole-site resplat, not a local dirty clip.
+        visualDeltaComplete: Boolean(sameSite && (!incoming.road?.length || terrainArrayEqual(incoming.road, previous.road))),
         // The generated crack network travels once, with the first full load; so do the road (1/16 cell polyline) and the torches.
         cracks: incoming.cracks?.length ? incoming.cracks : previous?.cracks ?? [],
         road: incoming.road?.length ? incoming.road : previous?.road ?? [],
         torches: incoming.torches?.length ? incoming.torches : previous?.torches ?? [] };
+}
+
+/** Compare source-authoritative microcell data, not object identity or server revision.
+ * Repeated damage/kill updates may resend the same block, and repainting that data must not
+ * touch its neighbours or create a new ground GPU capture.
+ */
+function terrainArrayEqual(a, b) {
+    if (a === b) return true;
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+}
+
+function terrainFineEqual(a, b) {
+    return a === b || Boolean(a && b && a.topsoil === b.topsoil && a.stoneTop === b.stoneTop &&
+        terrainArrayEqual(a.heights, b.heights) && terrainArrayEqual(a.wear, b.wear));
 }
 
 /** Height of one 12.5 cm microcolumn; whole columns answer with their single coarse height. */
@@ -1206,6 +1240,16 @@ export class TerrainCanvasCache {
         const kitReady = Boolean(forestKit());
         const visualSeed = frame.visualSeed ?? 0;
         if (this.canvas && this.visualSeed === visualSeed && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
+        // The authoritative C# revision may advance without changing a single terrain pixel
+        // (e.g. a repeated impact snapshot). Do not clear a full-screen cache or move road/grass
+        // pixels in response to a nonvisual update. A late art-kit load and new site still repaint.
+        if (this.canvas && this.revision !== null && this.visualSeed === visualSeed && this.band === band &&
+            this.kitReady === kitReady && frame.visualDeltaComplete && frame.changed?.length === 0 &&
+            frame.revision >= this.revision) {
+            this.revision = frame.revision;
+            frame.kindMaps = this.kindMaps;
+            return false;
+        }
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS * ART;
         const height = (frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2) * ART;
@@ -1219,7 +1263,8 @@ export class TerrainCanvasCache {
         baseCtx.setTransform(ART, 0, 0, ART, 0, 0);
         if (this.withNormals) this.normalCanvas.getContext('2d').setTransform(ART, 0, 0, ART, 0, 0);
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
-        const regions = !full && Array.isArray(frame.changed) ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
+        const regions = !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
+            ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
         const regional = regions.length > 0;
         // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;

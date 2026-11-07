@@ -170,6 +170,80 @@ test('more than 40 impacted blocks never force an unconditional full terrain rep
     assert.ok(clears.every(rect => rect[2] < 32 * 32), 'neither local clip spans the map width');
 });
 
+test('identical retransmitted fine voxels never repaint unchanged grass, road, albedo or normals', () => {
+    const created = [], cleared = [];
+    const makeCanvas = (width, height) => {
+        const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {},
+            clearRect(...area) { cleared.push(area); } };
+        const canvas = { width, height, getContext: () => ctx };
+        created.push(canvas);
+        return canvas;
+    };
+    const original = mergeTerrainFrame(null, { revision: 1, columns: 4, rows: 4, visualSeed: 71,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [] });
+    const cache = new TerrainCanvasCache(makeCanvas);
+    assert.equal(cache.update(original, 0), true);
+    const baselinePaints = cache.repaints, baselineClears = cleared.length;
+    const beforeRevision = cache.viewportRevision({ x: 2, y: 4 }, 390, 844, 2);
+    const next = mergeTerrainFrame(original, { revision: 2, columns: 4, rows: 4, visualSeed: 71,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [] });
+    assert.equal(next.visualDeltaComplete, true);
+    assert.deepEqual(next.changed, []);
+    assert.equal(cache.update(next, 0), false, 'no changed voxels mean no offscreen canvas redraw');
+    assert.equal(cache.repaints, baselinePaints);
+    assert.equal(cleared.length, baselineClears, 'do not clear any unchanged ground pixels');
+    assert.equal(cache.viewportRevision({ x: 2, y: 4 }, 390, 844, 2), beforeRevision,
+        'an identical visual frame must not invalidate GPU albedo and normal captures');
+    assert.equal(created.length, 1);
+    assert.equal(next.kindMaps, original.kindMaps, 'immutable original splat maps survive the no-op revision');
+});
+
+test('identical fine updates are ignored but excavation, stone wear and coarse changes still repaint', () => {
+    const land = { revision: 1, columns: 4, rows: 4, visualSeed: 73,
+        surface: Array(16).fill(0), material: Array(16).fill(0) };
+    const initial = mergeTerrainFrame(null, { ...land, fine: [] });
+    const base = { index: 6, heights: Array(64).fill(0), topsoil: 0, stoneTop: -8, wear: Array(64).fill(0) };
+    const chipped = mergeTerrainFrame(initial, { ...land, revision: 2, fine: [{ ...base,
+        heights: base.heights.map((v, i) => i === 14 ? -1 : v) }] });
+    assert.deepEqual(chipped.changed, [6], 'real height damage invalidates the original block');
+    const repeat = mergeTerrainFrame(chipped, { ...land, revision: 3, fine: [{ ...base,
+        heights: base.heights.map((v, i) => i === 14 ? -1 : v) }] });
+    assert.deepEqual(repeat.changed, [], 'retransmitting the same fine heights is not new damage');
+    const wear = mergeTerrainFrame(repeat, { ...land, revision: 4, fine: [{ ...base,
+        heights: base.heights.map((v, i) => i === 14 ? -1 : v),
+        wear: base.wear.map((v, i) => i === 14 ? 1 : v) }] });
+    assert.deepEqual(wear.changed, [6], 'worn stone has a new visible crack');
+    const changeMaterial = mergeTerrainFrame(wear, { ...land, revision: 5,
+        material: land.material.map((v, i) => i === 9 ? TERRAIN_MATERIAL.Stone : v), fine: [] });
+    assert.deepEqual(changeMaterial.changed, [9], 'coarse changes are never hidden by an empty fine delta');
+    const removed = mergeTerrainFrame(changeMaterial, { ...land, revision: 6,
+        material: changeMaterial.material, fine: [{ index: 6, heights: [] }] });
+    assert.deepEqual(removed.changed, [6], 'restoring whole terrain invalidates its formerly chipped face');
+    const noRepeatRemoval = mergeTerrainFrame(removed, { ...land, revision: 7,
+        material: changeMaterial.material, fine: [{ index: 6, heights: [] }] });
+    assert.deepEqual(noRepeatRemoval.changed, []);
+});
+
+test('a changed authoritative road never uses the no-op or local damage path', () => {
+    const initial = mergeTerrainFrame(null, { revision: 1, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [0, 0, 16, 16] });
+    const unchanged = mergeTerrainFrame(initial, { revision: 2, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [0, 0, 16, 16] });
+    assert.equal(unchanged.visualDeltaComplete, true);
+    const changed = mergeTerrainFrame(unchanged, { revision: 3, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [16, 0, 16, 32] });
+    assert.equal(changed.visualDeltaComplete, false, 'changed roads affect many background splat tiles');
+    const clears = [];
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {}, clearRect(...args) { clears.push(args); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    cache.update(initial, 0);
+    const baseline = clears.length;
+    assert.equal(cache.update(unchanged, 0), false);
+    assert.equal(clears.length, baseline);
+    assert.equal(cache.update(changed, 0), true);
+    assert.equal(clears.length, baseline + 1, 'road changes clear and repaint the full source canvas');
+});
+
 test('a new site with the same terrain revision replaces the entire cached image', () => {
     const clears = [];
     const ctx = { ...recorder(), clearRect(...rectangle) { clears.push(rectangle); } };
