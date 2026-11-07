@@ -27,13 +27,7 @@ public sealed partial class RunSimulation
     // excavation, but never exceed the bedrock-safe power-five profile.
     private int FireballTerrainPower(ProjectileState projectile)
     {
-        var power = Math.Clamp(projectile.Rank, 1, 5) switch
-        {
-            1 => 1,
-            2 or 3 => 2,
-            4 => 3,
-            _ => 4,
-        };
+        var power = ArenaTerrainMutation.FireballPowerForRank(projectile.Rank);
         if (HasFireballMutation(FireballMutationId.Detonation)) power += 1;
         if (HasFireballMutation(FireballMutationId.MeteorHeart)) power += 2;
         return Math.Clamp(power, 1, 5);
