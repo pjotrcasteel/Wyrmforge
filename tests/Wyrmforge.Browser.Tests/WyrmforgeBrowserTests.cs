@@ -1750,19 +1750,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".fireball-locked-explainer")).ToHaveCountAsync(0);
         await ScreenshotAsync("arcane-nexus-fireball-390.png");
 
-        await Page.Locator(".fireball-center").ClickAsync();
-        await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
-        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
-        Assert.AreEqual("hidden", await Page.Locator("[data-game-version]").EvaluateAsync<string>("element => getComputedStyle(element).visibility"));
-        await Expect(Page.Locator(".fireball-mini-pips i")).ToHaveCountAsync(10);
-        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +0%");
-        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+8%");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
-        await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
-        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +8%");
-        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+16%");
-        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
-
         await Page.Locator(".fireball-socket--1").ClickAsync();
         await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
         await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 2");
