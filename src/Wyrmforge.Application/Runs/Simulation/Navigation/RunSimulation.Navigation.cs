@@ -45,6 +45,7 @@ public sealed partial class RunSimulation
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true,
             claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled);
         playerPositionInitialized = false;
+        StageHuntEntrance();
         return true;
     }
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
@@ -101,6 +102,7 @@ public sealed partial class RunSimulation
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
+        StageHuntEntrance();
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();

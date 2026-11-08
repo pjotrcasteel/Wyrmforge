@@ -31,6 +31,8 @@ public sealed record RunRenderSnapshot(
 
     public IReadOnlyList<DamageNumberRenderSnapshot> DamageNumbers { get; init; } = [];
     public bool PresentationPaused { get; init; }
+    /// <summary>Authoritative staged walk-in: player input and combat are locked until this becomes false.</summary>
+    public bool HuntEntranceWalking { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
     public GpuLightingFrame? Lighting { get; init; }
 

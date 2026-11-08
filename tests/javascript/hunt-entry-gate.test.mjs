@@ -123,3 +123,40 @@ test('while the gate is held, JS requests a side-effect-free C# snapshot, never 
     assert.doesNotMatch(codebehind.match(/public RunRenderSnapshot PreviewFrame\(\)[\s\S]*?\[JSInvokable\]/)?.[0] ?? '',
         /\.Tick\(/, 'C# startup preview never advances enemy attacks, spawns or damage');
 });
+
+test('map click arms loading immediately even while only the previous paused scene exists', () => {
+    const { document, elements } = createDocument();
+    const gate = createHuntEntryGate({ ownerDocument: document, appendChild() {} });
+    const old = snapshot(), next = snapshot({ environment: { ...old.environment, seed: 18 } });
+    gate.update(old, 'ready');
+    assert.equal(gate.isBlocking(), false);
+    gate.arm();
+    assert.equal(gate.isBlocking(), true);
+    assert.equal(elements[0].getAttribute('aria-hidden'), 'false');
+    gate.update(snapshot({ paused: true }), 'inactive');
+    assert.equal(gate.isBlocking(), true, 'the map choice must not uncover the old arena');
+    gate.update(old, 'ready');
+    assert.equal(gate.isBlocking(), true, 'a stale old frame cannot release the new gate');
+    gate.update(next, 'terrain');
+    assert.equal(gate.isBlocking(), true);
+    gate.update(next, 'ready');
+    assert.equal(gate.isBlocking(), false);
+    gate.arm();
+    gate.cancel();
+    assert.equal(gate.isBlocking(), false, 'a rejected/aborted selection does not strand the user');
+    gate.dispose();
+});
+
+test('the map selection paints the veil before generating C# terrain and entrance is C# owned', () => {
+    const root = new URL('../../src/Wyrmforge.Presentation.Web/', import.meta.url);
+    const source = readFileSync(new URL('Features/Arena/ArenaView.razor.cs', root), 'utf8');
+    const js = readFileSync(new URL('wwwroot/js/arena.js', root), 'utf8');
+    const simulation = readFileSync(new URL('../Wyrmforge.Application/Runs/Simulation/RunSimulation.cs', root), 'utf8');
+    const intro = readFileSync(new URL('../Wyrmforge.Application/Runs/Simulation/Navigation/RunSimulation.Entrance.cs', root), 'utf8');
+    const entry = source.slice(source.indexOf('private async Task ChooseMapNodeAsync'), source.indexOf('private async Task UseCheckpointActionAsync'));
+    assert.ok(entry.indexOf('beginHuntEntry') >= 0 && entry.indexOf('beginHuntEntry') < entry.indexOf('ChooseMapNode(id)'));
+    assert.match(js, /state\.entryGate\?\.arm\(\)/);
+    assert.match(simulation, /if \(HuntEntranceActive\)[\s\S]*?AdvanceHuntEntrance\(delta, width, height\);[\s\S]*?return CreateSnapshot\(\)/);
+    assert.match(intro, /arenaEnvironment!\.RestrictMovement\(previous, proposed, width, height, player\.Radius\)/);
+    assert.match(source, /if \(reducedMotion\) current\.SkipHuntEntrance\(\)/);
+});

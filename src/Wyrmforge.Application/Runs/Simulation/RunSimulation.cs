@@ -166,6 +166,13 @@ public sealed partial class RunSimulation
             aimedPropId = null;
             return CreateSnapshot();
         }
+        if (HuntEntranceActive)
+        {
+            // The ready, visible mage walks up the protected south road before enemies,
+            // timers, spellcasting, hazards or user movement are allowed to advance.
+            AdvanceHuntEntrance(delta, width, height);
+            return CreateSnapshot();
+        }
         if (trailExitPending)
         {
             delta = Math.Clamp(delta, 0, 0.05);
@@ -417,6 +424,7 @@ public sealed partial class RunSimulation
             ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
         {
             DamageNumbers = CreateDamageNumberSnapshots(),
+            HuntEntranceWalking = HuntEntranceActive,
             DragonDefeat = dragonDefeat,
             AshfangEffects = CreateAshfangEffects(),
             AshfangGroundFires = CreateAshfangGroundFireSnapshots(),

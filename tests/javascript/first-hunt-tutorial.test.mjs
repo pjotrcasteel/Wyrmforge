@@ -10,10 +10,11 @@ test('first-Hunt guidance reacts to gameplay and never blocks movement', () => {
     const behavior = source('src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.cs');
     const css = source('src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.css');
     assert.match(arena, /data-tutorial="first-hunt"/);
-    assert.match(behavior, /if \(FirstHunt && MapCombatActive && !snapshot.Ended\)/);
+    assert.match(behavior, /if \(FirstHunt && MapCombatActive && !snapshot.Ended && !hadHuntEntrance\)/);
+    assert.match(behavior, /simulation\?\.HuntEntranceActive == true/);
     assert.match(behavior, /Math.Abs\(movementX\) \+ Math.Abs\(movementY\)/);
     assert.match(behavior, /current.CurrentMapNodeKills > 0/);
-    assert.match(behavior, /firstHuntHintAdvanced \|\| hadChoices/);
+    assert.match(behavior, /firstHuntHintAdvanced \|\| hadHuntEntrance && !current.HuntEntranceActive/);
     assert.match(css, /\.first-hunt-hint\s*\{[^}]*pointer-events:\s*none/s);
 });
 

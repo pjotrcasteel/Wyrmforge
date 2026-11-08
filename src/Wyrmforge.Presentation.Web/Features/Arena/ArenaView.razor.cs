@@ -110,7 +110,7 @@ public partial class ArenaView : IAsyncDisposable
         get
         {
             if (!FirstHunt || gameOverSent || ChoosingPrimary || trailTransition || runMoment is not null || !MapCombatActive
-                || CurrentChoices.Count > 0) return null;
+                || simulation?.HuntEntranceActive == true || CurrentChoices.Count > 0) return null;
             if (!firstHuntMovementObserved) return "DRAG TO MOVE • WASD / ARROW KEYS ON DESKTOP";
             if (!firstHuntKillObserved) return "YOUR MAGIC CASTS AUTOMATICALLY • KEEP MOVING TO EVADE";
             if (!firstHuntUpgradeChosen) return "DEFEAT ENEMIES TO EARN YOUR FIRST HUNT POWER";
@@ -204,7 +204,7 @@ public partial class ArenaView : IAsyncDisposable
         simulation?.CreateSnapshot() ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
 
     [JSInvokable]
-    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false, bool reducedMotion = false)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
@@ -238,10 +238,12 @@ public partial class ArenaView : IAsyncDisposable
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var previousRefugeReturns = current.RefugeReturns;
+        var hadHuntEntrance = current.HuntEntranceActive;
+        if (reducedMotion) current.SkipHuntEntrance();
         var input = new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         var snapshot = current.Tick(delta, input, width, height);
         var firstHuntHintAdvanced = false;
-        if (FirstHunt && MapCombatActive && !snapshot.Ended)
+        if (FirstHunt && MapCombatActive && !snapshot.Ended && !hadHuntEntrance)
         {
             if (!firstHuntMovementObserved && Math.Abs(movementX) + Math.Abs(movementY) >= 0.35)
             {
@@ -264,7 +266,8 @@ public partial class ArenaView : IAsyncDisposable
         }
         if (debugGod) current.DebugRestoreHealth();
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
-        var stateChanged = firstHuntHintAdvanced || hadChoices != current.PendingChoices.Count > 0
+        var stateChanged = firstHuntHintAdvanced || hadHuntEntrance && !current.HuntEntranceActive
+            || hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
             || hadRelicChoices != current.PendingRelicChoices.Count > 0
             || wasAtCheckpoint != current.AtCheckpoint
@@ -440,13 +443,28 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChooseMapNodeAsync(string id)
     {
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
-        if (node is null || simulation?.ChooseMapNode(id) != true) return;
-        if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
-            throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
-        ShowMapMoment(node);
-        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
-        await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
-        await InvokeAsync(StateHasChanged);
+        if (node is null || simulation is null) return;
+        // The JS overlay must visibly cover the prior map before the C# terrain generator runs.
+        if (arenaModule is not null) await arenaModule.InvokeVoidAsync("beginHuntEntry", CancellationToken.None, canvas);
+        try
+        {
+            if (!simulation.ChooseMapNode(id))
+            {
+                if (arenaModule is not null) await arenaModule.InvokeVoidAsync("cancelHuntEntry", CancellationToken.None, canvas);
+                return;
+            }
+            if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
+                throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
+            ShowMapMoment(node);
+            await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
+            await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            if (arenaModule is not null) await arenaModule.InvokeVoidAsync("cancelHuntEntry", CancellationToken.None, canvas);
+            throw;
+        }
     }
 
     private async Task UseCheckpointActionAsync(RunCheckpointActionId id)
