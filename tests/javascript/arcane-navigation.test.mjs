@@ -189,3 +189,17 @@ test('opening a long route reveals its explanation while retaining map context',
     }, scrollIntoView() { assert.fail('The entire long route must not displace the map'); } });
     assert.equal(revealed, 'nearest');
 });
+
+test('overview fits occupied landmarks instead of the empty world', () => {
+    const m = map(false, 11600);
+    m.viewport.clientWidth = 390;
+    m.viewport.clientHeight = 600;
+    m.viewport.querySelectorAll = () => [{style:{left:'3800px',top:'700px'}}, {style:{left:'7800px',top:'7100px'}}];
+    m.api.overview(m.viewport);
+    const { x, y, scale } = m.view();
+    assert.ok(scale > 0.07);
+    assert.ok(x + 3800 * scale >= 16);
+    assert.ok(x + 7800 * scale <= 374);
+    assert.ok(y + 700 * scale >= 64);
+    assert.ok(y + 7100 * scale <= 584);
+});
