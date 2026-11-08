@@ -358,7 +358,7 @@ export function botMovement(snapshot, memory, now, frame = null) {
         memory.exitBestDistance = distance;
         memory.roadDetourUntil = 0;
     }
-    if (frame && now < memory.exitRecoveryUntil && distance > exit.radius + 12) {
+    if (frame && now < memory.exitRecoveryUntil && distance > (exit.radius ?? 37) + 12) {
         const alternative = flowDirection(frame, player, exit, navigationProps(snapshot, frame));
         if (alternative && (alternative.x !== 0 || alternative.y !== 0)) return alternative;
     }
