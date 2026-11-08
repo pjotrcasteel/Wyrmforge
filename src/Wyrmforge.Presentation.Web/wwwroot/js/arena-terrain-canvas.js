@@ -1203,23 +1203,35 @@ export function terrainDirtyRegions(columns, rows, changed) {
     return regions;
 }
 
-/** Repaint only the dirty clips, in back-to-front painter order; outside pixels remain exactly as they were. */
+/**
+ * Rebuild complete vertical strips of the affected columns in the same order as a full terrain repaint.
+ * A dirty *rectangle* truncates the projected surface of cliffs, sunken microcells and already-painted
+ * neighbouring ground. Clearing that rectangle leaves hard brown/green boundaries on real iPhone Safari
+ * after impacts even though the authoritative frame and renderer revision match.
+ *
+ * We already visit every source row during regional painting; extending the destination clip to the
+ * full column height does not increase painter iterations. Coalescing overlapping column intervals
+ * prevents multiple impacts on the same route from repainting the same vertical strip repeatedly.
+ * Unaffected columns are never cleared, so this is not a full-map rebuild.
+ */
 export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_PAD_UNITS) {
-    const { columns, rows } = frame;
+    const { rows } = frame;
+    const strips = [];
+    for (const { c0, c1 } of [...regions].sort((a, b) => a.c0 - b.c0)) {
+        const last = strips[strips.length - 1];
+        if (last && c0 <= last.c1 + 1) last.c1 = Math.max(last.c1, c1);
+        else strips.push({ c0, c1 });
+    }
+    const fullHeight = rows * FACE_PIXELS + offsetY * 2;
     let painted = 0;
-    for (const { c0, c1, r0, r1 } of regions) {
-        // The clipped area must be an exact slice of a fresh full repaint, not a blend
-        // of old cache pixels and whichever nearby cells happened to be dirty.
-        // Scan source rows in canonical back-to-front order. Terrain can overdraw
-        // several rows above its origin and pit walls can draw below it; bounding
-        // source rows at a fixed +/- margin leaves rectangular stale patches.
-        const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
-        const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
+    for (const { c0, c1 } of strips) {
+        const clipX = c0 * FACE_PIXELS;
+        const clipW = (c1 - c0 + 1) * FACE_PIXELS;
         ctx.save();
         ctx.beginPath();
-        ctx.rect(clipX, clipY, clipW, clipH);
+        ctx.rect(clipX, 0, clipW, fullHeight);
         ctx.clip();
-        ctx.clearRect(clipX, clipY, clipW, clipH);
+        ctx.clearRect(clipX, 0, clipW, fullHeight);
         ctx.translate(0, offsetY);
         for (let row = 0; row < rows; row++)
             for (let column = c0; column <= c1; column++)
