@@ -393,6 +393,48 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
+    public void ScriptedAmbushFissures_PreserveRoadButLeaveOffRoadTerrainDestructible()
+    {
+        var grid = FlatSoil(16);
+        var guarded = new bool[grid.Columns * grid.Rows];
+        for (var row = 0; row < grid.Rows; row++)
+        {
+            guarded[row * grid.Columns + 8] = true;
+        }
+
+        var fissure = new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(8, 8), 1)
+        {
+            FissureReach = 16,
+            FissureSeed = 73,
+            PreserveProtectedRoute = true
+        };
+        var offRoadChanged = false;
+        foreach (var reach in new[] { 6, 11, 16 })
+        {
+            // Exactly the three increasing reaches used during the real ambush tell.
+            var changes = ArenaTerrainMutation.Apply(grid, fissure with { FissureReach = reach }, guarded);
+            offRoadChanged |= changes.Any(change => change.Column != 8);
+            for (var row = 0; row < grid.Rows; row++)
+            {
+                Assert.AreEqual(0, grid.Surface(8, row), $"the authored road at row {row} must remain level");
+                Assert.IsFalse(grid.IsSubdivided(8, row), $"stage {reach} must not subdivide road at row {row}");
+            }
+        }
+        Assert.IsTrue(offRoadChanged, "the ambush must still fracture ground beside the road");
+
+        var bossGrid = FlatSoil(16);
+        var bossFissure = fissure with { PreserveProtectedRoute = false };
+        var bossChanges = ArenaTerrainMutation.Apply(bossGrid, bossFissure, guarded);
+        Assert.IsTrue(bossChanges.Any(change => change.Column == 8),
+            "boss fissures must retain their original ability to destroy protected road columns");
+
+        var shot = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, ArenaTerrainGrid.CenterOf(8, 8), 1), guarded);
+        Assert.IsTrue(shot.Any(change => change.Column == 8), "direct Fireballs must still damage protected road safely");
+        Assert.IsTrue(grid.IsSubdivided(8, 8));
+        Assert.IsGreaterThanOrEqualTo(ArenaTerrainMutation.RouteFloorMicrocells, grid.Surface(8, 8));
+    }
+
+    [TestMethod]
     public void Revert_RestoresEveryColumnExactly()
     {
         var grid = FlatSoil();

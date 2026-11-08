@@ -60,7 +60,12 @@ public sealed partial class RunSimulation
         var impacts = positions.Select(at =>
         {
             var seed = unchecked((long)Math.Round(at.X * 4) * 73856093L ^ (long)Math.Round(at.Y * 4) * 19349663L);
-            return new ArenaTerrainImpact(++nextTerrainImpactId, at, 1) { FissureReach = reachMicrocells, FissureSeed = seed };
+            return new ArenaTerrainImpact(++nextTerrainImpactId, at, 1)
+            {
+                FissureReach = reachMicrocells,
+                FissureSeed = seed,
+                PreserveProtectedRoute = true
+            };
         }).ToArray();
         terrainChangesThisTick.AddRange(arenaEnvironment.ApplyTerrainImpacts(impacts, player.Position, player.Radius, arenaWidth, arenaHeight));
     }
