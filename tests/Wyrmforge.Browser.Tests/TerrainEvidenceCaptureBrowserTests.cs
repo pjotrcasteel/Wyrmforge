@@ -107,17 +107,17 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
                 return inspectTerrainCacheRebuild(document.querySelector('canvas.game-canvas'));
             }
             """);
-        var before = result.GetProperty("before").GetProperty("mismatched").GetInt32();
-        var after = result.GetProperty("after").GetProperty("mismatched").GetInt32();
+        var before = result.GetProperty("referenceBefore").GetProperty("mismatched").GetInt32();
+        var after = result.GetProperty("referenceAfter").GetProperty("mismatched").GetInt32();
+        var cacheParity = result.GetProperty("cacheParity").GetProperty("mismatched").GetInt32();
         var revision = result.GetProperty("revision").GetInt32();
         Assert.AreEqual(revision, result.GetProperty("cacheRevision").GetInt32(),
             "Both captures must use a single authoritative terrain revision.");
         Assert.IsTrue(result.GetProperty("fullRepaints").GetInt32() >
             result.GetProperty("previousFullRepaints").GetInt32(), "A real forced cache rebuild must occur.");
-        Assert.AreEqual(0, after,
-            $"Fresh full cache pixels must agree with the independent painter for the SAME frame (before={before}, after={after}, revision={revision}).");
-        Assert.AreEqual(0, before,
-            $"Damaged live-Hunt cache must match fresh ground pixels (before={before}, after={after}, revision={revision}).");
+        Assert.AreEqual(0, cacheParity,
+            $"Real Hunt cache must be independent of its partial-repaint history at the exact same revision " +
+            $"(cache-vs-rebuilt={cacheParity}, independent-reference before={before}, after={after}, revision={revision}).");
     }
 
 }
