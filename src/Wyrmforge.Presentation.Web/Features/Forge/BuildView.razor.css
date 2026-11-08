@@ -1865,3 +1865,25 @@
         min-width: 0;
     }
 }
+
+/* One-time first-point hint. The Web remains entirely interactive behind it. */
+.first-arcane-point-guide {
+    position: absolute;
+    z-index: 16;
+    top: 70px;
+    left: 50%;
+    display: grid;
+    gap: 3px;
+    width: min(340px, calc(100% - 24px));
+    padding: 9px 12px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(211, 159, 94, .55);
+    border-radius: 11px;
+    background: rgba(22, 15, 25, .92);
+    color: #dfcbaa;
+    font: 600 .75rem/1.4 system-ui, sans-serif;
+    text-align: center;
+    pointer-events: none;
+}
+.first-arcane-point-guide strong { color: #f6dcab; font-size: .67rem; letter-spacing: .12em; }
+@media (max-height: 550px) { .first-arcane-point-guide { top: 52px; } }
