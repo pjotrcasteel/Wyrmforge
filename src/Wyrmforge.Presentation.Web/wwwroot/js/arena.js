@@ -9,7 +9,7 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-fissure-occlusion-v1';
+import { terrainCaptureWindow, TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-buffered-ground-v1';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-crack-isolation-v1';
@@ -696,7 +696,7 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    let artScale = 1, groundAlbedo = null;
+    let artScale = 1, groundAlbedo = null, groundCaptureView = null;
     if (greybox) {
         // Level one-metre grey receiver. No material atlas or walls; the same
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
@@ -708,7 +708,10 @@ function draw(state, snapshot, width, height) {
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
             artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
-            if (artScale > 1) groundAlbedo = groundAlbedoView(state, camera, width, height, artScale);
+            if (artScale > 1) {
+                groundCaptureView = terrainCaptureWindow(camera, width, height);
+                groundAlbedo = groundAlbedoView(state, groundCaptureView, groundCaptureView.width, groundCaptureView.height, artScale);
+            }
             else if (layerLabEnabled('albedo')) state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
             else { ctx.fillStyle = '#777777'; ctx.fillRect(camera.x, camera.y, width, height); }
         } else {
@@ -809,11 +812,11 @@ function draw(state, snapshot, width, height) {
     const view = { x: camera.x, y: camera.y, width, height };
     const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
+            groundCaptureView ?? view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
     state.veinSeams = emissive?.seams ?? 0;
-    const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
+    const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, groundCaptureView ?? camera, groundCaptureView?.width ?? width, groundCaptureView?.height ?? height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
-        groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
+        groundAlbedo ? { source: groundAlbedo, scale: artScale, view: groundCaptureView, revision: terrainViewRevision(state, groundCaptureView, groundCaptureView.width, groundCaptureView.height, artScale) } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
