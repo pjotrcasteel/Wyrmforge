@@ -151,3 +151,14 @@ export function hollowGroundDiagnostics(state) {
     return { footfalls: state.footfalls, activePuffs: state.puffs.length,
         trackedHollowed: state.walkers.size, atlasReady: Boolean(atlas) };
 }
+
+
+/** H4 corpse dust uses H3's same licensed atlas, palette and crisp pixel scaler. */
+export function hollowGroundAtlasReady() { return Boolean(atlas); }
+
+export function drawHollowDeathDustFrame(ctx, material, x, y, frame, width, alpha) {
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) ||
+        !Number.isInteger(frame) || frame < 0 || frame >= HOLLOW_GROUND.frames ||
+        !Number.isFinite(alpha) || alpha <= 0) return false;
+    return drawPuff(ctx, material, x, y, frame, Math.round(width), Math.min(1, alpha));
+}

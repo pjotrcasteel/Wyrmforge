@@ -104,3 +104,14 @@ test('art is exactly the source-recolored 8-frame indexed atlas, no blended scal
         assert.equal(drawHollowGroundVfx(ctx,enemy({emergeProgress:.2}),state,null,0,true),1);
     } finally {globalThis.Image=prior;}
 });
+
+
+test('H4 death dust reuses H3 source atlas at the ground, no terrain writes', () => {
+    assert.equal(mod.hollowGroundAtlasReady(), true);
+    const ctx={globalAlpha:1,calls:[],save(){},restore(){},drawImage(...args){this.calls.push(args);}};
+    assert.equal(mod.drawHollowDeathDustFrame(ctx, 'soil', 120, 150, 4, 38, .55), true);
+    assert.equal(ctx.imageSmoothingEnabled, false);
+    assert.equal(ctx.calls.length, 1);
+    assert.equal(mod.drawHollowDeathDustFrame(ctx, 'lava', 120, 150, 4, 38, .55), false);
+    assert.equal(mod.drawHollowDeathDustFrame(ctx, 'stone', 120, 150, 9, 38, .55), false);
+});

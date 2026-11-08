@@ -49,6 +49,7 @@
             <label><input type="checkbox" @bind="hollowClawFxEnabled" @bind:after="SwitchHollowClawFx" /> Hollowed claw VFX</label>
             <label><input type="checkbox" @bind="hollowHitFxEnabled" @bind:after="SwitchHollowHitFx" /> Hollowed damage VFX</label>
             <label><input type="checkbox" @bind="hollowGroundFxEnabled" @bind:after="SwitchHollowGroundFx" /> Hollowed ground VFX</label>
+            <label><input type="checkbox" @bind="hollowDeathFxEnabled" @bind:after="SwitchHollowDeathFx" /> Hollowed death VFX</label>
         }
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
@@ -86,6 +87,7 @@
     [Parameter, SupplyParameterFromQuery(Name = "hollowClawFx")] public bool? HollowClawFxQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "hollowHitFx")] public bool? HollowHitFxQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "hollowGroundFx")] public bool? HollowGroundFxQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "hollowDeathFx")] public bool? HollowDeathFxQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
@@ -106,6 +108,7 @@
     private bool hollowClawFxEnabled = true;
     private bool hollowHitFxEnabled = true;
     private bool hollowGroundFxEnabled = true;
+    private bool hollowDeathFxEnabled = true;
     [Parameter, SupplyParameterFromQuery(Name = "ai1")] public bool? AgentPerceptionQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "tier")] public int? TierQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "count")] public int? CountQuery { get; set; }
@@ -130,6 +133,7 @@
         if (HollowClawFxQuery is { } claw) hollowClawFxEnabled = claw;
         if (HollowHitFxQuery is { } hit) hollowHitFxEnabled = hit;
         if (HollowGroundFxQuery is { } ground) hollowGroundFxEnabled = ground;
+        if (HollowDeathFxQuery is { } death) hollowDeathFxEnabled = death;
         if (PausedQuery is { } pause) paused = pause;
         if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
         if (AgentPerceptionQuery is { } ai1) agentPerception = ai1;
@@ -227,6 +231,12 @@
     {
         var value = hollowGroundFxEnabled ? (bool?)null : false;
         Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowGroundFx", value), forceLoad: true, replace: true);
+    }
+
+    private void SwitchHollowDeathFx()
+    {
+        var value = hollowDeathFxEnabled ? (bool?)null : false;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowDeathFx", value), forceLoad: true, replace: true);
     }
 
     private void SwitchMireStyle()

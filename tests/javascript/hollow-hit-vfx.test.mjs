@@ -50,3 +50,15 @@ test('the torso-aligned impact is crisp, bounded, and cannot modify gameplay',as
         assert.equal(drawHollowHitVfx(ctx,enemy,[number({periodic:true})]),0);
     } finally {globalThis.Image=oldImage;}
 });
+
+
+test('death splat reuses the already decoded H2 atlas, at torso height with no glow or mutation', async () => {
+    assert.equal(typeof mod.drawHollowDeathSplatFrame, 'function');
+    assert.equal(mod.hollowHitAtlasReady(), true);
+    const ctx={globalAlpha:1,calls:[],save(){},restore(){},drawImage(...args){this.calls.push(args);}};
+    assert.equal(mod.drawHollowDeathSplatFrame(ctx, 120, 150, 11, 3, .6), true);
+    assert.equal(ctx.imageSmoothingEnabled, false);
+    assert.equal(ctx.calls.length, 1);
+    assert.ok(ctx.calls[0][6] < 145, 'blood/ash must stay attached to corpse torso');
+    assert.equal(mod.drawHollowDeathSplatFrame(ctx, 120, 150, 11, -1, .6), false);
+});

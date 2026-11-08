@@ -36,6 +36,7 @@ import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHoll
 import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v3';
 import { preloadHollowHitVfx, drawHollowHitVfx } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h2';
 import { preloadHollowGroundVfx, createHollowGroundState, updateHollowGroundVfx, drawHollowGroundVfx, hollowGroundDiagnostics } from './hollow-ground-vfx.js?v=20261108-hollow-h3';
+import { createHollowDeathVfxState, updateHollowDeathVfx, drawHollowDeathGroundVfx, drawHollowDeathAccentVfx, hollowDeathArtReady, hollowDeathVfxDiagnostics } from './hollow-death-vfx.js?v=20261108-hollow-h4';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -304,6 +305,8 @@ export function readArenaDiagnostics(canvas) {
         hollowHitFxEnabled: state.hollowHitFxEnabled,
         hollowGroundFxEnabled: state.hollowGroundFxEnabled,
         hollowGround: hollowGroundDiagnostics(state.hollowGround),
+        hollowDeathFxEnabled: state.hollowDeathFxEnabled,
+        hollowDeath: hollowDeathVfxDiagnostics(state.hollowDeath),
         ashling: ashlingSprites.diagnostics(state.ashling),
         authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -414,6 +417,8 @@ function createState(canvas, dotNetReference) {
         hollowHitFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowHitFx')),
         hollowGroundFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowGroundFx')),
         hollowGround: createHollowGroundState(),
+        hollowDeathFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowDeathFx')),
+        hollowDeath: createHollowDeathVfxState(),
         ashling: ashlingSprites.createState(),
         // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
         authored: createAuthoredState(),
@@ -667,6 +672,8 @@ function draw(state, snapshot, width, height) {
     const lightViewport = { x: camera.x, y: camera.y, width, height };
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     updateHollowGroundVfx(state.hollowGround, snapshot, state.hollow, state.terrainFrame);
+    updateHollowDeathVfx(state.hollowDeath, snapshot, state.hollow.clock,
+        authoredOn && authoredManifests.has('Hollowed'), state.hollow.corpses);
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
     // Every illumination cue uses the SAME authoritative lighting frame.
@@ -912,6 +919,13 @@ function draw(state, snapshot, width, height) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
     }
+    // Source-atlas corpse dust must be composed after GPU actors but before the
+    // shared Gothic night veil. Neither terrain albedo nor the GPU cache changes.
+    if (state.hollowDeathFxEnabled) {
+        drawHollowDeathGroundVfx(ctx, state.hollowDeath, state.terrainFrame,
+            huntBand(state, snapshot), state.reducedMotion.matches);
+        drawHollowDeathAccentVfx(ctx, state.hollowDeath, state.reducedMotion.matches);
+    }
     const glowOnGround = Boolean(emissive && gpu);
     // Keep the Warden's authoritative ring and 37-frame impact visible above the GPU
     // presentation. Doing this before gpu.render would discard the effect on 64px/m terrain.
@@ -985,7 +999,12 @@ function draw(state, snapshot, width, height) {
     // The selection emitter belongs to the authoritative GPU snapshot; avoid Canvas double-lighting.
     if (!gpu) drawSpellLightSpill(ctx, actorLightsWithoutSigilOverlay(spellLights), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
-    for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
+    for (const death of snapshot.deathBursts) {
+        // The old white ring conflicts with the approved gothic Hollowed death
+        // art. Keep it for every other entity and as an asset-load fallback.
+        if (Number(death.kind) === 0 && state.hollowDeathFxEnabled && hollowDeathArtReady()) continue;
+        drawDeathBurst(ctx, death);
+    }
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);

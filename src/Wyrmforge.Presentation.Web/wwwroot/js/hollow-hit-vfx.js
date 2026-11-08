@@ -65,3 +65,21 @@ export function drawHollowHitVfx(ctx, enemy, numbers, reducedMotion = false) {
     }
     return rendered;
 }
+
+/** Reuse the exact H2 gothic atlas for a confirmed Hollowed killing blow. */
+export function hollowHitAtlasReady() { return Boolean(atlas); }
+
+export function drawHollowDeathSplatFrame(ctx, x, y, radius, frame, opacity = 1) {
+    if (!atlas || !Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(radius) ||
+        !Number.isInteger(frame) || frame < 0 || frame >= HOLLOW_HIT.frames ||
+        !Number.isFinite(opacity) || opacity <= 0) return false;
+    const width = Math.round(Math.min(54, Math.max(6, radius) * 3.6));
+    const height = Math.round(width * HOLLOW_HIT.cellHeight / HOLLOW_HIT.cellWidth);
+    ctx.save();
+    ctx.globalAlpha *= Math.min(1, opacity);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(atlas, frame * HOLLOW_HIT.cellWidth, 0, HOLLOW_HIT.cellWidth, HOLLOW_HIT.cellHeight,
+        Math.round(x - width / 2), Math.round(y - radius * 1.22 - height * .58), width, height);
+    ctx.restore();
+    return true;
+}
