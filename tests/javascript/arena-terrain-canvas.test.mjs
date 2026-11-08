@@ -458,6 +458,48 @@ test('the GPU path erases the covering faces and the Canvas path repaints them b
     assert.equal(repaint.calls.filter(call => call[0] === 'fillRect').length, 2);
 });
 
+test('fissures occlude the wizard only with surviving 12.5cm terrain instead of a dark full-block mask', () => {
+    // The actor stands one metre down in a cleft. The forward block's coarse
+    // height is floor level, but 62 of 64 microcolumns were destroyed to pit depth.
+    const terrain = frame(1, 2, [-8, 0]);
+    const heights = new Array(MICRO_PER_COLUMN * MICRO_PER_COLUMN).fill(-8);
+    heights[0] = 0;
+    heights[1] = 0;
+    terrain.fine = new Map([[1, { heights, topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -16 }]]);
+    const cells = occludingTerrainCells(terrain, 16, 12, -32, 16);
+    assert.deepEqual(cells, [{ column: 0, row: 1, microcells: [0, 1] }],
+        'only the intact microcolumns may mask the actor in the fissure');
+
+    const erase = recorder();
+    erase.globalCompositeOperation = 'source-over';
+    const saved = [];
+    erase.save = () => saved.push(erase.globalCompositeOperation);
+    erase.restore = () => { erase.globalCompositeOperation = saved.pop(); };
+    assert.equal(eraseTerrainOcclusion(erase, terrain, cells), 1);
+    const erased = erase.calls.filter(call => call[0] === 'fillRect').map(call => call.slice(1, 5));
+    assert.deepEqual(erased, [
+        [0, 32, 4, 4], [0, 36, 4, 32],
+        [4, 32, 4, 4], [4, 36, 4, 32],
+    ], 'erasure is limited to real surviving top and front faces, not an opaque 32x32 tile');
+    assert.equal(erase.globalCompositeOperation, 'source-over', 'restore compositing for subsequent characters');
+
+    const clipped = [], paint = recorder();
+    paint.beginPath = () => {};
+    paint.rect = (x, y, w, h) => clipped.push([x, y, w, h]);
+    paint.clip = () => {};
+    assert.equal(repaintTerrainOcclusion(paint, terrain, 0, cells, false), 1);
+    assert.deepEqual(clipped, erased, 'Canvas fallback must clip to the same surviving geometry as GPU');
+
+    // A fully destroyed block can still have a stale coarse height (the
+    // authoritative damage lives in fine.heights); it cannot become a solid lid.
+    terrain.fine.get(1).heights.fill(-8);
+    assert.deepEqual(occludingTerrainCells(terrain, 16, 12, -32, 16), [],
+        'a completely destroyed forward cell is no longer an occluder');
+    terrain.fine.get(1).heights.fill(0);
+    assert.equal(occludingTerrainCells(terrain, 16, 12, -32, 16)[0].microcells.length, 64,
+        'an intact wall in front of a lower actor still hides it');
+});
+
 test('ground grain is deterministic, mostly neutral, spans five tone steps and keeps bare patches and pebbles rare', () => {
     const steps = new Map();
     let bare = 0, pebbles = 0;
