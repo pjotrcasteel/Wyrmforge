@@ -204,7 +204,7 @@ public partial class ArenaView : IAsyncDisposable
         simulation?.CreateSnapshot() ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
 
     [JSInvokable]
-    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false, bool reducedMotion = false)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
