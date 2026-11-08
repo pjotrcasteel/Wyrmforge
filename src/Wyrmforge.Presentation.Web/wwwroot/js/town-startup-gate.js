@@ -47,6 +47,8 @@
     }
 
     async function townReady(scene) {
+        await until(() => !scene.isConnected || !app.querySelector('[data-home-restored]') ||
+            app.querySelector('[data-home-restored="true"]'));
         await until(() => !scene.isConnected || scene.dataset.townNavigationSettled === 'true');
         if (!scene.isConnected) return;
         // The existing C# foreground mount cuts transparent depth layers from the
@@ -86,6 +88,8 @@
 
     async function revealInitial() {
         await until(() => app.querySelector('.refuge-canonical-scene, .arrival-reference-art, .character-creation, .game-shell, main'));
+        await until(() => !app.querySelector('[data-home-restored]') ||
+            app.querySelector('[data-home-restored="true"]'));
         const scene = app.querySelector('.refuge-canonical-scene');
         const welcome = app.querySelector('.arrival-reference-art');
         if (scene) {
