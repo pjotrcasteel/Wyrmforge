@@ -1,5 +1,5 @@
-import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
-    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261106-default-hunt1-gate-v1';
+import { huntLayerCapture, huntLayerRevision, visibleHuntEnemyLayers, prepareHuntGpuScratch, HuntGpuScratchPool,
+    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261108-enemy-cull-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
@@ -9,7 +9,7 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-fissure-occlusion-v1';
+import { terrainCaptureWindow, TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-buffered-ground-v1';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-crack-isolation-v1';
@@ -696,7 +696,7 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    let artScale = 1, groundAlbedo = null;
+    let artScale = 1, groundAlbedo = null, groundCaptureView = null;
     if (greybox) {
         // Level one-metre grey receiver. No material atlas or walls; the same
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
@@ -708,7 +708,10 @@ function draw(state, snapshot, width, height) {
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
             artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
-            if (artScale > 1) groundAlbedo = groundAlbedoView(state, camera, width, height, artScale);
+            if (artScale > 1) {
+                groundCaptureView = terrainCaptureWindow(camera, width, height);
+                groundAlbedo = groundAlbedoView(state, groundCaptureView, groundCaptureView.width, groundCaptureView.height, artScale);
+            }
             else if (layerLabEnabled('albedo')) state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
             else { ctx.fillStyle = '#777777'; ctx.fillRect(camera.x, camera.y, width, height); }
         } else {
@@ -790,12 +793,15 @@ function draw(state, snapshot, width, height) {
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
+    const visibleGpuEnemyLayers = gpu ? visibleHuntEnemyLayers(snapshot.enemies, camera, width, height) : null;
+    state.visibleGpuEnemyCount = visibleGpuEnemyLayers?.length ?? null;
     const depthLayers = [
         ...exitLayers.map(layer => ({ ...layer, depth: layer.exit.y + layer.exit.radius })),
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
-        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) })),
+        ...(visibleGpuEnemyLayers ?? snapshot.enemies.map(enemy =>
+            ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) }))),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
@@ -809,11 +815,11 @@ function draw(state, snapshot, width, height) {
     const view = { x: camera.x, y: camera.y, width, height };
     const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
+            groundCaptureView ?? view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
     state.veinSeams = emissive?.seams ?? 0;
-    const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
+    const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, groundCaptureView ?? camera, groundCaptureView?.width ?? width, groundCaptureView?.height ?? height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
-        groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
+        groundAlbedo ? { source: groundAlbedo, scale: artScale, view: groundCaptureView, revision: terrainViewRevision(state, groundCaptureView, groundCaptureView.width, groundCaptureView.height, artScale) } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
@@ -825,7 +831,7 @@ function draw(state, snapshot, width, height) {
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
         const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
         if (gpu) {
-            capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
+            capture = layer.capture ?? huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
@@ -1493,6 +1499,8 @@ function arenaPerfReport(state) {
     const snapshot = state.latestSnapshot;
     return perfReport({ sampler: state.frameSampler, renderer: state.gpuWorld ? 'gpu' : 'canvas', quality: state.gpuWorld?.quality ?? null,
         terrain: state.terrainCache, heapMb: readHeapMegabytes(), enemies: snapshot?.enemies?.length ?? 0,
+        gpuVisibleEnemies: state.gpuWorld ? state.visibleGpuEnemyCount : null,
+        gpuUploads: state.gpuWorld?.lastFrameUploads ?? null,
         projectiles: snapshot?.projectiles?.length ?? 0, devicePixelRatio: window.devicePixelRatio || 1 });
 }
 

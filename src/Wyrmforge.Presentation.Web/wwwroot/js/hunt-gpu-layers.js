@@ -1,5 +1,6 @@
 // Stable presentation resources derived from existing authoritative scene records.
 import { territoryWallVisualRevision } from './arena-territory-walls.js';
+import { raisedActor } from './arena-projection.js';
 export function huntLayerCapture(layer, player, dragonDeath = null) {
     let actor, id, size;
     if (layer.kind === 'masonry' && layer.prop) {
@@ -74,6 +75,23 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         ...(physicalVolume ? { physicalVolume } : {}),
         ...(footFraction !== undefined ? { footFraction } : {}),
         ...(occluderHeightPx !== undefined ? { occluderHeightPx } : {}) };
+}
+
+/**
+ * Frustum-cull enemy GPU captures by their actual padded sprite bounds before depth sorting and GPU submission.
+ * C# simulation, attack calculations and offscreen animation state always process the full enemy snapshot separately.
+ * The guard retains approaching actors and effects at the edge, without rasterizing enemies hundreds of pixels away.
+ */
+export function visibleHuntEnemyLayers(enemies, camera, width, height, guard = 64) {
+    const layers = [];
+    for (const enemy of enemies ?? []) {
+        const layer = { kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) };
+        const capture = huntLayerCapture(layer, null);
+        if (!capture || capture.x + capture.size < camera.x - guard || capture.x > camera.x + width + guard ||
+            capture.y + capture.size < camera.y - guard || capture.y > camera.y + height + guard) continue;
+        layers.push({ ...layer, capture });
+    }
+    return layers;
 }
 
 /**

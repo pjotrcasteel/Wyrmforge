@@ -29,7 +29,7 @@ export function readHeapMegabytes(perf = globalThis.performance) {
     return Number.isFinite(used) ? used / 1048576 : null;
 }
 
-export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemies = 0, projectiles = 0, devicePixelRatio = 1 }) {
+export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemies = 0, projectiles = 0, gpuVisibleEnemies = null, gpuUploads = null, devicePixelRatio = 1 }) {
     const frames = sampler.summary();
     return {
         renderer, quality, devicePixelRatio,
@@ -42,7 +42,11 @@ export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemie
         terrainArtKitRepaints: terrain?.artKitRepaints ?? 0,
         terrainUnchangedRevisionSkips: terrain?.unchangedRevisionSkips ?? 0,
         terrainLastDirtyBlocks: terrain?.lastDirtyBlocks ?? 0,
+        terrainLastRepaintMs: round(terrain?.lastRepaintMs ?? 0),
+        terrainLastRepaintCellVisits: terrain?.lastRepaintCellVisits ?? 0,
         terrainLastPaintReason: terrain?.lastPaintReason ?? null,
+        gpuVisibleEnemies, gpuUploadTextures: gpuUploads?.dynamicTextures ?? null,
+        gpuUploadPixels: gpuUploads?.dynamicPixels ?? null,
         heapMb: heapMb === null ? null : round(heapMb), enemies, projectiles,
     };
 }
@@ -53,7 +57,8 @@ export function perfLines(report) {
         `>33ms ${report.longFrames}/${report.samples}  ${report.renderer}/${report.quality ?? '-'}  dpr ${report.devicePixelRatio}`,
         `terrain ${report.terrainRepaints} repaints  avg ${report.terrainRepaintAvgMs}  max ${report.terrainRepaintMaxMs} ms`,
         `ground full ${report.terrainFullRepaints} local ${report.terrainRegionalRepaints} ` +
-            `kit ${report.terrainArtKitRepaints} skip ${report.terrainUnchangedRevisionSkips} dirty ${report.terrainLastDirtyBlocks}`,
+            `kit ${report.terrainArtKitRepaints} skip ${report.terrainUnchangedRevisionSkips} dirty ${report.terrainLastDirtyBlocks}  ` +
+            `last ${report.terrainLastRepaintMs} ms / ${report.terrainLastRepaintCellVisits} cells`,
         `heap ${report.heapMb === null ? 'n/a' : `${report.heapMb} MB`}  foes ${report.enemies}  shots ${report.projectiles}`,
     ];
 }

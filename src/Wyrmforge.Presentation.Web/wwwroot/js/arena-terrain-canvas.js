@@ -1305,24 +1305,43 @@ export function terrainDirtyRegions(columns, rows, changed) {
 }
 
 /** Repaint only the dirty clips, in back-to-front painter order; outside pixels remain exactly as they were. */
-export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_PAD_UNITS) {
-    const { columns, rows } = frame;
+export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_PAD_UNITS, stats = null) {
+    const { rows } = frame;
+    let low = Infinity, high = -Infinity;
+    const include = heights => {
+        for (const height of heights) {
+            low = Math.min(low, height);
+            high = Math.max(high, height);
+        }
+    };
+    include(frame.surface);
+    if (frame.baseSurface) include(frame.baseSurface);
+    for (const block of frame.fine?.values() ?? []) include(block.heights);
+    // Walls can reach the next row's lowest microcolumn. Decals may
+    // extend below the face, so include the largest loaded sprite.
+    let padding = FACE_PIXELS;
+    for (const sprite of Object.values(forestKit()?.sprites ?? {}))
+        padding = Math.max(padding, sprite.h + 2);
     let painted = 0;
     for (const { c0, c1, r0, r1 } of regions) {
         // The clipped area must be an exact slice of a fresh full repaint, not a blend
         // of old cache pixels and whichever nearby cells happened to be dirty.
-        // Scan source rows in canonical back-to-front order. Terrain can overdraw
-        // several rows above its origin and pit walls can draw below it; bounding
-        // source rows at a fixed +/- margin leaves rectangular stale patches.
+        // Keep canonical order within conservative projected bounds.
         const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
         const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
+        const first = Math.max(0, Math.floor((clipY - offsetY + low * MICROCELL_UNITS - FACE_PIXELS - padding) / FACE_PIXELS));
+        const last = Math.min(rows - 1, Math.ceil((clipY + clipH - offsetY + high * MICROCELL_UNITS + padding) / FACE_PIXELS));
+        const bounded = Number.isFinite(first) && Number.isFinite(last);
+        const startRow = bounded ? first : 0;
+        const endRow = bounded ? last : rows - 1;
+        if (stats) stats.lastRepaintCellVisits += Math.max(0, endRow - startRow + 1) * (c1 - c0 + 1);
         ctx.save();
         ctx.beginPath();
         ctx.rect(clipX, clipY, clipW, clipH);
         ctx.clip();
         ctx.clearRect(clipX, clipY, clipW, clipH);
         ctx.translate(0, offsetY);
-        for (let row = 0; row < rows; row++)
+        for (let row = startRow; row <= endRow; row++)
             for (let column = c0; column <= c1; column++)
                 painted += paintTerrainCell(ctx, frame, band, column, row);
         ctx.restore();
@@ -1331,8 +1350,18 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
 }
 
 /**
+ * Hold a slightly larger painted window while the camera moves. Refresh only after a 64-world-unit grid crossing,
+ * rather than uploading albedo and normal textures every animation frame. The margin keeps every viewport pixel covered.
+ */
+export function terrainCaptureWindow(camera, width, height) {
+    const step = 64, margin = 16;
+    return { x: Math.floor(camera.x / step) * step - margin, y: Math.floor(camera.y / step) * step - margin,
+        width: width + step + 2 * margin, height: height + step + 2 * margin };
+}
+
+/**
  * Caches the painted heightfield in one offscreen surface and rebuilds it only when the C# terrain revision (or the
- * influence band) changes. Per frame the camera window is copied out, so excavation costs one repaint per impact.
+ * influence band) changes. The buffered camera window copies this static surface without repainting it.
  */
 export class TerrainCanvasCache {
     constructor(createCanvas = (width, height) => Object.assign(document.createElement('canvas'), { width, height }), withNormals = false) {
@@ -1413,7 +1442,8 @@ export class TerrainCanvasCache {
                 frame.surface[index] !== frame.baseSurface[index]) this.kindMaps.delete(index);
         }
         frame.kindMaps = this.kindMaps;
-        if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS);
+        this.lastRepaintCellVisits = regional ? 0 : frame.columns * frame.rows;
+        if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS, this);
         else {
             ctx.clearRect(0, 0, width / ART, height / ART);
             paintTerrain(ctx, frame, band, TERRAIN_PAD_UNITS);
@@ -1429,6 +1459,7 @@ export class TerrainCanvasCache {
         this.lastDirtyBlocks = frame.changed?.length ?? 0;
         this.lastPaintReason = kitSwitched ? 'forest-kit-loaded' : regional ? 'voxel-changes' : 'full-terrain-refresh';
         const elapsed = (globalThis.performance?.now() ?? 0) - started;
+        this.lastRepaintMs = elapsed;
         this.totalRepaintMs += elapsed;
         this.maxRepaintMs = Math.max(this.maxRepaintMs, elapsed);
         return true;

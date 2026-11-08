@@ -40,7 +40,8 @@ public sealed class ArenaEnvironmentState
     /// <summary>Where the hunter enters a Hunt 1.0 terrain arena (the south end of the road), or null for the legacy centre start.</summary>
     public Vector2D? TerrainSpawnPosition => terrainSpawn is { } spawn ? ArenaTerrainGrid.CenterOf(spawn.Column, spawn.Row) : null;
     private readonly SortedSet<long> appliedImpactIds = [];
-    private (int Revision, int Column, int Row, int Radius, bool[] Cells)? reachableCache;
+    private (int Revision, int Column, int Row)? reachableContext;
+    private readonly Dictionary<int, bool[]> reachableByRadius = [];
     private Dictionary<int, int[]>? distanceFields;
     private int distanceFieldRevision;
     private (int Column, int Row) distanceFieldCell;
@@ -371,20 +372,27 @@ public sealed class ArenaEnvironmentState
         return grid.NextWaypoint(field, enemy, radius, 4);
     }
 
-    // One breadth-first fill per hunter column and terrain revision, shared by every spawn in that window.
+    // One breadth-first fill per radius, hunter column and terrain revision, shared by every spawn in that window.
     private bool IsReachableFrom(Vector2D hunter, Vector2D candidate, double radius)
     {
         var grid = terrain!;
         var (hunterColumn, hunterRow) = ArenaTerrainGrid.ColumnOf(hunter);
         var key = (int)Math.Ceiling(radius);
-        if (reachableCache is not { } cache || cache.Revision != grid.Revision || cache.Column != hunterColumn ||
-            cache.Row != hunterRow || cache.Radius != key)
+        var context = (grid.Revision, hunterColumn, hunterRow);
+        if (reachableContext != context)
         {
-            cache = (grid.Revision, hunterColumn, hunterRow, key, grid.ReachableFrom((hunterColumn, hunterRow), key));
-            reachableCache = cache;
+            reachableByRadius.Clear();
+            reachableContext = context;
         }
+
+        if (!reachableByRadius.TryGetValue(key, out var cells))
+        {
+            cells = grid.ReachableFrom((hunterColumn, hunterRow), key);
+            reachableByRadius.Add(key, cells);
+        }
+
         var (column, row) = ArenaTerrainGrid.ColumnOf(candidate);
-        return grid.Contains(column, row) && cache.Cells[row * grid.Columns + column];
+        return grid.Contains(column, row) && cells[row * grid.Columns + column];
     }
 
     private Vector2D RestrictMovementOnObstacles(Vector2D previous, Vector2D proposed, double width, double height, double radius)
