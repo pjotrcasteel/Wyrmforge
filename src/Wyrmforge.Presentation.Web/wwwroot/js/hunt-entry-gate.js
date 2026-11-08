@@ -72,7 +72,7 @@ export function createHuntEntryGate(parent) {
     const overlay = createOverlay(parent.ownerDocument, parent);
     const phase = overlay.querySelector('[data-hunt-phase]');
     const tip = overlay.querySelector('[data-hunt-tip]');
-    let key = null, blocked = false, disposed = false, currentPhase = null;
+    let key = null, blocked = false, armed = false, disposed = false, currentPhase = null;
     const show = value => {
         overlay.classList.toggle('hunt-entry-loading--visible', value);
         overlay.setAttribute('aria-hidden', value ? 'false' : 'true');
@@ -80,9 +80,26 @@ export function createHuntEntryGate(parent) {
     show(false);
     return {
         isBlocking: () => !disposed && blocked,
+        // Arm at the map click, BEFORE C# builds terrain or produces its first scene snapshot.
+        arm() {
+            if (disposed) return;
+            armed = true;
+            blocked = true;
+            currentPhase = 'terrain';
+            phase.textContent = PHASE_LABELS.terrain;
+            show(true);
+        },
+        cancel() {
+            armed = false;
+            blocked = false;
+            show(false);
+        },
         update(snapshot, stage) {
             if (disposed) return;
             const next = huntEntrySceneKey(snapshot);
+            // The previous map snapshot can be returned while C# prepares the selected site.
+            // Never expose that old scene (or the open map) during the armed transition.
+            if (armed && (!next || next === key)) return;
             if (!next) {
                 // The C# map, level-up and refuge dialogs remain fully usable.
                 if (snapshot?.paused || snapshot?.ended) {
@@ -92,6 +109,7 @@ export function createHuntEntryGate(parent) {
                 return;
             }
             if (next !== key) {
+                armed = false;
                 key = next;
                 blocked = true;
                 currentPhase = null;
@@ -113,6 +131,7 @@ export function createHuntEntryGate(parent) {
         dispose() {
             if (disposed) return;
             disposed = true;
+            armed = false;
             blocked = false;
             overlay.remove();
         },
