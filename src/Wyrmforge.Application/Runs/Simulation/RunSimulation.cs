@@ -348,7 +348,12 @@ public sealed partial class RunSimulation
         var primary = build.Spells.ActiveSpell;
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud)
         {
-            PrimaryCooldownRemaining = Math.Max(0, spellCooldowns[primary]),
+            // Disabled Autocast in developer labs keeps internal cooldowns at +Infinity.
+            // A render snapshot must never expose Infinity: System.Text.Json and
+            // Blazor JSInterop reject it, which otherwise blanks both lab canvases.
+            // The simulation remains non-casting; only its HUD representation is finite.
+            PrimaryCooldownRemaining = double.IsFinite(spellCooldowns[primary])
+                ? Math.Max(0, spellCooldowns[primary]) : 0,
             PrimaryCooldownDuration = spellCooldownDurations[primary],
             DefensiveCooldownRemaining = contextualPolicy is null ? 0 : Math.Max(0, contextualRecovery),
             DefensiveCooldownDuration = contextualPolicy is null ? 0 : WardingPulse.RecoverySeconds,

@@ -33,6 +33,30 @@ public sealed class AgentFoundationBrowserTests : PageTest
             "Enemy Lab must never render the first-Hunt loading overlay.");
     }
 
+
+    [TestMethod]
+    [DataRow("false")]
+    [DataRow("true")]
+    public async Task HollowedLab_VisualFrames_WithAndWithoutAutocast_AreNotBlank(string casting)
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') +
+            $"/enemy-lab?kind=Hollow&count=3&autoplay=false&cast={casting}");
+
+        await Page.WaitForFunctionAsync(@"async () => {
+            const resource = performance.getEntriesByType('resource')
+                .find(entry => new URL(entry.name).pathname.endsWith('/js/arena.js'));
+            if (!resource) return false;
+            const arena = await import(resource.name);
+            const canvas = document.querySelector('.enemy-lab canvas');
+            const scene = arena.readArenaDiagnostics(canvas);
+            return scene?.active && scene?.player &&
+                scene?.enemies?.length === 3 && !scene?.renderingFailed;
+        }", null, new() { Timeout = 45000 });
+        Assert.AreEqual(0, await Page.Locator(".hunt-entry-loading").CountAsync());
+    }
+
     [TestMethod]
     public async Task HollowedLab_ChangingSpawnCount_UpdatesTheActualEncounter()
     {

@@ -104,6 +104,38 @@ public sealed class DevelopmentEnemyTests
         Assert.AreEqual(startingHealth - damage, hollow.Health, 0.0001);
     }
 
+
+    [TestMethod]
+    [DataRow(EnemyKind.Hollow, false)]
+    [DataRow(EnemyKind.Hollow, true)]
+    [DataRow(EnemyKind.MireHound, false)]
+    [DataRow(EnemyKind.MireHound, true)]
+    public void ActualEnemyLab_InitialAndRunningFramesSerializeForBrowserWithOrWithoutAutocast(EnemyKind kind, bool casting)
+    {
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(
+            SelfPlayBuildCatalog.All.First().SelectedNodes,
+            new DevelopmentEnemySetup(kind, 42, 390, 844, casting) { Count = 3 });
+
+        foreach (var snapshot in new[] { run.CreateSnapshot(), run.Tick(.05, default, 390, 844) })
+        {
+            Assert.IsNotNull(snapshot.Player);
+            Assert.HasCount(3, snapshot.Enemies);
+            Assert.IsTrue(double.IsFinite(snapshot.Hud.PrimaryCooldownRemaining));
+            Assert.IsGreaterThanOrEqualTo(0, snapshot.Hud.PrimaryCooldownRemaining);
+            var json = JsonSerializer.Serialize(snapshot);
+            StringAssert.Contains(json, "\"Enemies\"");
+            StringAssert.Contains(json, "\"Player\"");
+        }
+
+        // Non-casting is still authoritative: the infinite internal cooldown
+        // must NOT leak through the JSON HUD or be reset to permit spellcasting.
+        if (!casting)
+        {
+            for (var i = 0; i < 10; i++) run.Tick(.05, default, 390, 844);
+            Assert.IsEmpty(run.CreateSnapshot().Projectiles);
+        }
+    }
+
     [TestMethod]
     public void OrdinaryRun_RemainsAtMapChoice()
     {
