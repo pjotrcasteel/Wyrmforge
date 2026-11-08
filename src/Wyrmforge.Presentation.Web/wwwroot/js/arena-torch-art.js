@@ -48,7 +48,14 @@ function flameFallback(ctx, x, baseY, frame) {
 export function drawTorch(ctx, torch, seconds = 0, part = 'all') {
     const { x, y } = torch;
     const sprites = torchSprites(torch.variant);
-    if (part !== 'flame') { if (sprites) drawTorchCell(ctx, sprites.post, x, y); else drawPost(ctx, x, y); }
+    if (part !== 'flame') {
+        // A compact stepped contact shadow plants the authored fixture at its C# collision foot.
+        // It belongs to the post capture, not the emissive flame and never follows the camera.
+        rect(ctx, 'rgba(8,6,6,.42)', x - 7, y - 1, 14, 2);
+        rect(ctx, 'rgba(8,6,6,.24)', x - 5, y + 1, 10, 1);
+        if (sprites) drawTorchCell(ctx, sprites.post, x, y);
+        else drawPost(ctx, x, y);
+    }
     if (part === 'post') return;
     if (sprites) drawTorchCell(ctx, sprites.flames[burnFrame(seconds, torch.phase)], x, y); else drawFlame(ctx, torch, seconds);
 }

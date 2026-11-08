@@ -311,6 +311,61 @@ public sealed class ArenaTerrainTests
     }
 
     [TestMethod]
+    public void TorchBases_BlockOnlyTheirVisiblePostAndKeepNavigationOpen()
+    {
+        var grid = new ArenaTerrainGrid(9, 9);
+        grid.SetRoad([], [3 * 16 + 8, 3 * 16 + 8]);
+        var basePoint = ArenaTerrainGrid.CenterOf(3, 3);
+        var clear = basePoint + new Vector2D(ArenaTerrainGrid.TorchBaseRadiusUnits + PlayerRadius + 1, 0);
+        var approach = basePoint + new Vector2D(ArenaTerrainGrid.CellUnits * 2, 0);
+
+        Assert.IsFalse(grid.IsStandable(basePoint, PlayerRadius), "the torch post is solid");
+        Assert.IsTrue(grid.BlocksMovement(approach, basePoint, PlayerRadius), "the player cannot pass through the post");
+        Assert.IsTrue(grid.IsStandable(clear, PlayerRadius), "the collision stops outside the post and actor radius");
+        Assert.IsFalse(grid.BlocksMovement(approach, clear, PlayerRadius), "the base has no invisible 1 m-square barrier");
+        Assert.AreEqual(clear, grid.RestrictMovement(approach, clear, PlayerRadius));
+
+        var cost = grid.DistanceFrom((5, 3), PlayerRadius);
+        Assert.AreNotEqual(ArenaTerrainGrid.Unreachable, cost[3 * grid.Columns + 1],
+            "enemy navigation must route around the little post");
+        Assert.AreEqual(ArenaTerrainGrid.Unreachable, cost[3 * grid.Columns + 3],
+            "no nav waypoint may end inside the post");
+        Assert.AreEqual(0, grid.Revision, "torch footprints never mutate the terrain");
+    }
+
+    [TestMethod]
+    public void TorchFootprints_NeverBlockTheSeededProtectedRoad()
+    {
+        for (var seed = 0; seed < 40; seed++)
+        {
+            var recipe = Make(seed, .1);
+            var grid = recipe.Grid;
+            foreach (var (column, row) in recipe.ProtectedRoute)
+            {
+                var routePoint = ArenaTerrainGrid.CenterOf(column, row);
+                for (var i = 0; i + 1 < grid.Torches.Count; i += 2)
+                {
+                    var foot = new Vector2D(grid.Torches[i] * ArenaTerrainGrid.CellUnits / 16,
+                        grid.Torches[i + 1] * ArenaTerrainGrid.CellUnits / 16);
+                    Assert.IsGreaterThanOrEqualTo(PlayerRadius + ArenaTerrainGrid.TorchBaseRadiusUnits,
+                        Vector2D.Distance(routePoint, foot),
+                        $"seed {seed}: torch foot must not overlap the protected route {column},{row}");
+                }
+            }
+
+            for (var i = 0; i + 1 < grid.Torches.Count; i += 2)
+            {
+                var footX = grid.Torches[i] * ArenaTerrainGrid.CellUnits / 16;
+                Assert.IsGreaterThanOrEqualTo(ArenaTerrainGrid.CellUnits * 1.5,
+                    Math.Abs(footX - grid.Columns * ArenaTerrainGrid.CellUnits / 2),
+                    $"seed {seed}: solid posts must leave the central exit/entry passage clear");
+            }
+
+            Assert.IsTrue(grid.IsReachable(recipe.Spawn, recipe.Exit, PlayerRadius), $"seed {seed}: protect route from torch collision");
+        }
+    }
+
+    [TestMethod]
     public void Torches_LightTheNearestStretchOfRoadAndTravelOnlyWithTheFirstFrame()
     {
         var grid = Make(7, 0.1).Grid;

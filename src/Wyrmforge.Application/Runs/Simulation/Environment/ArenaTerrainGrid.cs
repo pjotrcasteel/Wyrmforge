@@ -31,6 +31,8 @@ public sealed class ArenaTerrainGrid
     public const double TreeTrunkRadiusUnits = 8;
     /// <summary>The tree sprite's foot is eight world units north of its column centre.</summary>
     public const double TreeFootRaiseUnits = 8;
+    /// <summary>Physical radius of a roadside torch's visible post/base, not its flame or light pool.</summary>
+    public const double TorchBaseRadiusUnits = 6;
 
     private readonly short[] surface;
     private readonly short[] stoneTop;
@@ -71,7 +73,7 @@ public sealed class ArenaTerrainGrid
     public void SetCracks(IReadOnlyList<int[]> cracks) => Cracks = cracks;
     /// <summary>The road's centre line as x, y pairs in 1/16 cell units (a smooth curve, from the generator); presentation paints the dirt road along it.</summary>
     public IReadOnlyList<int> Road { get; private set; } = [];
-    /// <summary>Roadside torch posts as x, y pairs in 1/16 cell units: static, non-colliding, each a warm point light in the lighting snapshot.</summary>
+    /// <summary>Roadside torch posts as x, y pairs in 1/16 cell units: small solid bases, each a warm point light in the lighting snapshot.</summary>
     public IReadOnlyList<int> Torches { get; private set; } = [];
     public void SetRoad(IReadOnlyList<int> road, IReadOnlyList<int> torches) { Road = road; Torches = torches; }
     /// <summary>Increments on every change so presentation can pull only what moved.</summary>
@@ -345,10 +347,39 @@ public sealed class ArenaTerrainGrid
     private int WalkSurfaceAt(Vector2D position, int column, int row) =>
         TreeTrunkIntersects(column, row, position, 0) ? Surface(column, row) : WalkSurface(column, row);
 
+    // Generated torch fixtures are real posts: the flame is not solid, but the base blocks only its visible radius.
+    // All gameplay callers (player, enemies and navigation) already share IsStandable/BlocksMovement.
+    private bool TorchBaseIntersects(Vector2D position, double radius)
+    {
+        var reach = TorchBaseRadiusUnits + Math.Max(0, radius);
+        var reachSquared = reach * reach;
+        for (var index = 0; index + 1 < Torches.Count; index += 2)
+        {
+            var dx = Torches[index] * (CellUnits / 16) - position.X;
+            if (Math.Abs(dx) >= reach)
+            {
+                continue;
+            }
+
+            var dy = Torches[index + 1] * (CellUnits / 16) - position.Y;
+            if (dx * dx + dy * dy < reachSquared)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public bool IsStandable(Vector2D position, double radius)
     {
         var (column, row) = ColumnOf(position);
         if (!Contains(column, row))
+        {
+            return false;
+        }
+
+        if (TorchBaseIntersects(position, radius))
         {
             return false;
         }
