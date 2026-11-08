@@ -8,7 +8,7 @@
 - Secondary round slot: the actually prepared contextual auto-defence (currently Warding Pulse), or a visibly locked shield before Hunter level 3; show its real independent recovery countdown. Its cast still consumes the next primary cast, as before.
 - Right violet crystal: **empty**. Reserved for a future real secondary resource. No invented mana/energy number or fill.
 - Under both orbs/spells: Hunt level and experience bar. Actual current XP and XP-to-next are rendered beneath, not above.
-- Keep the current encounter objective as one small contextual cue just above the HUD. No permanent top HP/score/kills banner.
+- No permanent top HUD or floating objective strip. Encounter phase announcements remain transient and the world gate retains its own directions.
 - Use the existing Arcane Nexus socket-rim asset and its muted copper, near-black plum and pixel-art treatment.
 
 ## Non-goals
@@ -22,7 +22,7 @@ Do not add a resource system, change cooldown balance, select a defensive spell 
 3. Verify the primary icon corresponds to the committed class spell, not a hardcoded Fireball. Attack a Hollowed; the primary ring starts at zero and recharges using the real cast interval.
 4. On a Hunter level 3+ profile with Warding Pulse prepared, the defensive icon replaces locked art; trigger it via crowd pressure and verify that the cooldown circle follows the genuine 7-second recovery.
 5. Kill enemies and earn EXP. The purple track and numeric EXP update; leveling up refreshes LV and the bar.
-6. Verify the compact trail objective still updates, and that upgrade confirmation, tutorial hints, retreat, damage numbers, map choice and Refuge overlays remain usable.
+6. Verify there is no floating trail objective strip or version watermark, and that upgrade confirmation, tutorial hints, retreat, damage numbers, map choice and Refuge overlays remain usable.
 7. Repeat at landscape width and with reduced motion.
 
 ## Automated tests
