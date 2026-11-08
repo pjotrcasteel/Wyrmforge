@@ -39,12 +39,12 @@ function startupFixture({ town = false } = {}) {
         querySelector(selector) {
             if (selector === '[data-home-restored]') return {};
             if (selector === '[data-home-restored="true"]') return restored ? {} : null;
-            if (selector.includes('.refuge-canonical-scene')) return town ? scene : null;
-            if (selector === '.arrival-reference-art') return town ? null : panorama;
+            if (selector.includes('.refuge-canonical-scene') && town) return scene;
+            if (selector.includes('.arrival-reference-art') && !town) return panorama;
             return null;
         },
     };
-    const splash = { classList: makeClasses('ignition-complete'), setAttribute() {} };
+    const splash = { classList: town ? makeClasses('ignition-complete') : makeClasses(), setAttribute() {} };
     const body = { classList: makeClasses('igniting') };
     const status = { textContent: '' }, retry = { hidden: true };
     const document = {
@@ -78,8 +78,8 @@ test('startup veil waits for actual decoded welcome artwork before revealing fir
     const f = startupFixture();
     const ready = f.startup.revealInitial();
     await Promise.resolve();
-    assert.equal(f.splash.classList.contains('ignition-complete'), true,
-        'the starting DOM is hidden behind the original splash');
+    assert.equal(f.splash.classList.contains('ignition-complete'), false,
+        'the original splash must still cover startup');
     assert.equal(f.body.classList.contains('igniting'), true);
     assert.equal(f.pending.length, 1, 'must actually decode the welcome painting');
     f.pending.shift()();
