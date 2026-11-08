@@ -28,6 +28,34 @@ public sealed class HunterVisibilityLightingProjectionTests
     }
 
     [TestMethod]
+    public void CaptureForScene_UsesMoonlightInsteadOfMovingHunterPoolOnVoxelTerrain()
+    {
+        var position = new Vector2D(240, 480);
+        var moonlit = HunterVisibilityLightingProjection.CaptureForScene(position, hasMoonlitTerrain: true);
+        var legacy = HunterVisibilityLightingProjection.CaptureForScene(position, hasMoonlitTerrain: false);
+
+        Assert.HasCount(0, moonlit, "Voxel Hunts already have moon/sky illumination: no moving flashlight-like pool.");
+        Assert.HasCount(1, legacy, "Legacy dark greybox still needs the authoritative local visibility source.");
+        Assert.AreEqual(HunterVisibilityLightingProjection.SourceId, legacy[0].Id);
+        Assert.AreEqual(position.X, legacy[0].X);
+        Assert.AreEqual(position.Y, legacy[0].Y);
+
+        var environment = new LightingEnvironment("gothic-night", "#8c9cbb", 1.0);
+        var composed = LightingSceneComposer.Compose("voxel-hunt", 6, environment,
+            [NightSkyLightingProjection.Capture(relief: true)], moonlit,
+            [new LightingEmitter("projectile:fire", "projectile:fire", "point",
+                250, 470, 24, "#ff7835", 2, 100)]);
+        var gpu = GpuLightingFrameProjection.FromSnapshot(composed, 6);
+
+        Assert.IsFalse(gpu.Lights.Any(light => light.Id == HunterVisibilityLightingProjection.SourceId));
+        Assert.IsTrue(gpu.Lights.Any(light => light.Id == NightSkyLightingProjection.SourceId),
+            "The moon must continue illuminating terrain and actor materials.");
+        Assert.IsTrue(gpu.Lights.Any(light => light.Id == "projectile:fire"),
+            "Removing the hunter pool must not remove spell light.");
+        Assert.AreEqual(1.0, gpu.Environment.Ambient, "Preserve distributed night visibility.");
+    }
+
+    [TestMethod]
     public void NightSky_UsesTheSameGenericLightingContractAndCannotLeakIntoAbsoluteDarknessProof()
     {
         var sky = NightSkyLightingProjection.Capture();
