@@ -3638,7 +3638,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync("""
             async () => {
-                const arena = await import(new URL('js/arena.js?v=20261106-default-hunt1-gate-v1', document.baseURI).href);
+                const arena = await import(performance.getEntriesByType('resource')
+                    .map(entry => entry.name)
+                    .find(url => url.includes('/js/arena.js?v='))
+                    ?? (() => { throw new Error('Running arena module was not loaded'); })());
                 window.__g5Read = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }
             """);
@@ -3680,7 +3683,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await EnterFirstTrailAsync("BEGIN FIRST HUNT");
             await Page.EvaluateAsync(@"async () => {
-                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261106-default-hunt1-gate-v1', document.baseURI).href);
+                window.__huntGpuArena = await import(performance.getEntriesByType('resource')
+                    .map(entry => entry.name)
+                    .find(url => url.includes('/js/arena.js?v='))
+                    ?? (() => { throw new Error('Running arena module was not loaded'); })());
                 window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }");
             await Page.WaitForFunctionAsync(@"() => {
@@ -3823,7 +3829,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 .find(url => url.includes('/js/arena-performance.js?v='));
             if (!resource) throw new Error('Active Arena performance module was not loaded');
             const performanceArena = await import(resource);
-            const arena = await import(new URL('js/arena.js?v=20261106-default-hunt1-gate-v1', document.baseURI).href);
+            const arena = await import(performance.getEntriesByType('resource')
+                    .map(entry => entry.name)
+                    .find(url => url.includes('/js/arena.js?v='))
+                    ?? (() => { throw new Error('Running arena module was not loaded'); })());
             window.__huntGpuArena = arena;
             window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
