@@ -238,11 +238,12 @@ public partial class ArenaView : IAsyncDisposable
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var previousRefugeReturns = current.RefugeReturns;
+        var hadHuntEntrance = current.HuntEntranceActive;
         if (reducedMotion) current.SkipHuntEntrance();
         var input = new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         var snapshot = current.Tick(delta, input, width, height);
         var firstHuntHintAdvanced = false;
-        if (FirstHunt && MapCombatActive && !snapshot.Ended)
+        if (FirstHunt && MapCombatActive && !snapshot.Ended && !hadHuntEntrance)
         {
             if (!firstHuntMovementObserved && Math.Abs(movementX) + Math.Abs(movementY) >= 0.35)
             {
@@ -265,7 +266,8 @@ public partial class ArenaView : IAsyncDisposable
         }
         if (debugGod) current.DebugRestoreHealth();
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
-        var stateChanged = firstHuntHintAdvanced || hadChoices != current.PendingChoices.Count > 0
+        var stateChanged = firstHuntHintAdvanced || hadHuntEntrance && !current.HuntEntranceActive
+            || hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
             || hadRelicChoices != current.PendingRelicChoices.Count > 0
             || wasAtCheckpoint != current.AtCheckpoint
