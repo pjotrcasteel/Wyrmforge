@@ -83,7 +83,8 @@ export function collectSoundEvents(tracker, snapshot, now) {
     tracker.previous = current;
     if (!previous || previous.paused || current.paused) return [];
 
-    const result = creatureAttacks.map(event => event.type);
+    const result = creatureAttacks.length && previous && !previous.paused && !current.paused
+        ? ['hollow-attack-windup'] : [];
     const emit = (name, interval) => {
         if (now - (tracker.lastPlayed.get(name) ?? -Infinity) < interval) return;
         tracker.lastPlayed.set(name, now);
