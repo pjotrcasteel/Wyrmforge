@@ -1208,8 +1208,11 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
     const { columns, rows } = frame;
     let painted = 0;
     for (const { c0, c1, r0, r1 } of regions) {
-        // Keep existing splat maps: they describe the site's original ground, not its excavated state.
-        // Raised columns can overdraw four rows north and fronts reach south; include the source rows whose faces touch the clip.
+        // The clipped area must be an exact slice of a fresh full repaint, not a blend
+        // of old cache pixels and whichever nearby cells happened to be dirty.
+        // Scan source rows in canonical back-to-front order. Terrain can overdraw
+        // several rows above its origin and pit walls can draw below it; bounding
+        // source rows at a fixed +/- margin leaves rectangular stale patches.
         const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
         const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
         ctx.save();
@@ -1218,8 +1221,8 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
         ctx.clip();
         ctx.clearRect(clipX, clipY, clipW, clipH);
         ctx.translate(0, offsetY);
-        for (let row = Math.max(0, r0 - 8); row <= Math.min(rows - 1, r1 + 8); row++)
-            for (let column = Math.max(0, c0 - 1); column <= Math.min(columns - 1, c1 + 1); column++)
+        for (let row = 0; row < rows; row++)
+            for (let column = c0; column <= c1; column++)
                 painted += paintTerrainCell(ctx, frame, band, column, row);
         ctx.restore();
     }
@@ -1293,9 +1296,12 @@ export class TerrainCanvasCache {
         const regions = this.allowRegional && !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
             ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
         const regional = regions.length > 0;
-        // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
+        // Recompute splat maps from the same authoritative terrain frame as the
+        // painter. Reusing masks from a previous revision can paint incompatible
+        // dirt/grass patches into an otherwise up-to-date cache after excavation.
+        // A kit-only texture load does not change material identity or patch masks.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
-        this.kindMaps = regional || kitOnly ? this.kindMaps : new Map();
+        this.kindMaps = kitOnly ? this.kindMaps : new Map();
         frame.kindMaps = this.kindMaps;
         if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS);
         else {
