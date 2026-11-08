@@ -21,6 +21,15 @@ internal static class ArcaneConstellations
 
     internal static IEnumerable<PassiveNodeDefinition> Nodes()
     {
+        int[] meridianSides = [350, 0, -500, -1250, -2000];
+        for (var step = 0; step < meridianSides.Length; step++)
+        {
+            yield return new(TransitId(step), $"Ember Meridian {step + 1}", "+1% mutation duration.",
+                PassiveNodeKind.Travel, PassiveSchool.Fire, 1, meridianSides[step], 3500,
+                PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationDuration, .01)),
+                Tier: PassiveNodeTier.Minor);
+        }
+
         foreach (var (school, _, themes, specialty) in Schools)
         for (var ring = 0; ring < themes.Length; ring++)
         for (var step = 0; step < Offsets.Length; step++)
@@ -63,6 +72,11 @@ internal static class ArcaneConstellations
         foreach (var (school, gate, themes, _) in Schools)
         {
             yield return new(gate, Id(school, 5, 0));
+            yield return new(Id(school, 5, 0), TransitId(0));
+            for (var step = 1; step < 5; step++)
+                yield return new(TransitId(step - 1), TransitId(step));
+            yield return new(TransitId(2), Id(school, 3, 0));
+            yield return new(TransitId(4), Id(school, 0, 0));
             for (var ring = 0; ring < themes.Length; ring++)
             {
                 for (var step = 0; step < Offsets.Length; step++)
@@ -74,6 +88,8 @@ internal static class ArcaneConstellations
             }
         }
     }
+
+    private static string TransitId(int step) => FormattableString.Invariant($"{Prefix}Fire-meridian-{step}");
 
     private static string Id(PassiveSchool school, int ring, int step) =>
         FormattableString.Invariant($"{Prefix}{school}-{StableRingId(ring)}-{step}");
