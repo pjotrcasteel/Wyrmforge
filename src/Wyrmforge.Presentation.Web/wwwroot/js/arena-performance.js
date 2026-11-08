@@ -1,5 +1,5 @@
 import { createSpellBadge } from './spell-hud.js';
-import { clampHudFraction, cooldownPresentation, selectCombatSlots } from './combat-hud-state.js';
+import { clampHudFraction, cooldownPresentation, healthCrystalPresentation, selectCombatSlots } from './combat-hud-state.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
 import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview, inspectTerrainCacheRebuild as inspectBaseTerrainCacheRebuild, beginHuntEntry as beginBaseHuntEntry, cancelHuntEntry as cancelBaseHuntEntry } from './arena.js?v=20261108-lab-loading-optin-v3';
 import { resolveArenaCamera } from './arena-camera.js';
@@ -245,8 +245,7 @@ function updateCombatHud(state, snapshot) {
     };
 
     // Left crystal orb is the real health meter; the right orb has no invented resource.
-    const healthFraction = clampHudFraction(hud.health / Math.max(1, hud.maxHealth));
-    const healthState = healthFraction <= .25 ? 'critical' : healthFraction <= .55 ? 'wounded' : 'healthy';
+    const { fraction: healthFraction, unfilledPercent, state: healthState } = healthCrystalPresentation(hud.health, hud.maxHealth);
     const healthTrack = dom.healthFill?.closest('.combat-health-track');
     if (healthTrack) {
         healthTrack.dataset.healthState = healthState;
@@ -255,7 +254,7 @@ function updateCombatHud(state, snapshot) {
     }
     dom.root.dataset.healthState = healthState;
     // Reveal a fixed-size pixel-glass texture instead of distorting an already-filled picture.
-    if (dom.healthFill) dom.healthFill.style.setProperty('--health-unfilled', `${(1 - healthFraction) * 100}%`);
+    if (dom.healthFill) dom.healthFill.style.setProperty('--health-unfilled', `${unfilledPercent}%`);
     updateText(dom.health, `${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
 
     updateText(dom.level, `LV ${hud.level}`);
