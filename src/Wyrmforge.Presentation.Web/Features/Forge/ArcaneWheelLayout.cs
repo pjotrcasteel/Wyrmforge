@@ -7,7 +7,7 @@ namespace Wyrmforge.Presentation.Web.Features.Forge;
 // ownership and connections remain domain data; these are presentation routes.
 internal static class ArcaneWheelLayout
 {
-    internal const double Size = 11600;
+    internal const double Size = 9800;
     internal const double Center = Size / 2;
     internal readonly record struct Point(double X, double Y);
     private static readonly PassiveSchool[] Order =
@@ -100,7 +100,12 @@ internal static class ArcaneWheelLayout
             if (node.Id == $"{bridge.Prefix}-2") return BridgePoint(bridge, active, 2);
         }
         var owner = ArcaneSchoolCatalog.Owner(node) ?? PassiveSchool.Fire;
-        if (node.Id.StartsWith("constellation-", StringComparison.Ordinal)) return Local(owner, active, node.X, node.Y);
+        if (node.Id.StartsWith("constellation-Fire-", StringComparison.Ordinal))
+        {
+            // Fan the constellation lanes around the Wyrmheart. The same
+            // school angle rotates the entire sector when another school is active.
+            return Polar(Angle(owner, active) + node.X / 3100, node.Y - 850);
+        }
         if (Landmarks.TryGetValue(node.Id, out var landmark)) return Local(owner, active, landmark.Side, landmark.Radius);
         if (node.Id.EndsWith("-start", StringComparison.Ordinal)) return Local(owner, active, 0, 300);
         if (node.Id.EndsWith("-1", StringComparison.Ordinal)) return Local(owner, active, 0, 460);
