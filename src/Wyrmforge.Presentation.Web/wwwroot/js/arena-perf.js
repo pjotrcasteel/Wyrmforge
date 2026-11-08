@@ -29,7 +29,7 @@ export function readHeapMegabytes(perf = globalThis.performance) {
     return Number.isFinite(used) ? used / 1048576 : null;
 }
 
-export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemies = 0, projectiles = 0, devicePixelRatio = 1 }) {
+export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemies = 0, projectiles = 0, gpuVisibleEnemies = null, gpuUploads = null, devicePixelRatio = 1 }) {
     const frames = sampler.summary();
     return {
         renderer, quality, devicePixelRatio,
@@ -45,6 +45,8 @@ export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemie
         terrainLastRepaintMs: round(terrain?.lastRepaintMs ?? 0),
         terrainLastRepaintCellVisits: terrain?.lastRepaintCellVisits ?? 0,
         terrainLastPaintReason: terrain?.lastPaintReason ?? null,
+        gpuVisibleEnemies, gpuUploadTextures: gpuUploads?.dynamicTextures ?? null,
+        gpuUploadPixels: gpuUploads?.dynamicPixels ?? null,
         heapMb: heapMb === null ? null : round(heapMb), enemies, projectiles,
     };
 }
