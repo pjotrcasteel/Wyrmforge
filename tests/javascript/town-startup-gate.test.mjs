@@ -77,7 +77,7 @@ function startupFixture({ town = false } = {}) {
 test('startup veil waits for actual decoded welcome artwork before revealing first screen', async () => {
     const f = startupFixture();
     const ready = f.startup.revealInitial();
-    await Promise.resolve();
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(f.splash.classList.contains('ignition-complete'), false,
         'the original splash must still cover startup');
     assert.equal(f.body.classList.contains('igniting'), true);
