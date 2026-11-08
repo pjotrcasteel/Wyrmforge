@@ -3877,14 +3877,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return match && Number(match[1]) >= 12;
         }", null, new() { Timeout = 30000 });
 
-        // The prior GPU candidate could be technically green while its actual
-        // Hunt was black. Require C#-owned hunter visibility AND a lit area in
-        // the live composited Canvas, away from the HTML HUD and boss overlays.
+        // The old moving hunter point light was a workaround for an almost-black
+        // GPU scene. Voxel Hunts now use authoritative distributed moon/ambient,
+        // not a flashlight-like player-following pool. Prove the *actual* framebuffer
+        // remains readable without that source, including source-painted terrain.
         await Page.WaitForFunctionAsync(@"(painted) => {
             const frame = window.__huntGpuRead?.();
-            const visible = frame?.gpuWorld?.lights?.some(light => light.id === 'hunter:night-visibility');
+            const lights = frame?.gpuWorld?.lights;
+            const moonlit = lights?.some(light => light.id === 'sky:moon');
+            const movingPool = lights?.some(light => light.id === 'hunter:night-visibility');
             const canvas = document.querySelector('canvas.game-canvas');
-            if (!visible || !canvas?.width || !canvas?.height) return false;
+            if (!moonlit || movingPool || !canvas?.width || !canvas?.height) return false;
             const startX = Math.floor(canvas.width * .18);
             const startY = Math.floor(canvas.height * .25);
             const w = Math.floor(canvas.width * .64);
