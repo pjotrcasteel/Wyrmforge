@@ -11,7 +11,7 @@ if (ART !== TERRAIN_ART_SCALE) throw new Error('Terrain tiles and the terrain ca
 import { drawGroundDecals } from './arena-ground-decals.js';
 import { cellShadow, shadowStyle, SHADOW_SAMPLES } from './arena-terrain-shadows.js';
 import { forestKit } from './forest-kit.js';
-import { layerLabEnabled } from './arena-layer-lab.js?v=20261108-terrain-evidence-v1';
+import { layerLabEnabled } from './arena-layer-lab.js?v=20261108-crack-isolation-v1';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4, Boulder: 5 });
 const isUprightProp = material => material === TERRAIN_MATERIAL.Wood || material === TERRAIN_MATERIAL.Boulder;
