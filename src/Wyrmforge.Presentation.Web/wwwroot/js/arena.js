@@ -484,17 +484,25 @@ function frame(state, timestamp) {
 
 function startSimulationFrame(state, timestamp, rect) {
     if (state.simulationBusy) return;
+    const entryBlocked = Boolean(state.entryGate?.isBlocking());
+    // Preparing artwork never advances the C# simulation. Even Tick(0) can
+    // resolve attack/spawn actions, so use read-only snapshots instead.
+    if (entryBlocked && timestamp - (state.lastEntryPreviewTimestamp ?? 0) < 90) return;
     state.simulationBusy = true;
-    const delta = state.entryGate?.isBlocking() ? 0 : Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
+    const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = state.entryGate?.isBlocking() ? { x: 0, y: 0 }
+    if (entryBlocked) state.lastEntryPreviewTimestamp = timestamp;
+    const movement = entryBlocked ? { x: 0, y: 0 }
         : state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
         : state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
-    const aim = state.entryGate?.isBlocking() ? { x: 0, y: 0 } : getArenaAim(state);
+    const aim = entryBlocked ? { x: 0, y: 0 } : getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaStickAim(state, aim))
-        .then(snapshot => {
+    const request = entryBlocked
+        ? state.dotNetReference.invokeMethodAsync('PreviewFrame')
+        : state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y,
+            getArenaPropFocus(state), isArenaStickAim(state, aim));
+    request.then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
@@ -506,9 +514,11 @@ function startSimulationFrame(state, timestamp, rect) {
             requestTerrainFrame(state, snapshot);
             if (snapshot.environment?.greybox && snapshot.lighting)
                 requestSharedGpuWorld(state, 'mobile');
-            state.simulationFrameCount++;
-            state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
-            state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
+            if (!entryBlocked) {
+                state.simulationFrameCount++;
+                state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
+                state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
+            }
         })
         .catch(error => {
             console.error('Wyrmforge arena frame failed.', error);
