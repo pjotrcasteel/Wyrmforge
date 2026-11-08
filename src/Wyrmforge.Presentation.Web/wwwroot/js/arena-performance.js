@@ -54,7 +54,7 @@ export function initializeArena(canvas, dotNetReference) {
     canvas.parentElement.appendChild(state.statusCanvas);
     syncStatusCanvas(state);
     frameStates.set(canvas, state);
-    initializeBaseArena(canvas, createThrottledReference(state));
+    initializeBaseArena(canvas, createThrottledReference(state), { huntEntryLoading: true });
 }
 
 export function disposeArena(canvas) {
