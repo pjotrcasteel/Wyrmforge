@@ -226,9 +226,11 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 differences += compare();
 
                 // The separate lava emitter also used to overwrite shared mask state.
+                const lavaMask = new Uint8Array(TILE * TILE).fill(9);
+                for (let i = 0; i < 101; i++) lavaMask[(i * 37 + 9) % lavaMask.length] = 7;
                 const lava = { ...original, material: Array(count).fill(TERRAIN_MATERIAL.Lava),
                     baseMaterial: Array(count).fill(TERRAIN_MATERIAL.Lava),
-                    kindMaps: new Map([[0, last]]) };
+                    kindMaps: new Map([[0, lavaMask]]) };
                 const glow = document.createElement('canvas');
                 glow.width = glow.height = TILE * columns;
                 paintLavaEmissive(glow.getContext('2d'), lava, 0,
