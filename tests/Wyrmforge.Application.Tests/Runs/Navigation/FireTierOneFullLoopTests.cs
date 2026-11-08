@@ -136,8 +136,6 @@ public sealed class FireTierOneFullLoopTests
         Assert.IsTrue(progress.TutorialRun);
         Assert.IsTrue(progress.CompleteRun(first.Metrics.Outcome == RunOutcome.Abandoned));
         Assert.IsTrue(progress.AtlasUnlocked, "Even a genuine first-Hunt defeat unlocks the Arcane Web.");
-        Assert.IsFalse(progress.AwardsArcanePoint(tutorialRunAtStart: true, abandoned: false),
-            "The tutorial already starts with its first point; never credit it twice.");
         Assert.AreEqual(1, web.AvailablePoints);
         Assert.IsTrue(web.Select("fire-start"), "The new hunter must be able to learn the first Fire node.");
 
@@ -157,9 +155,6 @@ public sealed class FireTierOneFullLoopTests
             selectedNodes: restoredWeb.Selected);
         AssertDamageableOutcome(second.Metrics, 2, 1204);
         Assert.IsTrue(restoredProgress.CompleteRun(second.Metrics.Outcome == RunOutcome.Abandoned));
-        Assert.IsTrue(restoredProgress.AwardsArcanePoint(tutorialRunAtStart: false, abandoned: false));
-        restoredWeb.GrantPoints(1);
-        Assert.AreEqual(2, restoredWeb.PointBudget, "A subsequent completed attempt earns one more point.");
         CollectionAssert.AreEquivalent(new[] { "fire-start" }, restoredWeb.Selected.ToArray());
     }
 

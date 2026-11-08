@@ -267,11 +267,10 @@ public partial class Home
             firstHunt.CompleteRun(false);
             await PersistFirstHuntAsync();
         }
-        // A completed tutorial already begins with one Atlas point. Subsequent hunts
-        // add one point, capped by PassiveTreeSelection; abandonment awards nothing.
-        if (firstHunt.AwardsArcanePoint(tutorialEnded, value.Outcome == RunOutcome.Abandoned))
-            selection.GrantPoints(1);
-        hunterGain = CreditHunterExperience(value.ExperienceEarned);
+        var experience = value.Outcome == RunOutcome.Abandoned ? 0 : value.ExperienceEarned;
+        if (tutorialEnded && value.Outcome == RunOutcome.Extracted)
+            experience = Math.Max(experience, HunterProgress.RequiredForLevel(1));
+        hunterGain = CreditHunterExperience(experience);
         await TryUnlockAdvancedAccessAsync();
         quests.Record(new HuntQuestEvidence(value.CompletedRouteNodes, value.RareRouteNodes, value.Depth, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds, value.EssenceIds, value.Synergies > 0, value.SpellLoadout.Any(spell => spell.Evolution.HasValue)));
@@ -416,7 +415,8 @@ public partial class Home
             selection.RestoreNodes(state.Nodes ?? []);
             selection.RestoreReserved(state.Reserved);
             mutationAmplifiers.Restore(state.Amplifiers);
-            hunter.Restore(state.HunterExperience);
+            if (state.ExponentialHunterCurve) hunter.Restore(state.HunterExperience);
+            else hunter.RestoreLegacyCurve(state.HunterExperience);
             selection.RestoreBudget(Math.Max(selection.PointBudget, hunter.AtlasBudget));
             quests.Restore(state.Quests, hunter.EarnedCaches);
         }
@@ -429,14 +429,14 @@ public partial class Home
         try
         {
             var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience, selection.Reserved,
-                mutationAmplifiers.ToSave().ToArray());
+                mutationAmplifiers.ToSave().ToArray(), ExponentialHunterCurve: true);
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
         }
         catch (JSException) { }
     }
 
     private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null,
-        IReadOnlyDictionary<PassiveSchool, int>? Reserved = null, MutationAmplifierAssignment[]? Amplifiers = null);
+        IReadOnlyDictionary<PassiveSchool, int>? Reserved = null, MutationAmplifierAssignment[]? Amplifiers = null, bool ExponentialHunterCurve = false);
 
     private HunterExperienceGain CreditHunterExperience(int experience)
     {
