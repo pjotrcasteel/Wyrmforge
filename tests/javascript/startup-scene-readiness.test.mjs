@@ -66,4 +66,8 @@ test('startup ignition holds until restored home and the exact first scene are r
     assert.match(forge, /wyrmforgeStartup\.beginTown", true/);
     assert.match(html, /requireTown \? sceneReadiness\.waitForTownScene\(\) : sceneReadiness\.waitForTownOrCreation\(\)/);
     assert.match(html, /if \(isHomeRoute\(\)\)/, 'lab routes must not wait for town');
+    assert.match(html, /document\.body\.classList\.remove\("igniting"\);\s*await new Promise\(resolve => requestAnimationFrame\(\(\) => requestAnimationFrame\(resolve\)\)\);[\s\S]*?splash\.classList\.add\("ignition-complete"\)/,
+        'Safari must paint the town behind the opaque splash before revealing it');
+    assert.match(town, /refuge-foreground-cutouts\.js\?v=\{AppBuildInfo\.Version\}-\{AppBuildInfo\.Commit\}/,
+        'Safari must not reuse cached cutout generation code without readiness signals');
 });
