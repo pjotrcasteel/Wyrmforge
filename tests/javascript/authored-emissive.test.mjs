@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, emissionIntensity } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
+import {
+    injectAuthoredSet, setAuthoredRenderMode, drawGrounded, hasEmissive, enemyHasEmissivePose, emissionIntensity,
+} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 
 const recorder = () => {
     const calls = [];
@@ -73,6 +75,32 @@ test('voxel-grounded large enemies use the C# surface as their true sprite-foot 
     assert.equal(glowing.calls.find(call => call[0] === 'drawImage')[7], sprite[7],
         'emissive strips line up with the grounded albedo instead of floating in front of it');
     setAuthoredRenderMode('overlay');
+});
+
+test('the enemy emissive fast path skips unlit poses without suppressing authored action glow', () => {
+    injectAuthoredSet('Test-Pose-Glow', set());
+    const state = { enemies: new Map([[42, { name: 'Test-Pose-Glow', action: 'walk', emerge: false }]]) };
+    assert.equal(enemyHasEmissivePose(state, 42), false, 'unlit walking never needs an emissive scratch canvas');
+    state.enemies.get(42).action = 'idle';
+    assert.equal(enemyHasEmissivePose(state, 42), true, 'loaded glowing actions still render');
+    state.enemies.get(42).emerge = true;
+    assert.equal(enemyHasEmissivePose(state, 42), false, 'emergence never draws an emissive pose');
+    state.enemies.get(42).emerge = false;
+    assert.equal(enemyHasEmissivePose(state, 999), false, 'missing pose does not allocate a canvas');
+    assert.equal(enemyHasEmissivePose(null, 42), false);
+});
+
+test('Fire enemy glow manifests only target real actions and do not constrain future authored emission', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { ENEMY_CHARACTERS } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js');
+    for (const [kind, name] of ENEMY_CHARACTERS) {
+        if (kind > 6) continue;
+        const manifest = JSON.parse(readFileSync(new URL(
+            `../../src/Wyrmforge.Presentation.Web/wwwroot/art/characters/${name}/manifest.json`, import.meta.url), 'utf8'));
+        const actions = new Set(Object.keys(manifest.actions));
+        assert.ok((manifest.emissive ?? []).every(action => actions.has(action)),
+            `${name}: newly added glow strips must name real actions so the conditional GPU upload remains correct`);
+    }
 });
 
 test('the second forms burn harder and a transformation swells the glow to its peak', () => {
