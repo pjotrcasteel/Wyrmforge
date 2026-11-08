@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wyrmforge Mage Comparison</title><style>
+body{background:#101017;color:#e9e1d6;font:16px system-ui;margin:0;padding:22px}h1{font-size:24px}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;max-width:960px;margin:auto}
+section{background:#1d2028;border:1px solid #42434c;border-radius:12px;padding:12px;text-align:center}
+canvas{width:100%;max-width:420px;image-rendering:pixelated;background:#252c2a;border-radius:6px}
+.controls{text-align:center;margin:18px}button{font:inherit;padding:10px 14px;margin:4px;background:#363c49;color:white;border:1px solid #707888;border-radius:6px}
+p{color:#b9b5b0}#status{text-align:center}</style></head><body>
+<h1 style="text-align:center">Mage comparison — actual game renderers</h1>
+<p style="text-align:center">Both renderers use the current Wyrmforge source. Select a direction and animation to compare.</p>
+<div class="controls" id="directions"></div><div class="controls" id="actions"></div>
+<p id="status">Loading authored Wizard sprites…</p>
+<main><section><h2>Legacy mage</h2><canvas id="legacy" width="420" height="340"></canvas><p>Four-direction renderer / legacy art</p></section>
+<section><h2>Authored Wizard (current Hunt)</h2><canvas id="authored" width="420" height="340"></canvas><p>Eight-direction authored sprite set</p></section></main>
+<script type="module">
+import {drawMage} from './js/arena-mage.js';
+import {preloadAuthoredCharacter,authoredCharacter,drawAuthoredWizard,createAuthoredState} from './js/authored-characters.js';
+import {loadArt} from './js/art-atlas.js';
+let direction='S',action='walk',start=performance.now();
+const dirs=['N','NE','E','SE','S','SW','W','NW'];
+function buttons(id,values,selected){const el=document.getElementById(id);for(const v of values){const b=document.createElement('button');b.textContent=v;b.onclick=()=>{selected(v);start=performance.now();};el.append(b);}}
+buttons('directions',dirs,v=>direction=v);buttons('actions',['idle','walk','cast'],v=>action=v);
+preloadAuthoredCharacter('Wizard');loadArt().catch(()=>{});
+const state=createAuthoredState();
+function paint(canvas,label,now){
+ const ctx=canvas.getContext('2d');ctx.clearRect(0,0,420,340);ctx.fillStyle='#252c2a';ctx.fillRect(0,0,420,340);
+ ctx.fillStyle='#3c483d';ctx.fillRect(0,250,420,90);ctx.strokeStyle='#53604e';ctx.beginPath();ctx.moveTo(0,250);ctx.lineTo(420,250);ctx.stroke();
+ const elapsed=(now-start)/1000,player={x:210,y:224,radius:12},cast=action==='cast'?{progress:(elapsed%1.2)/1.2,angle:0,rank:1}:null;
+ ctx.save();ctx.translate(210,210);ctx.scale(3,3);ctx.translate(-210,-210);
+ if(label==='legacy'){
+  const d=direction.includes('N')?'N':direction.includes('S')?'S':direction;
+  const face=d==='NE'||d==='SE'?'E':d==='NW'||d==='SW'?'W':d;
+  drawMage(ctx,player,cast,false,false,null,action==='walk'?(Math.floor(elapsed*8)%2)+1:0,face);
+ }else{
+  const set=authoredCharacter('Wizard');if(set){
+   const spec=set.manifest.actions[action]||set.manifest.actions.idle;
+   state.wizard.direction=direction;state.wizard.action=spec===set.manifest.actions[action]?action:'idle';
+   state.wizard.frame=Math.floor(elapsed*1000/110)%spec.framesPerDirection;
+   drawAuthoredWizard(ctx,player,state,false);
+  }
+ }
+ ctx.restore();
+}
+function frame(now){paint(document.getElementById('legacy'),'legacy',now);paint(document.getElementById('authored'),'authored',now);
+ document.getElementById('status').textContent=authoredCharacter('Wizard')?'Both renderers ready.':'Loading authored Wizard sprites…';
+ requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></body></html>
