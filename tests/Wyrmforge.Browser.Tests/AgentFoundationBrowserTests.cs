@@ -10,6 +10,30 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class AgentFoundationBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task HollowedLab_RealFrameInterop_SpawnsMageAndHollowedWithoutHuntLoadingVeil()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/enemy-lab?kind=Hollow&count=3&autoplay=false&cast=false");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Fire & Frost enemy lab" })).ToBeVisibleAsync();
+
+        // Import the EXACT versioned module loaded by Blazor, not an unversioned
+        // second renderer instance with an unrelated WeakMap of arena states.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const resource = performance.getEntriesByType('resource')
+                .find(entry => new URL(entry.name).pathname.endsWith('/js/arena.js'));
+            if (!resource) return false;
+            const renderer = await import(resource.name);
+            const canvas = document.querySelector('.enemy-lab canvas');
+            const snapshot = renderer.readArenaDiagnostics(canvas);
+            return snapshot?.active && snapshot?.player &&
+                snapshot?.enemies?.length === 3 && !snapshot?.renderingFailed;
+        }", null, new() { Timeout = 45000 });
+        Assert.AreEqual(0, await Page.Locator(".hunt-entry-loading").CountAsync(),
+            "Enemy Lab must never render the first-Hunt loading overlay.");
+    }
+
+    [TestMethod]
     public async Task HollowedLab_ChangingSpawnCount_UpdatesTheActualEncounter()
     {
         await Page.SetViewportSizeAsync(390, 844);

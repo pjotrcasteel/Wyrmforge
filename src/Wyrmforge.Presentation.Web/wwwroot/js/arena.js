@@ -52,6 +52,7 @@ import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { createHuntEntryGate, huntEntryReadiness, huntEntrySceneKey } from './hunt-entry-gate.js?v=20261108-hunt-entry-early-v2';
+import { arenaFrameArguments } from './arena-frame-arguments.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
@@ -526,8 +527,9 @@ function startSimulationFrame(state, timestamp, rect) {
 
     const request = entryBlocked
         ? state.dotNetReference.invokeMethodAsync('PreviewFrame')
-        : state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y,
-            getArenaPropFocus(state), isArenaStickAim(state, aim), state.reducedMotion.matches);
+        : state.dotNetReference.invokeMethodAsync('Frame', ...arenaFrameArguments(
+            delta, rect.width, rect.height, movement, aim, getArenaPropFocus(state),
+            isArenaStickAim(state, aim), state.reducedMotion.matches, Boolean(state.entryGate)));
     request.then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());

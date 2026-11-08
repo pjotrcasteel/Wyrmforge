@@ -181,3 +181,26 @@ test('only the production Hunt shell enables a blocking veil; enemy and wyrm lab
     assert.match(wyrmLab, /InvokeVoidAsync\("initializeArena", canvas, reference\)/,
         'Wyrm lab is also free of the Hunt loading overlay');
 });
+
+test('shared renderer sends the exact JSInvokable Frame argument count for labs and production Hunt', async () => {
+    const root = new URL('../../src/Wyrmforge.Presentation.Web/', import.meta.url);
+    const { arenaFrameArguments } = await import(new URL('wwwroot/js/arena-frame-arguments.js', root));
+    const args = [0.05, 390, 844, { x: 1, y: -1 }, { x: .5, y: .25 }, null, false, true];
+    const lab = arenaFrameArguments(...args, false);
+    const hunt = arenaFrameArguments(...args, true);
+    assert.deepEqual(lab, [0.05, 390, 844, 1, -1, .5, .25, null, false]);
+    assert.deepEqual(hunt, [...lab, true]);
+    const renderer = readFileSync(new URL('wwwroot/js/arena.js', root), 'utf8');
+    const shell = readFileSync(new URL('wwwroot/js/arena-performance.js', root), 'utf8');
+    const enemy = readFileSync(new URL('Pages/EnemyLab.razor', root), 'utf8');
+    const wyrm = readFileSync(new URL('Pages/HuntLab.razor', root), 'utf8');
+    const production = readFileSync(new URL('Features/Arena/ArenaView.razor.cs', root), 'utf8');
+    const contract = /public (?:async )?Task<RunRenderSnapshot> Frame\(([^)]*)\)/;
+    const countParameters = source => source.match(contract)?.[1]?.split(',').length;
+    assert.equal(countParameters(enemy), 9, 'Enemy Lab has exactly nine C# Frame parameters');
+    assert.equal(countParameters(wyrm), 9, 'Wyrm Lab has exactly nine C# Frame parameters');
+    assert.equal(countParameters(production), 10, 'production Hunt has the reduced-motion parameter');
+    assert.match(renderer, /arenaFrameArguments\([\s\S]*?Boolean\(state\.entryGate\)\)/,
+        'the real renderer selects the C# contract according to the loading-gate opt-in');
+    assert.match(shell, /huntEntryLoading: true/, 'the first Hunt must keep the existing loading screen');
+});
