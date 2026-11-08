@@ -31,3 +31,9 @@
 The initial fixed high slash position was replaced with a calibrated path through the actual right-hand wrist keys in `tools/sprite-lab/build-hollow-attack.py` (source frames 5, 7, 8 and 10). The trail now descends and reaches forward through the authored contact frames 6–8; 12 VFX frames play over 0.30s instead of 0.36s, and the broken-right-arm silhouette uses a smaller stroke. Source atlas pixels and original gameplay are unchanged.
 
 Enemy Lab now exposes an editable **Spawn count** control for Hollowed and Mire Hounds (1–64). It clamps invalid values, restarts the real C# encounter and preserves a shareable `count=` parameter alongside the selected seed; unsupported species remain single-enemy previews. Browser and JavaScript regression tests cover the new controls and claw-follow behavior.
+
+## Claw registration and mage readability follow-up (8 November 2026)
+
+The owner's 390px iPhone screenshot showed the shadow claw ~one arm-width ahead and above its source wrist. The v3 overlay pulls the visible arc inward by about 17 world pixels and down about 18 at frame 7 (radius 11, east-facing). The underlying wrist-motion keys and frame timing remain. This is presentation-only and does not imply confirmed damage. Check all eight facings and impaired arms before accepting.
+
+The mage's authored 48px sprite and fallback body/staff now use the shared `MAGE_VISUAL_SCALE=7/6` (~56px: one head taller). Both the authored albedo/emissive material passes and barrier seams share the scale and remain grounded at the same foot position; no collision or gameplay stat is modified.

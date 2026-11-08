@@ -26,14 +26,14 @@ import {
     ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
     setAuthoredRenderMode, emissionIntensity,
-} from './authored-characters.js?v=20261108-voxel-actor-grounding-v1';
+} from './authored-characters.js?v=20261108-mage-head-v2';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
-import { drawMage, updateMageWalk } from './arena-mage.js';
+import { drawMage, updateMageWalk } from './arena-mage.js?v=20261108-mage-head-v2';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
-import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v2';
+import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v3';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';

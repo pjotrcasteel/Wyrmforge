@@ -2,6 +2,7 @@
 // Gameplay/physics never reads animation geometry.
 import { drawMagePixelFrame, mageFrameKey } from './arena-mage-frames.js';
 import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
+import { MAGE_VISUAL_SCALE } from './mage-visual-profile.js';
 
 const cloak = '#485b73';
 const cloakEdge = '#1b2637';
@@ -89,10 +90,13 @@ function paintPixelShaft(ctx, from, to, thickness, pigment) {
 export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0, facing = 'S', authored = null) {
     if (!player) return;
     if (authored?.(ctx)) return;
-    const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
+    const baseScale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
+    const scale = baseScale * MAGE_VISUAL_SCALE;
 
     ctx.save();
-    ctx.translate(player.x, player.y);
+    // Grow upward from the planted feet; keep the old ground pivot at
+    // player.y + 15 * baseScale while the body/staff become a head taller.
+    ctx.translate(player.x, player.y + (baseScale - scale) * 15);
     ctx.scale(scale, scale);
 
     // Small displaced shadow marks feet, not a HUD-like circle or glowing outline.

@@ -8,6 +8,7 @@
 export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 import { drawEmergeParticles } from './arena-field-ambush-vfx.js';
 import { drawFootprint, drawCastShadow, footDrop } from './authored-grounding.js';
+import { MAGE_VISUAL_SCALE } from './mage-visual-profile.js';
 
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
 export const ENEMY_CHARACTERS = new Map([
@@ -545,17 +546,24 @@ export const WIZARD_FEET_OFFSET = 12;
 
 export function drawAuthoredWizard(ctx, player, state, hit = false) {
     const wizard = state.wizard, radius = Number(player.radius) || 12, feetY = player.y + WIZARD_FEET_OFFSET;
-    if (renderMode === 'emissive') return drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY - footDrop(radius), { radius });
+    if (renderMode === 'emissive') return drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
+        player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
     // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
     ctx.save();
     if (hit) ctx.filter = 'sepia(1) saturate(3.2) hue-rotate(-35deg) brightness(1.05)';
-    const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY - footDrop(radius), { radius });
+    const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
+        player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
     ctx.restore();
     // Warding Barrier: two pale seams at the shoulders, as the old mage showed it.
     if (player.barrier) {
+        // Warding seams share the larger sprite's foot-anchored coordinate space.
+        ctx.save();
+        ctx.translate(Math.round(player.x), Math.round(feetY));
+        ctx.scale(MAGE_VISUAL_SCALE, MAGE_VISUAL_SCALE);
         ctx.fillStyle = '#a9c8d3';
-        ctx.fillRect(Math.round(player.x) - 11, feetY - 26, 3, 8);
-        ctx.fillRect(Math.round(player.x) + 8, feetY - 26, 3, 8);
+        ctx.fillRect(-11, -26, 3, 8);
+        ctx.fillRect(8, -26, 3, 8);
+        ctx.restore();
     }
     return drawn;
 }

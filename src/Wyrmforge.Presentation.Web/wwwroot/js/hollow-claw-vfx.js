@@ -28,7 +28,7 @@ function interpolateWrist(attackFrame) {
 }
 
 // Align the effect to the moving right claw, not a fixed overhead point. The
-// small downward registration puts the visible trail around the actual fingers
+// downward and inward registration puts the visible trail around the actual fingers
 // rather than hovering above the wrist; the forward offset leads its strike.
 export function hollowClawAnchor(enemy, pose) {
     const angle = DIRECTIONS[pose?.direction];
@@ -38,11 +38,14 @@ export function hollowClawAnchor(enemy, pose) {
     const radius = Math.max(7, Number(enemy.radius) || 11);
     const actorScale = Math.max(.85, Math.min(1.15, Number(pose.visualScale) || 1));
     const pxPerMetre = 93 / 1.55 * radius / 11 * actorScale;
-    const reach = wrist.forward * pxPerMetre + radius * 0.4;
+    // The strict-grid atlas has its visible claw pixels biased ahead of its
+    // cell center. Register the sweep near the actual hand, not out ahead of it.
+    // Keep the forward motion from the Blender wrist path, at a shorter reach.
+    const reach = wrist.forward * pxPerMetre * 0.55 - radius * 0.35;
     const sideways = wrist.side * pxPerMetre;
     return { x: enemy.x + reach * Math.cos(angle) - sideways * Math.sin(angle),
         y: enemy.y + reach * Math.sin(angle) * 0.42 + sideways * Math.cos(angle) * 0.18 -
-            (wrist.height + .5) * pxPerMetre + radius * 0.9 };
+            (wrist.height + .2) * pxPerMetre + radius * 0.9 };
 }
 
 let atlas = null;

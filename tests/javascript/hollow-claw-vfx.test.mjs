@@ -38,6 +38,12 @@ test('claw follows the authored wrist forward and down through strike frames 6â€
     assert.ok(release.x > windup.x, 'the moving claw must reach forward before impact');
     assert.ok(follow.y > release.y, 'the strike must descend with the actual hand');
     assert.ok(follow.y > enemy.y - enemy.radius * 3.65, 'it cannot remain at the old high anchor');
+    // Screenshot regression: original v2 centered its visible stroke high and
+    // far beyond the claw, even though the wrist was animated.
+    const originalReach = 0.34 * (93 / 1.55) + enemy.radius * 0.4;
+    const originalY = enemy.y - (0.21 + 0.5) * (93 / 1.55) + enemy.radius * 0.9;
+    assert.ok(release.x <= enemy.x + originalReach - 15, 'the slash must sit closer to the attacking hand');
+    assert.ok(release.y >= originalY + 16, 'the slash must register lower than the floating v2 stroke');
     for (const direction of ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']) {
         const position = hollowClawAnchor(enemy, { ...attack(8 / 12), direction });
         assert.ok(Number.isFinite(position.x) && Number.isFinite(position.y));
