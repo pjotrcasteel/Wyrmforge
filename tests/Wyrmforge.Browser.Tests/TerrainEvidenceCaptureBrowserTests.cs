@@ -168,6 +168,8 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             $"Real Hunt cache must be independent of its partial-repaint history at the exact same revision " +
             $"(cache-vs-rebuilt={cacheParity}, cache-bounds={result.GetProperty("cacheParity").GetProperty("bounds")}, " +
             $"cache-first={result.GetProperty("cacheParity").GetProperty("first")}, " +
+            $"mask-parity={result.GetProperty("mapParity")}, changed={result.GetProperty("changedBlocks")}, " +
+            $"seed={result.GetProperty("visualSeed")}, band={result.GetProperty("influenceBand")}, " +
             $"independent-reference before={before}, after={after}, revision={revision}).");
     }
 
