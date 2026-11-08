@@ -157,7 +157,7 @@ internal static class ArcaneWheelLayout
             var bend = connection.From == "fire-blast-shaping" ? -1 : 1;
             // Keep short links close to their endpoints and give the long
             // Fire approaches a wider sweep. Rotation uses the same geometry.
-            return CurvedLink(from, to, bend * Math.Min(120, length * .12), length);
+            return CurvedLink(from, to, bend * Math.Min(120, length * .08), length);
         }
         return Polyline([from, to]);
     }
