@@ -9,14 +9,14 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-owned-splat-fix-v1';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-crack-isolation-v1';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-terrain-evidence-v1';
+import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-crack-isolation-v1';
 import { captureTerrainEvidence, captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
-import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js?v=20261108-crack-isolation-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
@@ -700,7 +700,7 @@ function draw(state, snapshot, width, height) {
     const view = { x: camera.x, y: camera.y, width, height };
     const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
+            view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
     state.veinSeams = emissive?.seams ?? 0;
     const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
@@ -816,7 +816,9 @@ function draw(state, snapshot, width, height) {
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
         const nowSeconds = performance.now() / 1000;
         if (!glowOnGround && layerLabEnabled('emissive')) {
-            state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+            state.veinSeams = layerLabEnabled('crackVeins')
+                ? drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches)
+                : 0;
             drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
         }
         if (state.destructionFx && layerLabEnabled('damageFx')) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
