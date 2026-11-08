@@ -688,14 +688,21 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.EvaluateAsync("""
             async () => {
                 const module = await import('/js/arena-performance.js');
+                const { resolveArenaCamera } = await import('/js/arena-camera.js');
                 const canvas = document.querySelector('canvas.game-canvas');
                 window.__torch = { shot: null, variants: [] };
                 const tick = () => {
                     const state = module.readArenaDiagnostics(canvas), shots = window.__torch;
                     const torches = state?.hunt1Terrain?.torches ?? [];
                     shots.variants = [...new Set(torches.filter(t => t.art).map(t => t.variant))];
-                    const near = torches.find(t => t.art && state.player && Math.abs(t.x - state.player.x) < 70 && t.y < state.player.y && state.player.y - t.y < 110);
-                    if (near && !shots.shot) shots.shot = canvas.toDataURL('image/png');
+                    // Posts are deliberately 3-5 cells OFF the road (~100-160 world units).
+                    // Capture a genuinely visible loaded authored torch, not an impossible 70-unit player radius.
+                    const width = canvas.clientWidth, height = canvas.clientHeight;
+                    const camera = resolveArenaCamera(state?.world, state?.player, width, height);
+                    const visible = torches.find(t => t.art &&
+                        t.x >= camera.x + 16 && t.x <= camera.x + width - 16 &&
+                        t.y >= camera.y + 64 && t.y <= camera.y + height - 24);
+                    if (visible && !shots.shot) shots.shot = canvas.toDataURL('image/png');
                     requestAnimationFrame(tick);
                 };
                 tick();

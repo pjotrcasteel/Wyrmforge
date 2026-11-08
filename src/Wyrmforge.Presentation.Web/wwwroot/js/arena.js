@@ -9,10 +9,11 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-terrain-isolation-v1';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-terrain-evidence-v1';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-terrain-isolation-v1';
+import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-terrain-evidence-v1';
+import { captureTerrainEvidence } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
@@ -98,9 +99,35 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.layerLab = mountLayerLab(rebuildTerrain => {
         // Only baked source-pixel switches may rebuild the cached raster.
-        // GPU, emissive, overlay, and scenery switches MUST leave its pixels untouched,
-        // otherwise comparing Safari's corrupted GPU output against Canvas2D is impossible.
+        // GPU, emissive, overlay, and scenery switches MUST leave its pixels untouched.
         if (rebuildTerrain && state.terrainCache) state.terrainCache.revision = null;
+    }, async () => {
+        const snapshot = state.latestSnapshot;
+        if (!snapshot?.environment?.terrain || !state.terrainFrame || !state.terrainCache?.canvas)
+            throw new Error('Enter a Hunt and wait for the terrain to load before capturing.');
+        const rect = state.canvas.getBoundingClientRect();
+        const position = resolveArenaCamera(snapshot.world, snapshot.player, rect.width, rect.height);
+        // resolveArenaCamera carries WORLD extents for the scene renderer, not viewport size.
+        // Evidence must never allocate two full-world 2x canvases on an iPhone.
+        const camera = { x: position.x, y: position.y, width: rect.width, height: rect.height };
+        return captureTerrainEvidence({
+            sceneCanvas: state.canvas, terrainCache: state.terrainCache,
+            frame: state.terrainFrame, camera, band: huntBand(state, snapshot), paintTerrainCell,
+            worldUnitsPerCell: FACE_PIXELS, artScale: TERRAIN_ART_SCALE,
+            readServerFrame: () => state.dotNetReference.invokeMethodAsync('TerrainFrame', -1),
+            layerState: layerLabSnapshot(),
+            diagnostics: {
+                snapshotRevision: snapshot.environment.terrain.revision,
+                lastPaintedRevision: state.terrainCache.revision,
+                lastPaintReason: state.terrainCache.lastPaintReason,
+                repaints: state.terrainCache.repaints, fullRepaints: state.terrainCache.fullRepaints,
+                regionalRepaints: state.terrainCache.regionalRepaints,
+                unchangedRevisionSkips: state.terrainCache.unchangedRevisionSkips,
+                lastDirtyBlocks: state.terrainCache.lastDirtyBlocks,
+                gpuEnabled: Boolean(state.gpuWorld && layerLabEnabled('gpu')),
+                renderError: state.renderError ?? null
+            }
+        });
     });
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);

@@ -70,7 +70,7 @@ export function layerLabSnapshot() {
 }
 
 /** Deliberately separate DOM from the game canvas: it remains usable in iOS Safari with no desktop devtools. */
-export function mountLayerLab(onChange) {
+export function mountLayerLab(onChange, onCapture = null) {
     if (!active || typeof document === 'undefined') return null;
     const panel = document.createElement('section');
     panel.setAttribute('aria-label', 'Hunt render layers diagnostic controls');
@@ -151,6 +151,48 @@ export function mountLayerLab(onChange) {
     refresh.addEventListener('click', () => onChange(true));
     details.appendChild(refresh);
 
+    let evidenceUrl = null;
+    if (onCapture) {
+        const capture = document.createElement('button');
+        capture.type = 'button';
+        capture.textContent = 'CAPTURE GLITCH EVIDENCE';
+        capture.style.cssText = 'margin-top:10px;width:100%;padding:11px 6px;background:#355e40;color:#fff;' +
+            'border:1px solid #9fcc9f;border-radius:5px;font-weight:700;';
+        details.appendChild(capture);
+        const status = document.createElement('p');
+        status.style.cssText = 'font-size:12px;margin:5px 0;color:#ddd;';
+        status.textContent = 'After brown squares appear, capture BEFORE pressing Rebuild Ground.';
+        details.appendChild(status);
+        const download = document.createElement('a');
+        download.textContent = 'DOWNLOAD EVIDENCE (.json)';
+        download.style.cssText = 'display:none;padding:10px;color:#f8d584;text-decoration:underline;font-weight:700;';
+        details.appendChild(download);
+        capture.addEventListener('click', async () => {
+            capture.disabled = true;
+            capture.textContent = 'CAPTURING…';
+            status.textContent = 'Capturing terrain cache, independent repaint and authoritative revision…';
+            download.style.display = 'none';
+            try {
+                const report = await onCapture();
+                if (evidenceUrl) URL.revokeObjectURL(evidenceUrl);
+                evidenceUrl = URL.createObjectURL(new Blob([JSON.stringify(report)], { type: 'application/json' }));
+                download.href = evidenceUrl;
+                download.download = 'wyrmforge-terrain-' + report.timestamp.replace(/[:.]/g, '-') + '.json';
+                download.style.display = 'block';
+                const pixel = report.pixelComparison;
+                status.textContent = 'Captured. Cache vs independent: ' +
+                    (pixel ? pixel.mismatched + '/' + pixel.total + ' differing pixels' : 'comparison unavailable') +
+                    '. C# frame: ' + (report.authoritativeComparison?.status ?? 'unavailable') +
+                    '. DOWNLOAD and share the JSON here.';
+            } catch (error) {
+                status.textContent = 'Capture failed: ' + String(error);
+            } finally {
+                capture.disabled = false;
+                capture.textContent = 'CAPTURE GLITCH EVIDENCE';
+            }
+        });
+    }
+
     const reset = document.createElement('button');
     reset.type = 'button'; reset.textContent = 'RESTORE ALL LAYERS';
     reset.style.cssText = 'margin-top:9px;width:100%;padding:11px 6px;background:#66543a;color:white;border:1px solid #ddbd88;border-radius:5px;font-weight:700;';
@@ -171,5 +213,5 @@ export function mountLayerLab(onChange) {
 
     document.body.appendChild(panel);
     refreshTitle();
-    return { dispose() { panel.remove(); }, snapshot: layerLabSnapshot };
+    return { dispose() { if (evidenceUrl) URL.revokeObjectURL(evidenceUrl); panel.remove(); }, snapshot: layerLabSnapshot };
 }

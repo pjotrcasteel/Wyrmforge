@@ -169,6 +169,26 @@ test('road review bot looks far enough ahead to avoid bouncing around spline sam
     assert.ok(heading.x > .2 && heading.y < -.8, 'use a reachable forward point through the bend, not the first tiny spline step');
 });
 
+test('the exit bot abandons a stalled road heading temporarily for a reachable terrain route', () => {
+    const terrain = grid(20, 20);
+    // The closest road segment bends east, even though the actual exit is due north.
+    terrain.road = [[10, 10], [11, 10], [12, 10], [13, 10]]
+        .flatMap(([column, row]) => [(column + .5) * 16, (row + .5) * 16]);
+    const stuck = at(10 * 32 + 16, 10 * 32 + 16, {
+        exit: { x: 10 * 32 + 16, y: 2 * 32 + 16, radius: 37 },
+    });
+    const memory = createBotMemory();
+    const initial = botMovement(stuck, memory, 0, terrain);
+    assert.ok(initial.x > .9, 'begin by following the actual generated road');
+    const recovery = botMovement(stuck, memory, 2100, terrain);
+    assert.ok(recovery.y < -.9, 'after no real movement, recover using an exit-facing path');
+    assert.ok(memory.exitRecoveryUntil > 2100, 'temporary fallback cannot permanently replace the road');
+    const progress = botMovement(at(stuck.player.x, stuck.player.y - 48,
+        { exit: stuck.exit }), memory, 2200, terrain);
+    assert.ok(progress.y < -.9, 'moving toward the exit must preserve forward progress');
+    assert.ok(memory.exitRecoveryUntil > 2200, 'recovery persists briefly instead of steering back into the obstruction');
+});
+
 test('road review bot sidesteps after sustained collision and then resumes its route', () => {
     const terrain = grid(20, 20);
     terrain.road = Array.from({ length: 15 }, (_, row) => [8 * 16 + 8, (19 - row) * 16 + 8]).flat();

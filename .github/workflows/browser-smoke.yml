@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   preview:
@@ -96,10 +97,24 @@ jobs:
         run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
       - name: Download matching playable build
-        uses: actions/download-artifact@v4
-        with:
-          name: wyrmforge-playable-preview-${{ github.sha }}
-          path: artifacts/playable-preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_NAME: wyrmforge-playable-preview-${{ github.sha }}
+        run: |
+          for attempt in 1 2 3 4; do
+            rm -rf artifacts/playable-preview
+            mkdir -p artifacts/playable-preview
+            if gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$ARTIFACT_NAME" --dir artifacts/playable-preview; then
+              test -f artifacts/playable-preview/wwwroot/index.html
+              exit 0
+            fi
+            if [ "$attempt" -eq 4 ]; then
+              echo "::error::Unable to download the matching playable preview after 4 attempts"
+              exit 1
+            fi
+            echo "::warning::GitHub artifact download failed (attempt $attempt); retrying"
+            sleep 5
+          done
 
       - name: Start local WyrmForge
         run: |
