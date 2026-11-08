@@ -280,7 +280,7 @@ test('Hollowed attack windup enters the shared audio event stream once', () => {
     const tracker = createSoundEventTracker();
     const snapshot = progress => frame({ enemies: [{
         entityId: 42, kind: 0, x: 500, y: 500, hitFlash: false,
-        telegraph: { kind: 'bash', progress },
+        telegraph: { kind: 'hollow-grasp', progress },
     }] });
     assert.deepEqual(collectSoundEvents(tracker, frame(), 0), []);
     assert.deepEqual(collectSoundEvents(tracker, snapshot(0.1), 100), ['hollow-attack-windup']);
