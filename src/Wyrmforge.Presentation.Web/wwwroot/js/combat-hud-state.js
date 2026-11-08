@@ -4,6 +4,17 @@ export function clampHudFraction(value) {
     return Math.max(0, Math.min(1, value));
 }
 
+
+/** Fixed-size pixel art is revealed from bottom to top; it is never resized with HP. */
+export function healthCrystalPresentation(health, maxHealth) {
+    const fraction = clampHudFraction(Number.isFinite(maxHealth) && maxHealth > 0 ? health / maxHealth : 0);
+    return {
+        fraction,
+        unfilledPercent: Math.round((1 - fraction) * 10000) / 100,
+        state: fraction <= .25 ? 'critical' : fraction <= .55 ? 'wounded' : 'healthy',
+    };
+}
+
 export function cooldownPresentation(remaining, duration) {
     if (!Number.isFinite(remaining) || !Number.isFinite(duration) || duration <= 0 || remaining <= 0.05) {
         return { readyDegrees: 360, shadeDegrees: 0, text: '', recovering: false };
