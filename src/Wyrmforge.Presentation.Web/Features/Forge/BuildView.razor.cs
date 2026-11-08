@@ -237,6 +237,24 @@ public partial class BuildView : IAsyncDisposable
             : "web-edge";
     }
 
+    private static string? ConnectionStroke(PassiveTreeConnection connection, string edgeClass)
+    {
+        if (edgeClass == "web-edge fire-constellation") return "stroke: #bd8258b8";
+        if (edgeClass != "web-edge") return null;
+        var school = ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(connection.To));
+        if (school != ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(connection.From))) return null;
+        return school switch
+        {
+            PassiveSchool.Fire => "stroke: #a966465e",
+            PassiveSchool.Frost => "stroke: #7ca7c88c",
+            PassiveSchool.Storm => "stroke: #c1a3638c",
+            PassiveSchool.Arcane => "stroke: #a282c38c",
+            PassiveSchool.Death => "stroke: #7eac868c",
+            PassiveSchool.Binding => "stroke: #c1a98b8c",
+            _ => null,
+        };
+    }
+
     private IReadOnlyList<ArcaneStatBadge> RouteMinorBonuses(PassiveTreeRoutePlan plan) =>
         ArcaneNodePresentation.AggregateMinorBonuses(plan.NodeIds.Select(PassiveTreeCatalog.Get));
 

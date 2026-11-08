@@ -42,7 +42,8 @@ public sealed class ProgressionV13Tests : BrowserTest
         }"), "The Fire sigil sits at the center and all Fire nodes branch north from it.");
         var fireLink = page.Locator(".web-edge[data-from='constellation-Fire-13-3'][data-to='constellation-Fire-13-4']");
         var activeFireStroke = await fireLink.EvaluateAsync<string>("link => getComputedStyle(link).stroke");
-        Assert.IsTrue(await fireLink.EvaluateAsync<bool>("link => (link.getAttribute('d').match(/L/g) ?? []).length > 1"));
+        var fireApproach = page.Locator(".web-edge[data-from='fire-banked-embers'][data-to='constellation-Fire-8-0']");
+        Assert.IsTrue(await fireApproach.EvaluateAsync<bool>("link => (link.getAttribute('d').match(/L/g) ?? []).length > 1"));
         await Capture(page, $"web-{width}-overview");
         await page.Locator("[data-node-id='fire-ember-covenant']").ClickAsync();
         await Expect(page.Locator(".node-inspector.open")).ToContainTextAsync("Ember Covenant");

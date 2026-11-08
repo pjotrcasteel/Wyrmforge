@@ -16,14 +16,19 @@ internal static class ArcaneConstellations
             "Torch", "Charcoal", "Afterburn"], BuildStatId.BurnDamage),
     ];
     private static readonly string[] Names = ["Ward", "Spark", "Focus", "Thread", "Seal", "Trace", "Mantle", "Sign"];
-    private static readonly (int Side, int Radius)[] Offsets =
-        [(0, -170), (120, -120), (170, 0), (120, 120), (0, 170), (-120, 120), (-170, 0), (-120, -120)];
+    private static readonly (int Side, int Radius)[][] Silhouettes =
+    [
+        [(0, -190), (100, -95), (200, 0), (100, 95), (0, 190), (-100, 95), (-200, 0), (-100, -95)],
+        [(0, -190), (155, -150), (195, -25), (80, 55), (5, 190), (-115, 115), (-175, 0), (-100, -85)],
+        [(0, -200), (115, -115), (170, 5), (135, 130), (-5, 190), (-135, 130), (-170, 5), (-115, -115)],
+    ];
+    private const int NodesPerCluster = 8;
 
     // Coordinates are authored in Fire's local fan before school rotation.
     private static readonly (int Side, int Radius)[] Centers =
     [
         (-2000, 3980), (-1490, 3770), (-950, 3980), (-465, 3740), (30, 3860),
-        (525, 3990), (1000, 3780), (1500, 3910), (2000, 3990),
+        (525, 3990), (1000, 3780), (1500, 3830), (2000, 3990),
         (-2070, 4530), (-1550, 4310), (-1040, 4610), (-555, 4270), (-20, 4470),
         (500, 4560), (1020, 4310), (1510, 4470), (2030, 4550),
         (-1830, 5010), (-1410, 5150), (-950, 5230), (-440, 4870), (30, 5110),
@@ -43,9 +48,9 @@ internal static class ArcaneConstellations
 
         foreach (var (school, _, themes, specialty) in Schools)
         for (var ring = 0; ring < themes.Length; ring++)
-        for (var step = 0; step < Offsets.Length; step++)
+        for (var step = 0; step < NodesPerCluster; step++)
         {
-            var (side, radius) = Offsets[step];
+            var (side, radius) = Silhouettes[ring % Silhouettes.Length][step];
             var stat = (StableRingId(ring) < 6 ? step % 3 : (step + ring) % 6) switch
             {
                 0 => BuildStatId.MaxHealth,
@@ -96,8 +101,8 @@ internal static class ArcaneConstellations
             yield return new(TransitId(4), Id(school, 0, 0));
             for (var ring = 0; ring < themes.Length; ring++)
             {
-                for (var step = 0; step < Offsets.Length; step++)
-                    yield return new(Id(school, ring, step), Id(school, ring, (step + 1) % Offsets.Length));
+                for (var step = 0; step < NodesPerCluster; step++)
+                    yield return new(Id(school, ring, step), Id(school, ring, (step + 1) % NodesPerCluster));
                 if (ring % 9 < 8)
                     yield return new(Id(school, ring, 2), Id(school, ring + 1, 6));
                 if (ring + 9 < themes.Length)

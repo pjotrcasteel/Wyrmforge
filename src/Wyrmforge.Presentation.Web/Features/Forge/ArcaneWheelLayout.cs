@@ -154,6 +154,9 @@ internal static class ArcaneWheelLayout
         if (connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal))
         {
             var length = Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
+            // Keep the small facets angular. Curve the longer routes that
+            // connect them into branches, instead of outlining every loop.
+            if (length < 235) return Polyline([from, to]);
             var bend = connection.From == "fire-blast-shaping" ? -1 : 1;
             // Keep short links close to their endpoints and give the long
             // Fire approaches a wider sweep. Rotation uses the same geometry.

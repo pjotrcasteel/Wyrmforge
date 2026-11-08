@@ -73,7 +73,7 @@
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
                                 var edgeClass = ConnectionClass(connection, mapPreview, mapPlan?.AnchorId);
-                                <path class="@edgeClass" style="@(edgeClass == "web-edge fire-constellation" ? "stroke: #bd8258b8" : null)" data-from="@connection.From" data-to="@connection.To"
+                                <path class="@edgeClass" style="@ConnectionStroke(connection, edgeClass)" data-from="@connection.From" data-to="@connection.To"
                                       d="@ArcaneWheelLayout.Path(connection, ActiveSchool)" />
                             }
                         </svg>
