@@ -90,7 +90,7 @@ export function cancelHuntEntry(canvas) {
     arenas.get(canvas)?.entryGate?.cancel();
 }
 
-export function initializeArena(canvas, dotNetReference) {
+export function initializeArena(canvas, dotNetReference, { huntEntryLoading = false } = {}) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     const atlasLoad = loadArt(new URL('../art/', import.meta.url).href);
@@ -113,7 +113,11 @@ export function initializeArena(canvas, dotNetReference) {
     state.entryAssetsSettled = false;
     Promise.allSettled([atlasLoad, fireballLoad, paintedLoad, hollowLoad])
         .then(() => { if (state.active) state.entryAssetsSettled = true; });
-    state.entryGate = createHuntEntryGate(canvas.closest('.game-screen') ?? canvas.parentElement);
+    // Labs use this same renderer but have no Hunt selection/PreviewFrame handshake.
+    // Only the production Hunt shell may install a blocking loading veil.
+    state.entryGate = huntEntryLoading
+        ? createHuntEntryGate(canvas.closest('.game-screen') ?? canvas.parentElement)
+        : null;
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
     if (settings) {
         settings.value = state.damageNumberMode;
