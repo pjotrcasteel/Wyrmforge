@@ -18,7 +18,7 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
         var comparisons = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
             async () => {
                 const { TerrainCanvasCache, mergeTerrainFrame, paintTerrainCell, TERRAIN_MATERIAL } =
-                    await import('/js/arena-terrain-canvas.js?v=20261108-terrain-evidence-v1');
+                    await import('/js/arena-terrain-canvas.js?v=20261108-owned-splat-fix-v1');
                 const { captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } =
                     await import('/js/arena-terrain-evidence.js?v=20261108-terrain-evidence-v1');
                 const columns = 12, rows = 14;
