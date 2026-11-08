@@ -9,7 +9,8 @@ export function compareTerrainPixels(actual, expected, width) {
     const first = [];
     let x0 = width, y0 = actual.length / (width * 4), x1 = -1, y1 = -1;
     for (let i = 0; i < actual.length; i += 4) {
-        const delta = Math.max(...[0, 1, 2, 3].map(channel => Math.abs(actual[i + channel] - expected[i + channel])));
+        const delta = Math.max(Math.abs(actual[i] - expected[i]), Math.abs(actual[i + 1] - expected[i + 1]),
+            Math.abs(actual[i + 2] - expected[i + 2]), Math.abs(actual[i + 3] - expected[i + 3]));
         if (!delta) continue;
         const pixel = i / 4, x = pixel % width, y = Math.floor(pixel / width);
         mismatched++;
@@ -136,8 +137,9 @@ export async function captureTerrainEvidence(options) {
     };
     // Start read-only authoritative fetch immediately; compare only if its revision
     // equals the captured JS frame (otherwise identify the race, never guess).
-    const server = Promise.resolve().then(readServerFrame).then(value => ({ value }))
-        .catch(error => ({ error: String(error) }));
+    let server;
+    try { server = Promise.resolve(readServerFrame()).then(value => ({ value })).catch(error => ({ error: String(error) })); }
+    catch (error) { server = Promise.resolve({ error: String(error) }); }
     try {
         const image = captureTerrainViewport(terrainCache, frame, camera, band,
             paintTerrainCell, worldUnitsPerCell, artScale);
