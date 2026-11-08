@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Progression.DragonEssences;
@@ -15,12 +16,14 @@ namespace Wyrmforge.Application.Tests.Runs.SelfPlay;
 public sealed class FireEvolutionHuntTests
 {
     [TestMethod]
-    public void RegularHunt_EarnsAndTriggersSolarWakeThroughLiveCombat()
+    [DataRow(1358, false)]
+    [DataRow(1339, true)]
+    public void RegularHunt_EarnsAndTriggersSolarWakeThroughLiveCombat(int seed, bool elderHunt)
     {
-        const int seed = 1358;
         var build = SelfPlayBuildCatalog.All.First(item => item.Goals.Contains("volcanic"));
         var simulation = new RunSimulationFactory(new SeededRandomSource(1)).Create(build.SelectedNodes,
             offering: DragonEssenceId.PhaseWing, seed: seed, fireballLevel: 5,
+            hunt: elderHunt ? HuntSelection.FireTierThree : null,
             fireballMutations: [FireballMutationId.MeteorHeart, FireballMutationId.Detonation]);
         var agent = new EvolutionAgent(simulation,
             new HeuristicRunAgent(RunAgentPersonality.Greedy, seed, SpellSchool.Fire),
