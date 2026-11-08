@@ -123,7 +123,7 @@ test('while the gate is held, JS requests a side-effect-free C# snapshot, never 
     assert.doesNotMatch(codebehind.match(/public RunRenderSnapshot PreviewFrame\(\)[\s\S]*?\[JSInvokable\]/)?.[0] ?? '',
         /\.Tick\(/, 'C# startup preview never advances enemy attacks, spawns or damage');
 });
-\n
+
 test('map click arms loading immediately even while only the previous paused scene exists', () => {
     const { document, elements } = createDocument();
     const gate = createHuntEntryGate({ ownerDocument: document, appendChild() {} });
