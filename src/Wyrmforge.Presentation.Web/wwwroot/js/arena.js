@@ -34,6 +34,7 @@ import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFac
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js?v=20261108-hollow-player-contact-v1';
 import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v3';
+import { preloadHollowHitVfx, drawHollowHitVfx } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h2';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -83,6 +84,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadPaintedEnemies();
     preloadHollowSprites();
     preloadHollowClawVfx();
+    preloadHollowHitVfx();
     ashlingSprites.preload();
     for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
     preloadCrawlOut();
@@ -270,6 +272,7 @@ export function readArenaDiagnostics(canvas) {
         damageNumberMode: state.damageNumberMode,
         hollow: hollowDiagnostics(state.hollow),
         hollowClawFxEnabled: state.hollowClawFxEnabled,
+        hollowHitFxEnabled: state.hollowHitFxEnabled,
         ashling: ashlingSprites.diagnostics(state.ashling),
         authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -376,6 +379,7 @@ function createState(canvas, dotNetReference) {
         paintedCorpses: {},
         hollow: createHollowState(),
         hollowClawFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowClawFx')),
+        hollowHitFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowHitFx')),
         ashling: ashlingSprites.createState(),
         // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
         authored: createAuthoredState(),
@@ -762,6 +766,8 @@ function draw(state, snapshot, width, height) {
                 }
                 // Source-derived Gothic pixel swipe: actor-depth, eight facings, no synthetic hit.
                 if (state.hollowClawFxEnabled) drawHollowClawVfx(ctx, enemy, state.hollow, state.reducedMotion.matches);
+                // Combat-confirmed target ID and direct damage decide if a Hollowed can show a wound burst.
+                if (state.hollowHitFxEnabled) drawHollowHitVfx(ctx, enemy, snapshot.damageNumbers, state.reducedMotion.matches);
                 drawMireHoundContact(ctx, enemy, state.reducedMotion.matches);
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {

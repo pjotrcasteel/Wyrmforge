@@ -84,6 +84,27 @@ public sealed class DevelopmentEnemyTests
     }
 
     [TestMethod]
+    public void ActualHollowedDamageFeedback_CarriesAuthoritativeVictimIdentity()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var enemies = (List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        var hollow = enemies.Single();
+        var startingHealth = hollow.Health;
+        var damage = startingHealth * 0.25;
+
+        var dealDamage = typeof(RunSimulation).GetMethod("DamageTarget", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        dealDamage.Invoke(run, [hollow, damage, null, null]);
+
+        var actual = run.CreateSnapshot().DamageNumbers.Single();
+        Assert.AreEqual(hollow.Id, actual.TargetId);
+        Assert.IsFalse(actual.IsDragon);
+        Assert.IsFalse(actual.Periodic);
+        Assert.IsGreaterThan(0, actual.Amount);
+        Assert.AreEqual(startingHealth - damage, hollow.Health, 0.0001);
+    }
+
+    [TestMethod]
     public void OrdinaryRun_RemainsAtMapChoice()
     {
         var normal = new RunSimulationFactory(new SeededRandomSource(1)).Create(SelfPlayBuildCatalog.All.First().SelectedNodes, seed: 42);

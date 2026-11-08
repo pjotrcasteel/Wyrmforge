@@ -47,6 +47,7 @@
         @if (kind == EnemyKind.Hollow)
         {
             <label><input type="checkbox" @bind="hollowClawFxEnabled" @bind:after="SwitchHollowClawFx" /> Hollowed claw VFX</label>
+            <label><input type="checkbox" @bind="hollowHitFxEnabled" @bind:after="SwitchHollowHitFx" /> Hollowed damage VFX</label>
         }
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
@@ -82,6 +83,7 @@
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "hollowClawFx")] public bool? HollowClawFxQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "hollowHitFx")] public bool? HollowHitFxQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
@@ -99,6 +101,7 @@
     private bool autoplay = true;
     private bool casting;
     private bool hollowClawFxEnabled = true;
+    private bool hollowHitFxEnabled = true;
     [Parameter, SupplyParameterFromQuery(Name = "ai1")] public bool? AgentPerceptionQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "tier")] public int? TierQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "count")] public int? CountQuery { get; set; }
@@ -121,6 +124,7 @@
         if (AutoplayQuery is { } auto) autoplay = auto;
         if (CastQuery is { } cast) casting = cast;
         if (HollowClawFxQuery is { } claw) hollowClawFxEnabled = claw;
+        if (HollowHitFxQuery is { } hit) hollowHitFxEnabled = hit;
         if (PausedQuery is { } pause) paused = pause;
         if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
         if (AgentPerceptionQuery is { } ai1) agentPerception = ai1;
@@ -206,6 +210,12 @@
         // Reload the same encounter seed with and without the visual-only slash.
         var value = hollowClawFxEnabled ? (bool?)null : false;
         Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowClawFx", value), forceLoad: true, replace: true);
+    }
+
+    private void SwitchHollowHitFx()
+    {
+        var value = hollowHitFxEnabled ? (bool?)null : false;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowHitFx", value), forceLoad: true, replace: true);
     }
 
     private void SwitchMireStyle()
