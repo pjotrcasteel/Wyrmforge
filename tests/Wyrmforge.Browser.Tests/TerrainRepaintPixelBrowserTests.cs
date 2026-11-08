@@ -135,4 +135,86 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
         CollectionAssert.AreEqual(Enumerable.Repeat(0, 18).ToArray(), differences,
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
+    /// <summary>Reproduces the real iPhone viewport, dirty cells and world dimensions with a winding authored road.</summary>
+    [TestMethod]
+    public async Task DamagedTerrain_IPhoneCaptureViewportRemainsIdenticalAfterRepeatedRegionalImpacts()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+        var differences = await Page.EvaluateAsync<int[]>("""
+            async () => {
+                const { TerrainCanvasCache, mergeTerrainFrame, TERRAIN_MATERIAL } =
+                    await import('/js/arena-terrain-canvas.js');
+                const columns = 32, rows = 60, count = columns * rows;
+                const surface = Array.from({ length: count }, (_, i) => {
+                    const column = i % columns, row = Math.floor(i / columns);
+                    // Shaped forest heights (including cliffs): a deliberately harder
+                    // case than the old uniform, flat 12x14 road-only test.
+                    if (column < 6 && row > 36 && row < 56) return 8;
+                    if (column > 26 && row > 24 && row < 54) return -4;
+                    return 0;
+                });
+                const material = Array.from({ length: count }, (_, i) =>
+                    ((i % columns) * 7 + Math.floor(i / columns) * 3) % 19 < 3 ?
+                        TERRAIN_MATERIAL.Ash : TERRAIN_MATERIAL.Soil);
+                const road = [];
+                for (let row = 0; row < rows; row++)
+                    road.push(Math.round((16 + Math.sin(row * .17) * 3.4) * 16), row * 16);
+                const base = { revision: 1, columns, rows, visualSeed: -1885611032,
+                    surface, material, fine: [], road, cracks: [] };
+                let current = mergeTerrainFrame(null, base);
+                const regional = new TerrainCanvasCache();
+                regional.enableNormals();
+                regional.update(current, 0);
+                const viewport = { x: 327, y: 1264, width: 402, height: 656 };
+                const copy = (cache, normal) => {
+                    const out = document.createElement('canvas');
+                    out.width = viewport.width * 2;
+                    out.height = viewport.height * 2;
+                    const ctx = out.getContext('2d', { willReadFrequently: true });
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.setTransform(2, 0, 0, 2, -viewport.x * 2, -viewport.y * 2);
+                    if (normal) cache.drawNormals(ctx, viewport);
+                    else cache.draw(ctx, viewport);
+                    return ctx.getImageData(0, 0, out.width, out.height).data;
+                };
+                const mismatches = [];
+                const compare = () => {
+                    const full = new TerrainCanvasCache();
+                    full.enableNormals();
+                    full.update({ ...current, kindMaps: undefined }, 0);
+                    for (const normal of [false, true]) {
+                        const a = copy(regional, normal), b = copy(full, normal);
+                        let mismatch = 0;
+                        for (let index = 0; index < a.length; index += 4)
+                            if (a[index] !== b[index] || a[index + 1] !== b[index + 1] ||
+                                a[index + 2] !== b[index + 2] || a[index + 3] !== b[index + 3]) mismatch++;
+                        mismatches.push(mismatch);
+                    }
+                };
+                const impacts = [
+                    // Same two dirty indices captured on Safari at C# revision 1325.
+                    [1680, [26, 27, 28, 33, 34, 35, 36, 37, 41, 42, 43, 44, 45, 49, 50, 51, 52, 53, 57, 58, 59, 60, 61]],
+                    [1712, [2, 3, 4]],
+                    [49 * columns + 15, [12, 13, 20, 21]],
+                    [43 * columns + 19, [27, 28, 35, 36]],
+                    [53 * columns + 16, [2, 3, 4, 10, 11, 12]],
+                ];
+                for (const [i, [index, dug]] of impacts.entries()) {
+                    const heights = Array(64).fill(0);
+                    for (const micro of dug) heights[micro] = -1;
+                    current = mergeTerrainFrame(current, { ...base, revision: i + 2,
+                        fine: [{ index, heights, topsoil: 0, stoneTop: -8 }] });
+                    regional.update(current, 0);
+                    compare();
+                }
+                return mismatches;
+            }
+            """);
+
+        CollectionAssert.AreEqual(Enumerable.Repeat(0, 10).ToArray(), differences,
+            "Safari-sized viewport albedo and normals must agree with fresh ground across repeated road impacts.");
+    }
+
 }
