@@ -1,7 +1,7 @@
 import { createSpellBadge } from './spell-hud.js';
 import { clampHudFraction, cooldownPresentation, selectCombatSlots } from './combat-hud-state.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview, inspectTerrainCacheRebuild as inspectBaseTerrainCacheRebuild } from './arena.js?v=20261108-fissure-occlusion-v1';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview, inspectTerrainCacheRebuild as inspectBaseTerrainCacheRebuild, beginHuntEntry as beginBaseHuntEntry, cancelHuntEntry as cancelBaseHuntEntry } from './arena.js?v=20261108-hunt-entry-early-v2';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();
@@ -9,6 +9,8 @@ const frameStates = new WeakMap();
 export const readArenaDiagnostics = canvas => readBaseArenaDiagnostics(canvas);
 export const renderArenaMapOverview = canvas => renderBaseMapOverview(canvas);
 export const inspectTerrainCacheRebuild = canvas => inspectBaseTerrainCacheRebuild(canvas);
+export const beginHuntEntry = canvas => beginBaseHuntEntry(canvas);
+export const cancelHuntEntry = canvas => cancelBaseHuntEntry(canvas);
 const activeSimulationIntervalMilliseconds = 1000 / 60;
 const pausedSimulationIntervalMilliseconds = 100;
 const statusVisuals = [
