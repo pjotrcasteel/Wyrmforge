@@ -24,8 +24,21 @@ export function createSpellBadge(spell) {
         'Chain Lightning': 'storm', 'Ball Lightning': 'storm',
         'Warding Pulse': 'shield',
     };
-    const art = document.createElement('span');
-    art.className = `px-icon px-${pixelSchool[spell.name] ?? 'rune'}`;
+    // Real, separable 32px art: the selected spell stays independent of its cooldown clock.
+    const layeredAssets = {
+        'Fire Bolt': 'spell-fireball.svg',
+        'Cinder Needle': 'spell-fireball.svg',
+        'Warding Pulse': 'spell-ward.svg',
+    };
+    const asset = layeredAssets[spell.name];
+    const art = document.createElement(asset ? 'img' : 'span');
+    if (asset) {
+        art.className = 'hunt-hud-pixel-icon';
+        art.src = new URL(`art/hunt-hud/${asset}`, document.baseURI).href;
+        art.alt = '';
+    } else {
+        art.className = `px-icon px-${pixelSchool[spell.name] ?? 'rune'}`;
+    }
     art.setAttribute('aria-hidden', 'true');
     const rank = document.createElement('b');
     rank.textContent = spell.contextual ? 'AUTO' : ['0', 'I', 'II', 'III', 'IV', 'V'][spell.rank] ?? String(spell.rank);

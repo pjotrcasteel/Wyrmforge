@@ -13,7 +13,9 @@ test('health HUD is readable without a question-mark button or blocking popover'
     assert.match(markup, /class="combat-health-track crystal-orb orb-health" role="progressbar" aria-label="Health"/);
     assert.doesNotMatch(markup, /healthHelpOpen|combat-health-help|Explain health|How health works/);
     assert.doesNotMatch(codebehind, /healthHelpOpen/);
-    assert.match(js, /healthFraction <= \.25 \? 'critical'/);
+    const hudState = source('src/Wyrmforge.Presentation.Web/wwwroot/js/combat-hud-state.js');
+    assert.match(js, /healthCrystalPresentation\(hud\.health, hud\.maxHealth\)/);
+    assert.match(hudState, /fraction <= \.25 \? 'critical'/);
     assert.match(js, /aria-valuenow/);
 });
 
