@@ -257,11 +257,17 @@ test('calm wet forest skips per-frame emission while real heat, fissures, lava a
     assert.equal(hasGroundEmission(frame, heat, 0, view, 6), false, 'cool craters no longer emit');
     assert.equal(hasGroundEmission(frame, { heat: [{ ...heat.heat[0], x: 2000, y: 2000 }] }, 0, view, 1), false);
     assert.equal(hasGroundEmission(frame, null, 1, view, 1), true, 'scorched fissures still emit');
+    assert.equal(hasGroundEmission(frame, null, 1, view, 1, false), false, 'isolating crack veins removes only their emission');
+    assert.equal(paintGroundEmissive({}, frame, null, 3, view, 1, false, 1, false), null,
+        'disabling crack veins cannot upload an unnecessary black texture');
+    assert.equal(hasGroundEmission(frame, heat, 1, view, 1, false), true,
+        'crater heat stays active with the crack-only diagnostic switch off');
     assert.equal(hasGroundEmission({ ...frame, material: frame.material.map((m, i) => i === 0 ? TERRAIN_MATERIAL.Lava : m) },
-        null, 0, view, 1), true, 'lava emits in the wet band too');
+        null, 0, view, 1, false), true, 'lava emits even with crack veins disabled');
     const heights = new Array(64).fill(0);
     heights[5] = BEDROCK_MICROCELLS;
-    assert.equal(hasGroundEmission({ ...frame, fine: new Map([[0, { heights }]]) }, null, 0, view, 1), true);
+    assert.equal(hasGroundEmission({ ...frame, fine: new Map([[0, { heights }]]) }, null, 0, view, 1, false), true,
+        'exposed bedrock stays lit with crack veins disabled');
     assert.equal(hasGroundEmission(null, null, 0, view, 1), false);
 });
 
@@ -283,6 +289,8 @@ test('the ground emissive map is an opaque black canvas with the glows drawn in 
         assert.equal(calls.find(call => call[0] === 'fillRect')[5], '#000000', 'black background so only glowing cells are emissive');
         assert.deepEqual(calls.find(call => call[0] === 'translate'), ['translate', -16, -8], 'world cells land at their camera-relative pixels');
         assert.ok(first.seams > 0, 'the vein cells were drawn onto it');
+        assert.equal(paintGroundEmissive(holder, frame, null, 3, view, 1, false, 1, false), null,
+            'crack-only emission vanishes when the diagnostic switch is off');
         assert.equal(paintGroundEmissive(holder, frame, null, 3, view, 2).canvas, first.canvas, 'the canvas is reused between frames');
         assert.equal(created.length, 1);
     } finally { delete globalThis.document; }
