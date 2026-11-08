@@ -30,6 +30,9 @@ public sealed class ProgressionV13Tests : BrowserTest
         await page.Locator(".refuge-town-spot--nexus").ClickAsync();
         await page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
+        var fireLink = page.Locator(".web-edge[data-from='constellation-Fire-13-3'][data-to='constellation-Fire-13-4']");
+        var activeFireStroke = await fireLink.EvaluateAsync<string>("link => getComputedStyle(link).stroke");
+        Assert.IsTrue(await fireLink.EvaluateAsync<bool>("link => (link.getAttribute('d').match(/L/g) ?? []).length > 1"));
         await Capture(page, $"web-{width}-overview");
         await page.Locator("[data-node-id='fire-ember-covenant']").ClickAsync();
         await Expect(page.Locator(".node-inspector.open")).ToContainTextAsync("Ember Covenant");
@@ -68,6 +71,9 @@ public sealed class ProgressionV13Tests : BrowserTest
         var saved = await page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.arcaneBuild.v1')");
         StringAssert.Contains(saved, "fire-2");
         await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
+        var dormantFireStroke = await fireLink.EvaluateAsync<string>("link => getComputedStyle(link).stroke");
+        Assert.AreNotEqual(activeFireStroke, dormantFireStroke, "The overview should distinguish active Fire links from dormant links.");
+        await Capture(page, $"web-{width}-rotated-overview");
         await page.Locator("[data-node-id='fire-2']").ClickAsync();
         await Expect(page.Locator(".node-inspector.open")).ToContainTextAsync("Dormant:");
         await Capture(page, $"web-{width}-dormant");
