@@ -19,6 +19,17 @@ internal static class ArcaneConstellations
     private static readonly (int Side, int Radius)[] Offsets =
         [(0, -170), (120, -120), (170, 0), (120, 120), (0, 170), (-120, 120), (-170, 0), (-120, -120)];
 
+    // Coordinates are authored in Fire's local fan before school rotation.
+    private static readonly (int Side, int Radius)[] Centers =
+    [
+        (-2000, 3980), (-1490, 3770), (-950, 3980), (-465, 3740), (30, 3860),
+        (525, 3990), (1000, 3780), (1500, 3910), (2000, 3990),
+        (-2070, 4530), (-1550, 4310), (-1040, 4610), (-555, 4270), (-20, 4470),
+        (500, 4560), (1020, 4310), (1510, 4470), (2030, 4550),
+        (-1830, 5010), (-1410, 5150), (-950, 5230), (-440, 4870), (30, 5110),
+        (565, 5160), (1110, 4890), (1600, 5110), (2070, 5030),
+    ];
+
     internal static IEnumerable<PassiveNodeDefinition> Nodes()
     {
         int[] meridianSides = [350, 0, -500, -1250, -2000];
@@ -59,9 +70,13 @@ internal static class ArcaneConstellations
             var shape = ring % 4;
             side = side * (8 + shape) / 10;
             radius = radius * (11 - shape) / 10;
+            // Shear alternate loops into different silhouettes without
+            // changing their entrances, exits or point costs.
+            side += radius * (ring % 3 - 1) / 4;
+            var center = Centers[ring];
             yield return new(Id(school, ring, step), $"{themes[StableRingId(ring)]} {Names[step]}",
                 $"+{percent}% {label}.", notable ? PassiveNodeKind.Notable : PassiveNodeKind.Travel,
-                school, major ? 3 : notable ? 2 : 1, (ring % 9 - 4) * 500 + side, 3900 + ring / 9 * 540 + radius + (ring % 9 % 2) * 75,
+                school, major ? 3 : notable ? 2 : 1, center.Side + side, center.Radius + radius,
                 PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(stat, percent / 100d)),
                 Tier: major ? PassiveNodeTier.Major : notable ? PassiveNodeTier.Medium : PassiveNodeTier.Minor);
         }
