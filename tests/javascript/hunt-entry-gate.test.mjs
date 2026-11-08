@@ -160,3 +160,24 @@ test('the map selection paints the veil before generating C# terrain and entranc
     assert.match(intro, /arenaEnvironment!\.RestrictMovement\(previous, proposed, width, height, player\.Radius\)/);
     assert.match(source, /if \(reducedMotion\) current\.SkipHuntEntrance\(\)/);
 });
+
+test('only the production Hunt shell enables a blocking veil; enemy and wyrm labs never do', () => {
+    const web = new URL('../../src/Wyrmforge.Presentation.Web/', import.meta.url);
+    const renderer = readFileSync(new URL('wwwroot/js/arena.js', web), 'utf8');
+    const huntShell = readFileSync(new URL('wwwroot/js/arena-performance.js', web), 'utf8');
+    const enemyLab = readFileSync(new URL('Pages/EnemyLab.razor', web), 'utf8');
+    const wyrmLab = readFileSync(new URL('Pages/HuntLab.razor', web), 'utf8');
+
+    assert.match(renderer, /initializeArena\(canvas, dotNetReference, \{ huntEntryLoading = false \} = \{\}\)/,
+        'shared renderer must not block a lab unless specifically enabled');
+    assert.match(renderer, /state\.entryGate = huntEntryLoading\s*\? createHuntEntryGate\(/,
+        'disabled labs must not create an overlay or stall their combat frames');
+    assert.match(huntShell, /initializeBaseArena\(canvas, createThrottledReference\(state\), \{ huntEntryLoading: true \}\)/,
+        'real Hunts still load safely before the player walks in');
+    assert.match(enemyLab, /InvokeVoidAsync\("initializeArena", canvas, reference\)/,
+        'enemy lab uses immediate start even when viewing Hollow VFX');
+    assert.match(enemyLab, /ArenaModulePath => .*AppBuildInfo\.Version.*AppBuildInfo\.Commit/,
+        'iPhone Safari must import fresh lab JavaScript after deploy');
+    assert.match(wyrmLab, /InvokeVoidAsync\("initializeArena", canvas, reference\)/,
+        'Wyrm lab is also free of the Hunt loading overlay');
+});
