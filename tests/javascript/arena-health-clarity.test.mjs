@@ -9,8 +9,8 @@ test('health HUD is readable without a question-mark button or blocking popover'
     const markup = source('src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor');
     const codebehind = source('src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.cs');
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/arena-performance.js');
-    assert.match(markup, /class="combat-hp-value">♥ HP 100\/100/);
-    assert.match(markup, /class="combat-health-track" role="progressbar" aria-label="Health"/);
+    assert.match(markup, /data-hud="health" class="orb-health-number">100\/100/);
+    assert.match(markup, /class="combat-health-track crystal-orb orb-health" role="progressbar" aria-label="Health"/);
     assert.doesNotMatch(markup, /healthHelpOpen|combat-health-help|Explain health|How health works/);
     assert.doesNotMatch(codebehind, /healthHelpOpen/);
     assert.match(js, /healthFraction <= \.25 \? 'critical'/);

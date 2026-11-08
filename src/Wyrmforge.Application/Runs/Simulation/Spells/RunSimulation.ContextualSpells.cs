@@ -59,7 +59,9 @@ public sealed partial class RunSimulation
         contextualRecovery = WardingPulse.RecoverySeconds;
         ContextualCasts++;
         PrimaryCastsYielded++;
-        spellCooldowns[primary.Id] = Math.Max(spellCooldowns[primary.Id], GetSpellCooldown(primary, rank, moving));
+        var primaryCooldown = GetSpellCooldown(primary, rank, moving);
+        spellCooldowns[primary.Id] = Math.Max(spellCooldowns[primary.Id], primaryCooldown);
+        spellCooldownDurations[primary.Id] = Math.Max(spellCooldownDurations[primary.Id], spellCooldowns[primary.Id]);
         return true;
     }
 

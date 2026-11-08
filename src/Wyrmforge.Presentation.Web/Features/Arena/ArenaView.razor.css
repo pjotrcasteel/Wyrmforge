@@ -473,3 +473,334 @@
     background: #30273b;
     font: inherit;
 }
+
+
+/* Compact Nexus-inspired Hunt HUD: four functional circles and the EXP track, without the old top bar.
+   This uses the same crisp-edged ritual socket asset as the Arcane Nexus. All rings are presentation-only. */
+.arcane-hunt-hud {
+    position: fixed;
+    z-index: 6;
+    bottom: max(5px, calc(env(safe-area-inset-bottom) + 3px));
+    left: 50%;
+    display: grid;
+    gap: 0;
+    align-content: end;
+    width: min(460px, calc(100vw - 14px));
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    transform: translateX(-50%);
+    color: #eadbc8;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.arcane-hud-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 4px;
+    width: 100%;
+}
+
+.arcane-hunt-hud .crystal-orb,
+.arcane-hunt-hud .spell-slot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    isolation: isolate;
+    box-shadow: 0 3px 0 #0b080d, 0 5px 10px #05030688;
+}
+
+.arcane-hunt-hud .crystal-orb {
+    flex: 0 0 clamp(60px, 20vw, 100px);
+    width: clamp(60px, 20vw, 100px);
+    overflow: visible;
+    border: 0;
+    background: radial-gradient(circle, #30202b 0 65%, #966e50 68%, #160f17 73%, #0a080d 78%);
+}
+
+.arcane-hunt-hud .crystal-orb::after,
+.arcane-hunt-hud .spell-slot::after {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    border-radius: 50%;
+    background: url('art/arcane-nexus/socket-rim.svg') center/100% 100% no-repeat;
+    image-rendering: pixelated;
+    content: '';
+    pointer-events: none;
+}
+
+.arcane-hunt-hud .crystal-orb-core {
+    position: absolute;
+    z-index: 1;
+    inset: 12%;
+    overflow: hidden;
+    width: auto;
+    height: auto;
+    border: 1px solid #2d1c26;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 72%, #4a1023, #200d19 73%);
+    box-shadow: inset 0 0 0 2px #160e16, inset 0 8px 10px #03020599;
+}
+
+.arcane-hunt-hud .crystal-orb-fill {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    background: radial-gradient(circle at 35% 75%, #fc553b, #b91a29 55%, #6c1023 100%);
+    box-shadow: inset 0 0 8px #ff8150aa;
+    transition: height .12s linear;
+}
+
+.arcane-hunt-hud .crystal-orb-facets {
+    position: absolute;
+    inset: 0;
+    opacity: .86;
+    background:
+        linear-gradient(145deg, #ffffff3c 0 10%, transparent 10% 37%, #ffffff12 38% 47%, transparent 48%),
+        conic-gradient(from 24deg, #fff2b812 0deg 38deg, transparent 39deg 112deg, #0b031631 113deg 182deg,
+            transparent 183deg 255deg, #ffe5ff16 256deg 310deg, transparent 311deg);
+    clip-path: polygon(28% 2%, 72% 2%, 98% 34%, 97% 67%, 69% 98%, 28% 98%, 2% 68%, 2% 32%);
+    pointer-events: none;
+}
+
+.arcane-hunt-hud .orb-health-number {
+    position: relative;
+    z-index: 6;
+    align-self: center;
+    margin-top: 12%;
+    color: #fff0e5;
+    font: 700 clamp(.64rem, 2.7vw, .84rem)/1 Georgia, 'Times New Roman', serif;
+    text-shadow: 1px 2px #10050a, -1px -1px #170409, 0 0 5px #000;
+    white-space: nowrap;
+}
+
+.arcane-hunt-hud .orb-health[data-health-state="wounded"] .crystal-orb-fill {
+    background: radial-gradient(circle at 35% 75%, #ffc05e, #bd5329 64%, #642224);
+}
+.arcane-hunt-hud .orb-health[data-health-state="critical"] .crystal-orb-fill {
+    background: radial-gradient(circle at 35% 75%, #ee423a, #7e1428 60%, #380b17);
+}
+.arcane-hunt-hud .orb-secondary .crystal-orb-core {
+    border-color: #291c41;
+    background:
+        linear-gradient(133deg, #b9a2e020 0 18%, transparent 18% 68%, #7a55c41a 69%),
+        radial-gradient(circle at 50% 75%, #2d1b4b, #171029 66%, #0d0a1a);
+}
+.arcane-hunt-hud .orb-secondary .crystal-orb-facets {
+    opacity: .54;
+}
+.arcane-hunt-hud .orb-secondary {
+    filter: saturate(.78);
+}
+
+.arcane-hunt-hud .spell-slot {
+    flex: 0 0 clamp(47px, 16vw, 78px);
+    width: clamp(47px, 16vw, 78px);
+    --spell-accent: #eb9558;
+    --ready-angle: 360deg;
+    --shade-angle: 0deg;
+    margin-bottom: 5%;
+    border: 1px solid #8b603e;
+    background: radial-gradient(circle at center, #372015, #110b15 61%, #704a32 70%, #0c0910 76%);
+}
+.arcane-hunt-hud .defensive-spell { --spell-accent: #83a5e8; }
+.arcane-hunt-hud .spell-slot-art {
+    position: absolute;
+    z-index: 1;
+    inset: 14%;
+    display: grid;
+    place-items: center;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 58%, #592917, #150e18 75%);
+}
+.arcane-hunt-hud .defensive-spell .spell-slot-art {
+    background: radial-gradient(circle at 50% 58%, #293452, #120e1c 75%);
+}
+
+.arcane-hunt-hud .spell-cooldown-shade {
+    position: absolute;
+    z-index: 3;
+    inset: 14%;
+    border-radius: 50%;
+    background: conic-gradient(from -90deg, #07050bbf 0deg var(--shade-angle),
+        transparent var(--shade-angle) 360deg);
+    opacity: 0;
+    pointer-events: none;
+}
+.arcane-hunt-hud .spell-slot.is-recovering .spell-cooldown-shade { opacity: 1; }
+.arcane-hunt-hud .spell-ready-ring {
+    position: absolute;
+    z-index: 4;
+    inset: 5%;
+    border-radius: 50%;
+    background: conic-gradient(from -90deg, var(--spell-accent) 0deg var(--ready-angle),
+        #362937 var(--ready-angle) 360deg);
+    -webkit-mask: radial-gradient(transparent 64%, #000 67% 74%, transparent 77%);
+    mask: radial-gradient(transparent 64%, #000 67% 74%, transparent 77%);
+    pointer-events: none;
+}
+.arcane-hunt-hud .spell-slot.is-locked { --ready-angle: 0deg; filter: saturate(.5); }
+.arcane-hunt-hud .spell-slot.is-locked .spell-slot-art { opacity: .5; }
+.arcane-hunt-hud .spell-slot .spell-slot-art .defensive-placeholder {
+    width: 48%;
+    height: 48%;
+    color: #b5b2db;
+}
+.arcane-hunt-hud .spell-cooldown-label {
+    position: absolute;
+    z-index: 6;
+    bottom: 11%;
+    left: 50%;
+    transform: translateX(-50%);
+    min-height: .6rem;
+    color: #fff4e8;
+    font: 750 clamp(.51rem, 2.2vw, .67rem)/1 system-ui, sans-serif;
+    text-shadow: 0 1px 3px #000, 0 0 5px #000;
+    white-space: nowrap;
+}
+.arcane-hunt-hud .spell-slot.is-locked .spell-cooldown-label {
+    bottom: 15%;
+    color: #ae9caf;
+    font-size: clamp(.43rem, 1.65vw, .52rem);
+    letter-spacing: .025em;
+}
+
+/* The DOM badges come from the same canonical spell descriptors used by the original HUD. */
+.arcane-hunt-hud ::deep .combat-spell-badge {
+    display: grid;
+    place-items: center;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.arcane-hunt-hud ::deep .combat-spell-badge svg {
+    width: clamp(23px, 8vw, 42px);
+    height: clamp(23px, 8vw, 42px);
+    filter: drop-shadow(0 0 3px #ff7e4b7a);
+}
+.arcane-hunt-hud .defensive-spell ::deep .combat-spell-badge svg {
+    filter: drop-shadow(0 0 4px #809cf38a);
+}
+.arcane-hunt-hud ::deep .combat-spell-badge b { display: none; }
+
+.arcane-hunt-hud .arcane-xp-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: calc(100% - 16px);
+    min-height: 24px;
+    margin: -2px auto 0;
+    padding: 4px 9px;
+    border: 1px solid #a87a50;
+    border-radius: 2px;
+    background: linear-gradient(#2a1a2c, #0e0b15 46%, #1b111e);
+    box-shadow: inset 0 0 0 1px #09070c, 0 2px 0 #060508;
+    color: #ead5b9;
+    font: 700 clamp(.59rem, 2.05vw, .76rem)/1 Georgia, serif;
+    white-space: nowrap;
+}
+.arcane-hunt-hud .arcane-xp-row strong { flex: 0 0 auto; }
+.arcane-hunt-hud .arcane-xp-row span { flex: 0 0 auto; font-size: .92em; }
+.arcane-hunt-hud .combat-xp-track {
+    flex: 1 1 auto;
+    min-width: 10px;
+    height: 8px;
+    border: 1px solid #62466e;
+    border-radius: 1px;
+    background: #110d1b;
+    overflow: hidden;
+}
+.arcane-hunt-hud .combat-xp-track > div {
+    width: 0;
+    height: 100%;
+    border-radius: 0;
+    background: linear-gradient(#d8a8ff, #945cc6);
+    box-shadow: 0 0 6px #ae6be3;
+}
+
+/* Only a small contextual objective above the action HUD; no score/HP/trail banner at the top. */
+.compact-hunt-objective,
+.arcane-top-hud .encounter-objective {
+    top: auto;
+}
+.compact-hunt-objective {
+    position: fixed;
+    z-index: 5;
+    right: auto;
+    bottom: max(140px, calc(env(safe-area-inset-bottom) + 134px));
+    left: 50%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3px 7px;
+    width: max-content;
+    max-width: min(330px, calc(100vw - 38px));
+    min-height: 0;
+    padding: 5px 10px;
+    transform: translateX(-50%);
+    border: 1px solid #67513e;
+    border-radius: 4px;
+    background: rgba(16, 11, 19, .84);
+    backdrop-filter: none;
+    box-shadow: 0 2px 5px #0007;
+    pointer-events: none;
+}
+.compact-hunt-objective > span {
+    color: #ceaf84;
+    font-size: .56rem;
+    white-space: nowrap;
+}
+.compact-hunt-objective .encounter-phase {
+    padding: 1px 4px;
+    border-color: #4d374d;
+    border-radius: 2px;
+    font-size: .5rem;
+}
+.compact-hunt-objective .encounter-phase small { margin-left: 3px; }
+.compact-hunt-objective strong { font-size: .59rem; }
+.compact-hunt-objective .trail-progress {
+    flex-basis: 100%;
+    height: 2px;
+    background: #2a1b2b;
+}
+.compact-hunt-objective.evacuation { border-color: #a75d4d; }
+
+.run-state-dock {
+    bottom: max(142px, calc(env(safe-area-inset-bottom) + 138px));
+}
+/* Keep early movement guidance below brief encounter phase cues. */
+.first-hunt-hint { top: max(116px, calc(env(safe-area-inset-top) + 108px)); }
+.encounter-change { top: max(72px, calc(env(safe-area-inset-top) + 64px)); }
+.trail-exit-instruction { top: max(75px, calc(env(safe-area-inset-top) + 66px)); }
+
+@media (max-width: 360px) {
+    .arcane-hunt-hud { width: calc(100vw - 10px); }
+    .arcane-hunt-hud .arcane-xp-row { gap: 4px; padding: 3px 6px; min-height: 21px; }
+    .compact-hunt-objective { bottom: max(122px, calc(env(safe-area-inset-bottom) + 116px)); }
+    .run-state-dock { bottom: max(126px, calc(env(safe-area-inset-bottom) + 120px)); }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+    .arcane-hunt-hud { width: min(335px, calc(100vw - 24px)); }
+    .compact-hunt-objective { bottom: max(112px, calc(env(safe-area-inset-bottom) + 106px)); }
+    .run-state-dock { bottom: max(112px, calc(env(safe-area-inset-bottom) + 106px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .arcane-hunt-hud .crystal-orb-fill { transition: none; }
+}

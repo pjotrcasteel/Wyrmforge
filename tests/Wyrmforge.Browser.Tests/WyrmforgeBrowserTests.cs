@@ -2222,14 +2222,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".combat-health-help")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".health-help-panel")).ToHaveCountAsync(0);
         await Expect(Page.GetByRole(AriaRole.Progressbar, new() { Name = "Health" })).ToBeVisibleAsync();
-        await Expect(Page.Locator("[data-hud='health']")).ToContainTextAsync("HP");
+        await Expect(Page.Locator(".arena-top-hud")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("[data-hud='health']")).ToContainTextAsync("/");
+        await Expect(Page.Locator(".orb-secondary")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".orb-secondary [data-hud]")).ToHaveCountAsync(0);
         var state = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
             const value = document.querySelector('[data-hud=health]').textContent;
             const bar = document.querySelector('.combat-health-track');
             return { text: value, value: bar.getAttribute('aria-valuenow'),
                 state: document.querySelector('.combat-vitals').dataset.healthState };
         }");
-        Assert.IsTrue(state.GetProperty("text").GetString()!.Contains("♥"));
+        Assert.IsTrue(state.GetProperty("text").GetString()!.Contains('/'));
         Assert.IsTrue(int.TryParse(state.GetProperty("value").GetString(), out _));
         Assert.IsNotNull(state.GetProperty("state").GetString());
     }
@@ -2828,9 +2831,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
             var objective = await Page.GetByLabel("Current encounter objective").BoundingBoxAsync();
             Assert.IsNotNull(vitals);
             Assert.IsNotNull(objective);
-            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.Y - objective.Y), "Trail status must align with vitals.");
-            Assert.IsGreaterThanOrEqualTo(vitals.X + vitals.Width - 2, objective.X, "Trail status must sit to the right of vitals.");
-            Assert.IsLessThanOrEqualTo(100, Math.Max(vitals.Height, objective.Height), "HUD must leave room for combat.");
+            Assert.IsGreaterThan(844 * .65, vitals.Y, "The four-slot HUD belongs at the bottom, not across the combat view.");
+            Assert.IsLessThanOrEqualTo(vitals.Y + 2, objective.Y + objective.Height, "The compact trail cue belongs above the HUD.");
+            Assert.IsLessThanOrEqualTo(391, vitals.X + vitals.Width, "HUD should remain visible at phone width.");
+            await Expect(Page.Locator(".arena-top-hud")).ToHaveCountAsync(0);
+            await Expect(Page.Locator(".arcane-hud-row .crystal-orb")).ToHaveCountAsync(2);
+            await Expect(Page.Locator(".arcane-hud-row .spell-slot")).ToHaveCountAsync(2);
+            await Expect(Page.Locator(".arcane-xp-row [data-hud='xp-fill']")).ToHaveCountAsync(1);
             await Expect(Page.GetByRole(AriaRole.Progressbar, new() { Name = "Trail progress" })).ToHaveAttributeAsync("aria-valuenow", new System.Text.RegularExpressions.Regex("^\\d+$"));
             await Expect(Page.Locator("[data-trail='phase-time']")).ToHaveTextAsync(new System.Text.RegularExpressions.Regex("^\\d+s$"));
 
@@ -3522,10 +3529,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(moment).ToBeVisibleAsync();
         await Expect(moment).ToHaveCSSAsync("pointer-events", "none");
         var box = await moment.BoundingBoxAsync();
-        var hud = await Page.Locator(".arena-top-hud").BoundingBoxAsync();
+        var hud = await Page.Locator(".arcane-hunt-hud").BoundingBoxAsync();
         Assert.IsNotNull(box);
         Assert.IsNotNull(hud);
-        Assert.IsGreaterThanOrEqualTo(hud.Y + hud.Height, box.Y);
+        Assert.IsLessThanOrEqualTo(hud.Y + 2, box.Y + box.Height, "Upgrade feedback must not obscure the bottom HUD.");
         Assert.IsLessThanOrEqualTo(width, box.X + box.Width);
         Assert.IsLessThanOrEqualTo(height, box.Y + box.Height);
         Assert.IsFalse(await moment.EvaluateAsync<bool>(@"node => {

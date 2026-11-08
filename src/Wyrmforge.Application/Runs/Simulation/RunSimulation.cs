@@ -55,6 +55,7 @@ public sealed partial class RunSimulation
     private readonly Dictionary<int, double> hitFlashRemaining = [];
     private readonly List<SplashPulseState> splashPulses = [];
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
+    private readonly Dictionary<SpellId, double> spellCooldownDurations = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
     private readonly Dictionary<SpellId, int> primaryCastCounts = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0);
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
@@ -337,7 +338,14 @@ public sealed partial class RunSimulation
 
     public RunRenderSnapshot CreateSnapshot()
     {
-        var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
+        var primary = build.Spells.ActiveSpell;
+        var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud)
+        {
+            PrimaryCooldownRemaining = Math.Max(0, spellCooldowns[primary]),
+            PrimaryCooldownDuration = spellCooldownDurations[primary],
+            DefensiveCooldownRemaining = contextualPolicy is null ? 0 : Math.Max(0, contextualRecovery),
+            DefensiveCooldownDuration = contextualPolicy is null ? 0 : WardingPulse.RecoverySeconds,
+        };
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
