@@ -279,6 +279,8 @@ public sealed class ArenaTerrainGrid
     }
 
     // The coarse height every gameplay query reads is the rounded mean of the 64 microcolumns, in exact integer arithmetic.
+    internal void RefreshExcavatedColumn(int column, int row) => RefreshColumn(row * Columns + column);
+
     private void RefreshColumn(int index)
     {
         var heights = fine[index];
