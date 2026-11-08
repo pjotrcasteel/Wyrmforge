@@ -102,6 +102,7 @@ public sealed partial class RunSimulation
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
+        StageHuntEntrance();
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();
