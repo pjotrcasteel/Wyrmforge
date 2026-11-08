@@ -442,6 +442,17 @@ const texY = row => (row % MEGA) * TILE;
 const TEXTURE_UNITS = MEGA * FACE_PIXELS;
 
 /**
+ * World-align ordinary wall strata so neighboring faces sample the same atlas row
+ * at the same projected world Y, even when their top surfaces are different heights.
+ * Grass/rock crest textures are intentionally relative to the individual wall lip.
+ * Always wrap negative world coordinates into the atlas rather than sampling outside it.
+ */
+export function wallTextureSourceY(worldY, depthFromLip = 0, crest = false) {
+    const value = crest ? depthFromLip : worldY;
+    return ((value % TEXTURE_UNITS) + TEXTURE_UNITS) % TEXTURE_UNITS;
+}
+
+/**
  * The base ground of a whole column. Patches inside it (mud, dry grass, bare rock, flagstone) and the road are laid per art pixel by
  * `kindMap`. A stone column above ground level carries a turf cap in the living bands (a grassy hill with rock faces) unless it is `capped = false`
  * (a chipped or dug microcolumn, which shows the bare rock).
@@ -824,8 +835,9 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
         const start = (wallTop - segment.from) * MICROCELL_UNITS;
         if (segment.kind === 'lava') {
             for (let drawn = 0; drawn < height;) {
-                const v = start + drawn, piece = Math.min(height - drawn, TEXTURE_UNITS - (v % TEXTURE_UNITS));
-                ctx.drawImage(atlas.lavaSide[0], source, (v % TEXTURE_UNITS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
+                const sampleY = wallTextureSourceY(y + drawn);
+                const piece = Math.min(height - drawn, TEXTURE_UNITS - sampleY);
+                ctx.drawImage(atlas.lavaSide[0], source, sampleY * ART, width * ART, piece * ART, x, y + drawn, width, piece);
                 drawn += piece;
                 painted++;
             }
@@ -836,10 +848,12 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
         const rockCrest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone;
         for (let drawn = 0; drawn < height;) {
             const v = start + drawn;
-            const crest = v < FACE_PIXELS;
-            const name = stone ? (rockCrest && crest ? (band <= 1 ? 'stoneGrassSide' : 'stoneLipSide') : 'stoneSide') : turf && crest ? 'grassSide' : 'dirtSide';
-            const piece = Math.min(height - drawn, (rockCrest || turf) && crest ? FACE_PIXELS - v : TEXTURE_UNITS - (v % TEXTURE_UNITS));
-            ctx.drawImage(atlas[name][0], source, (v % TEXTURE_UNITS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
+            const crest = (rockCrest || turf) && v < FACE_PIXELS;
+            const name = stone ? (rockCrest && crest ? (band <= 1 ? 'stoneGrassSide' : 'stoneLipSide') : 'stoneSide')
+                : crest ? 'grassSide' : 'dirtSide';
+            const sampleY = wallTextureSourceY(y + drawn, v, crest);
+            const piece = Math.min(height - drawn, TEXTURE_UNITS - sampleY, crest ? FACE_PIXELS - v : Number.POSITIVE_INFINITY);
+            ctx.drawImage(atlas[name][0], source, sampleY * ART, width * ART, piece * ART, x, y + drawn, width, piece);
             drawn += piece;
             painted++;
         }
