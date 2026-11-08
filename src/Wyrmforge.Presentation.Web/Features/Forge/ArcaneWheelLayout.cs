@@ -7,7 +7,7 @@ namespace Wyrmforge.Presentation.Web.Features.Forge;
 // ownership and connections remain domain data; these are presentation routes.
 internal static class ArcaneWheelLayout
 {
-    internal const double Size = 7000;
+    internal const double Size = 11600;
     internal const double Center = Size / 2;
     internal readonly record struct Point(double X, double Y);
     private static readonly PassiveSchool[] Order =
