@@ -63,13 +63,14 @@
                     splash.classList.add("ignition-complete");
                 }, remaining);
             };
-            const beginTown = () => {
+            const beginTown = (requireTown = false) => {
                 if (!sceneReadiness) return;
                 splash.classList.remove("ignition-complete", "ignition-failed");
                 retry.hidden = true;
                 status.textContent = "AWAKENING THE REFUGE";
                 document.body.classList.add("igniting");
-                void sceneReadiness.waitForTownOrCreation().then(reveal).catch(fail);
+                const ready = requireTown ? sceneReadiness.waitForTownScene() : sceneReadiness.waitForTownOrCreation();
+                void ready.then(reveal).catch(fail);
             };
 
             // The framework supplies a SHA-256 integrity hash for immutable boot assets.
