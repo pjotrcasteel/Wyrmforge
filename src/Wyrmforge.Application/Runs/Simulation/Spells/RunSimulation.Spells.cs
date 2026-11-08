@@ -26,7 +26,9 @@ public sealed partial class RunSimulation
         if (TryCastContextualSpell(delta, spell, rank, moving)) return;
         if (spellCooldowns[spell.Id] > 0 || (!manualAimEngaged && aimedPropId is null && PrimaryTarget(player.Position) is null)) return;
         CastSpell(spell, rank, FocusedCastProfile.For(spell.Id, rank).DamageMultiplier, false);
-        spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
+        var cooldown = GetSpellCooldown(spell, rank, moving);
+        spellCooldowns[spell.Id] = cooldown;
+        spellCooldownDurations[spell.Id] = cooldown;
     }
 
     private double GetSpellCooldown(SpellDefinition spell, int rank, bool moving)
