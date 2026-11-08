@@ -33,6 +33,7 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -81,6 +82,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadAshfangGroundFlames();
     preloadPaintedEnemies();
     preloadHollowSprites();
+    preloadHollowClawVfx();
     ashlingSprites.preload();
     for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
     preloadCrawlOut();
@@ -267,6 +269,7 @@ export function readArenaDiagnostics(canvas) {
         damageNumbers: state.latestSnapshot?.damageNumbers ?? [],
         damageNumberMode: state.damageNumberMode,
         hollow: hollowDiagnostics(state.hollow),
+        hollowClawFxEnabled: state.hollowClawFxEnabled,
         ashling: ashlingSprites.diagnostics(state.ashling),
         authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -372,6 +375,7 @@ function createState(canvas, dotNetReference) {
         enemyMotion: createEnemyMotionState(),
         paintedCorpses: {},
         hollow: createHollowState(),
+        hollowClawFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowClawFx')),
         ashling: ashlingSprites.createState(),
         // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
         authored: createAuthoredState(),
@@ -754,6 +758,8 @@ function draw(state, snapshot, width, height) {
                         enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
                     drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
                 }
+                // Source-derived Gothic pixel swipe: actor-depth, eight facings, no synthetic hit.
+                if (state.hollowClawFxEnabled) drawHollowClawVfx(ctx, enemy, state.hollow, state.reducedMotion.matches);
                 drawMireHoundContact(ctx, enemy, state.reducedMotion.matches);
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {
