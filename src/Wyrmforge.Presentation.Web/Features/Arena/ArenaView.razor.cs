@@ -34,6 +34,9 @@ public partial class ArenaView : IAsyncDisposable
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
+    private bool firstHuntMovementObserved;
+    private bool firstHuntKillObserved;
+    private bool firstHuntUpgradeChosen;
     private bool previewMountainMonastery;
     private long lastAiProfilingFrame;
     private bool ChoosingPrimary => simulation is { PrimaryCommitted: false };
@@ -101,6 +104,19 @@ public partial class ArenaView : IAsyncDisposable
     private int RelicSlots => simulation?.RelicSlots ?? 0;
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
+
+    private string? FirstHuntHint
+    {
+        get
+        {
+            if (!FirstHunt || gameOverSent || ChoosingPrimary || trailTransition || runMoment is not null || !MapCombatActive
+                || CurrentChoices.Count > 0) return null;
+            if (!firstHuntMovementObserved) return "DRAG TO MOVE • WASD / ARROW KEYS ON DESKTOP";
+            if (!firstHuntKillObserved) return "YOUR MAGIC CASTS AUTOMATICALLY • KEEP MOVING TO EVADE";
+            if (!firstHuntUpgradeChosen) return "DEFEAT ENEMIES TO EARN YOUR FIRST HUNT POWER";
+            return null;
+        }
+    }
     private int PendingEssenceCount => Math.Max(0, CurrentEssences.Count - SecuredEssenceCount);
 
     protected override void OnInitialized()
@@ -215,6 +231,20 @@ public partial class ArenaView : IAsyncDisposable
         var previousRefugeReturns = current.RefugeReturns;
         var input = new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         var snapshot = current.Tick(delta, input, width, height);
+        var firstHuntHintAdvanced = false;
+        if (FirstHunt && MapCombatActive && !snapshot.Ended)
+        {
+            if (!firstHuntMovementObserved && Math.Abs(movementX) + Math.Abs(movementY) >= 0.35)
+            {
+                firstHuntMovementObserved = true;
+                firstHuntHintAdvanced = true;
+            }
+            if (!firstHuntKillObserved && current.CurrentMapNodeKills > 0)
+            {
+                firstHuntKillObserved = true;
+                firstHuntHintAdvanced = true;
+            }
+        }
         // Debug/automation (opt-in by URL): extra fixed ticks per frame stop at any choice, checkpoint or end so the UI still gets its turn.
         for (var extra = 1; extra < debugSpeed && !snapshot.Ended && !snapshot.Paused && !current.AtCheckpoint
             && current.PendingChoices.Count == 0 && current.PendingDragonEssenceChoices.Count == 0
@@ -225,7 +255,7 @@ public partial class ArenaView : IAsyncDisposable
         }
         if (debugGod) current.DebugRestoreHealth();
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
-        var stateChanged = hadChoices != current.PendingChoices.Count > 0
+        var stateChanged = firstHuntHintAdvanced || hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
             || hadRelicChoices != current.PendingRelicChoices.Count > 0
             || wasAtCheckpoint != current.AtCheckpoint
@@ -367,6 +397,7 @@ public partial class ArenaView : IAsyncDisposable
     {
         var choice = CurrentChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || simulation?.ApplyChoice(id) != true) return;
+        if (FirstHunt) firstHuntUpgradeChosen = true;
         ShowChoiceMoment(choice);
         await TryPlayAudioAsync("upgrade-choice");
         await InvokeAsync(StateHasChanged);
