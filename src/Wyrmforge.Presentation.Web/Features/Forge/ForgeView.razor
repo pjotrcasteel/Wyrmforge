@@ -79,7 +79,7 @@
                                         class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
                                         disabled="@(!ready)"
                                         aria-label="@(ready ? $"Choose {school.Name}" : $"{school.Name}, not yet available")"
-                                        @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
+                                        @onclick="() => ChooseSchoolAndEnterTownAsync(school.Id)">
                                     <span class="character-school-icon" aria-hidden="true"></span>
                                     <strong>@school.Name</strong>
                                     <small>@(ready ? "AVAILABLE" : "LOCKED")</small>
@@ -211,7 +211,21 @@
     [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;
-    private void EnterTown() => enteredTown = true;
+    private async Task EnterTown()
+    {
+        // The initial welcome art is ready; keep it covered until the actual
+        // town's textures, navigation, cutouts and first composited frame are ready.
+        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown");
+        enteredTown = true;
+    }
+
+    private async Task ChooseSchoolAndEnterTownAsync(DivineArchetype school)
+    {
+        // New characters see character creation first, then enter the same
+        // fully prepared town as returning players.
+        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown", true);
+        await OnChooseSchool.InvokeAsync(school);
+    }
     [Parameter] public EventCallback<string> OnPlayerNameChanged { get; set; }
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public FirstHuntProgress Progress { get; set; } = null!;

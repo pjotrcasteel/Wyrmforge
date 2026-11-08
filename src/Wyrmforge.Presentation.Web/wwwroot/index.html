@@ -7,7 +7,7 @@
     <title>Wyrmforge</title>
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="art/icons.css" />
-    <link rel="stylesheet" href="css/ignition.css" />
+    <link rel="stylesheet" href="css/ignition.css?v=__WYRMFORGE_BUILD__" />
     <link rel="stylesheet" href="css/dragon-harvest.css" />
     <link rel="stylesheet" href="Wyrmforge.Presentation.Web.styles.css" />
     <link rel="stylesheet" href="css/run-overlays.css" />
@@ -45,6 +45,35 @@
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const minimumIntroMs = reducedMotion ? 0 : 1100;
             let started = false;
+            let sceneReadiness;
+
+            const isHomeRoute = () => {
+                const base = new URL(document.baseURI).pathname.replace(/\/+$/, "");
+                const path = location.pathname.replace(/\/index\.html$/, "").replace(/\/+$/, "");
+                return path === base;
+            };
+
+            // Reuse the existing full-screen ignition art for the first town entry.
+            // The welcome screen is a separate, real illustration; opening town must
+            // not reveal a half-decoded panorama or progressively appearing buildings.
+            const reveal = () => {
+                const remaining = Math.max(0, minimumIntroMs - (performance.now() - startedAt));
+                window.setTimeout(() => {
+                    splash.classList.remove("ignition-entering");
+                    document.body.classList.remove("igniting");
+                    splash.classList.add("ignition-complete");
+                }, remaining);
+            };
+            const beginTown = (requireTown = false) => {
+                if (!sceneReadiness) return;
+                splash.classList.add("ignition-entering");
+                splash.classList.remove("ignition-complete", "ignition-failed");
+                retry.hidden = true;
+                status.textContent = "AWAKENING THE REFUGE";
+                document.body.classList.add("igniting");
+                const ready = requireTown ? sceneReadiness.waitForTownScene() : sceneReadiness.waitForTownOrCreation();
+                void ready.then(reveal).catch(fail);
+            };
 
             // The framework supplies a SHA-256 integrity hash for immutable boot assets.
             // Reuse their cached URLs between releases; change only when bytes change.
@@ -89,21 +118,27 @@
                         if (!started) fail(new Error("Startup still incomplete. Manual retry available."));
                     }, 90000);
                     if (!window.Blazor) throw new Error("Blazor bootstrap was not loaded.");
+                    // Import before WASM starts so the welcome and school-selection
+                    // callbacks can re-arm this same veil without a flash.
+                    sceneReadiness = await import(new URL(
+                        "js/startup-scene-readiness.js?v=" + encodeURIComponent(build), document.baseURI).href);
+                    window.wyrmforgeStartup = { beginTown };
                     return window.Blazor.start({ loadBootResource: versionedResource });
                 })
-                .then(() => {
+                .then(async () => {
                     started = true;
                     window.clearTimeout(recoveryTimer);
                     window.clearTimeout(slowStartupTimer);
                     performance.mark("wyrmforge:boot-ready");
                     performance.measure("wyrmforge:boot", "wyrmforge:boot-start", "wyrmforge:boot-ready");
 
-                    const remaining = Math.max(0, minimumIntroMs - (performance.now() - startedAt));
-                    window.setTimeout(() => {
-                        document.body.classList.remove("igniting");
-                        splash.classList.add("ignition-complete");
-                        window.setTimeout(() => splash.remove(), 650);
-                    }, remaining);
+                    if (isHomeRoute()) {
+                        status.textContent = "PREPARING THE REFUGE";
+                        // WASM booted is not artwork ready: wait for restored player
+                        // progress, decoded town/welcome images, and the first paint.
+                        await sceneReadiness.waitForInitialScene();
+                    }
+                    reveal();
                 })
                 .catch(error => {
                     window.clearTimeout(recoveryTimer);

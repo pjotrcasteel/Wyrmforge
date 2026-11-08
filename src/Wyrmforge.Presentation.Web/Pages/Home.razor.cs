@@ -108,6 +108,8 @@ public partial class Home
 
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
 
+    private bool startupDataReady;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -142,6 +144,9 @@ public partial class Home
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
+        // First render has placeholder progress. Reveal the real home only after
+        // persistent unlocks, saved school, and town selections have been restored.
+        startupDataReady = true;
         StateHasChanged();
     }
 

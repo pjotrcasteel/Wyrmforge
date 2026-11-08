@@ -3,6 +3,7 @@
 @using Wyrmforge.Presentation.Web.Features.Playtesting
 @using Wyrmforge.Presentation.Web.Features.Leaderboard
 
+<span hidden data-wyrmforge-home-loaded="@(startupDataReady ? "true" : "false")"></span>
 @if (!runActive)
 {
     <ForgeView StartInFirstWeb="@firstWebRequested" SkipTitle="@(runNumber > 0)" PlayerName="@playerName" CharacterSchool="@characterSchool" OnChooseSchool="ChooseCharacterSchoolAsync" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" MutationAmplifiers="mutationAmplifiers" OnAssignFireballAmplifier="AssignFireballAmplifierAsync" Vault="essenceVault" Codex="arcaneCodex" Bestiary="bestiary" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback" OnResetCharacter="ResetCharacterAsync"
