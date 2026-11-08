@@ -186,7 +186,7 @@ test('the exit bot abandons a stalled road heading temporarily for a reachable t
     const progress = botMovement(at(stuck.player.x, stuck.player.y - 48,
         { exit: stuck.exit }), memory, 2200, terrain);
     assert.ok(progress.y < -.9, 'moving toward the exit must preserve forward progress');
-    assert.equal(memory.exitRecoveryUntil, 0, 'forward progress ends the fallback immediately');
+    assert.ok(memory.exitRecoveryUntil > 2200, 'recovery persists briefly instead of steering back into the obstruction');
 });
 
 test('road review bot sidesteps after sustained collision and then resumes its route', () => {
