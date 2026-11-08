@@ -25,3 +25,9 @@
   in the Enemy Lab and Hunt. Check eight facings, damaged-arm silhouettes, attack
   readability under night lighting and no performance regression in a pack. Technical
   tests do not substitute for artistic/mobile approval.
+
+## Hollowed claw-follow refinement (8 November 2026)
+
+The initial fixed high slash position was replaced with a calibrated path through the actual right-hand wrist keys in `tools/sprite-lab/build-hollow-attack.py` (source frames 5, 7, 8 and 10). The trail now descends and reaches forward through the authored contact frames 6–8; 12 VFX frames play over 0.30s instead of 0.36s, and the broken-right-arm silhouette uses a smaller stroke. Source atlas pixels and original gameplay are unchanged.
+
+Enemy Lab now exposes an editable **Spawn count** control for Hollowed and Mire Hounds (1–64). It clamps invalid values, restarts the real C# encounter and preserves a shareable `count=` parameter alongside the selected seed; unsupported species remain single-enemy previews. Browser and JavaScript regression tests cover the new controls and claw-follow behavior.

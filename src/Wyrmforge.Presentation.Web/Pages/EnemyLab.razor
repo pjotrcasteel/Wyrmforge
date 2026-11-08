@@ -37,6 +37,13 @@
             </select>
         </label>
         <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
+        @if (kind is EnemyKind.Hollow or EnemyKind.MireHound)
+        {
+            <label>Spawn count
+                <input aria-label="Spawn count" type="number" min="1" max="64" step="1"
+                       @bind="enemyCount" @bind:after="ApplySpawnCount" />
+            </label>
+        }
         @if (kind == EnemyKind.Hollow)
         {
             <label><input type="checkbox" @bind="hollowClawFxEnabled" @bind:after="SwitchHollowClawFx" /> Hollowed claw VFX</label>
@@ -55,7 +62,7 @@
         </section>
     }
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
-        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
+        <div class="status">@kind • @enemyCount SPAWNED • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
     @if (agentFoundation || agentPerception || intelligence is not null)
     {
@@ -170,6 +177,7 @@
     }
     private void LoadSelectedEnemy()
     {
+        if (kind is not (EnemyKind.Hollow or EnemyKind.MireHound)) enemyCount = 1;
         Restart();
         // Shareable kind links allow before/after capture with the same actor and seed.
         var url = Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
@@ -185,6 +193,14 @@
         });
         Navigation.NavigateTo(url, replace: true);
     }
+    private void ApplySpawnCount()
+    {
+        enemyCount = Math.Clamp(enemyCount, 1, 64);
+        Restart();
+        // URL keeps repeatable pack size and seed, while the real C# encounter reinitializes.
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("count", enemyCount), replace: true);
+    }
+
     private void SwitchHollowClawFx()
     {
         // Reload the same encounter seed with and without the visual-only slash.

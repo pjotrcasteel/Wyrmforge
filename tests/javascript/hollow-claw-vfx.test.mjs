@@ -8,25 +8,44 @@ const source = readFileSync(new URL('js/hollow-claw-vfx.js', root), 'utf8')
     .replace("new URL('../art/vfx/hollowed-claw-strict.png', import.meta.url)",
         "new URL('https://example.test/art/vfx/hollowed-claw-strict.png')");
 const mod = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
-const { HOLLOW_CLAW, hollowClawFrame, preloadHollowClawVfx, drawHollowClawVfx } = mod;
+const { HOLLOW_CLAW, hollowClawFrame, hollowClawAnchor, preloadHollowClawVfx, drawHollowClawVfx } = mod;
 const attack = (values = {}) => ({ clip: 'attack', age: 0.52, attackAt: 0, direction: 'E', ...values });
 
 test('claw trail exists only during the current authored attack release window', () => {
     assert.equal(hollowClawFrame(attack({ age: 0.35 })), -1);
     assert.equal(hollowClawFrame(attack({ clip: 'walk' })), -1);
     assert.equal(hollowClawFrame(attack({ attackAt: null })), -1);
-    assert.equal(hollowClawFrame(attack({ age: 0.72 })), -1);
+    assert.equal(hollowClawFrame(attack({ age: 0.77 })), -1);
     assert.ok(hollowClawFrame(attack()) >= 0);
     assert.equal(hollowClawFrame(attack({ direction: 'invalid' })), -1);
 });
 
 test('animation advances deterministically and supports all eight authentic facings', () => {
     for (const direction of ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']) {
-        assert.equal(hollowClawFrame(attack({ direction, age: 0.36 })), 0);
-        assert.equal(hollowClawFrame(attack({ direction, age: 0.69 })), 11);
+        assert.equal(hollowClawFrame(attack({ direction, age: 0.47 })), 0);
+        assert.equal(hollowClawFrame(attack({ direction, age: 0.76 })), 11);
     }
     assert.equal(hollowClawFrame(attack({ age: 0.4, attackAt: 0.4 })), -1);
     assert.equal(hollowClawFrame(attack({ age: 0.52, attackAt: 0.2 })), -1);
+});
+
+test('claw follows the authored wrist forward and down through strike frames 6–8', () => {
+    const enemy = { kind: 0, entityId: 9, x: 100, y: 150, radius: 11 };
+    const attack = age => ({ clip: 'attack', age, attackAt: 0, direction: 'E', visualScale: 1 });
+    const windup = hollowClawAnchor(enemy, attack(5.5 / 12));
+    const release = hollowClawAnchor(enemy, attack(7 / 12));
+    const follow = hollowClawAnchor(enemy, attack(8 / 12));
+    assert.ok(release.x > windup.x, 'the moving claw must reach forward before impact');
+    assert.ok(follow.y > release.y, 'the strike must descend with the actual hand');
+    assert.ok(follow.y > enemy.y - enemy.radius * 3.65, 'it cannot remain at the old high anchor');
+    for (const direction of ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']) {
+        const position = hollowClawAnchor(enemy, { ...attack(8 / 12), direction });
+        assert.ok(Number.isFinite(position.x) && Number.isFinite(position.y));
+    }
+    const west = hollowClawAnchor(enemy, { ...attack(8 / 12), direction: 'W' });
+    assert.ok(west.x < enemy.x, 'west-facing attack must remain in front of its actor');
+    assert.equal(hollowClawAnchor(enemy, { ...attack(8 / 12), attackAt: null }), null);
+    assert.deepEqual(enemy, { kind: 0, entityId: 9, x: 100, y: 150, radius: 11 });
 });
 
 test('reduced motion renders one brief static slash rather than animating', () => {

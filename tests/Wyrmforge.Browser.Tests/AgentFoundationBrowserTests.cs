@@ -10,6 +10,26 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class AgentFoundationBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task HollowedLab_ChangingSpawnCount_UpdatesTheActualEncounter()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/enemy-lab?kind=Hollow&count=2&autoplay=false&cast=false");
+        var count = Page.GetByLabel("Spawn count");
+        await Expect(count).ToHaveValueAsync("2");
+
+        await Page.EvaluateAsync("async () => { window.hollowSpawnLab = await import('./js/arena.js'); }");
+        await count.FillAsync("6");
+        await count.PressAsync("Tab");
+        await Expect(count).ToHaveValueAsync("6");
+        await Page.WaitForFunctionAsync(
+            "() => window.hollowSpawnLab.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.enemies?.length === 6",
+            null, new() { Timeout = 45000 });
+        StringAssert.Contains(Page.Url, "count=6");
+        await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("6 SPAWNED");
+    }
+
+    [TestMethod]
     public async Task TacticalPack_ActualMobileLab_ExposesBoundedPressureMetrics()
     {
         await Page.SetViewportSizeAsync(390, 844);
