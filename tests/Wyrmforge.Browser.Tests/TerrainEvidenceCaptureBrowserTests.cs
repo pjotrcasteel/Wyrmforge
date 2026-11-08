@@ -58,4 +58,60 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
         CollectionAssert.AreEqual(new[] { 0, 0, 0 }, mismatched,
             "One-shot independent terrain viewport must not invent differences absent from the ground cache.");
     }
+    /// <summary>A real automated Hunt must preserve its grass/road pixel identity through successive C# terrain impacts.</summary>
+    [TestMethod]
+    public async Task LiveHunt_RepeatedImpactsMatchIndependentGroundRepaint()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1', '3');
+            localStorage.setItem('wyrmforge.characterSchool.v1', 'Pyromancer');
+            """);
+        await Page.GotoAsync(root + "/?god=1&bot=1&speed=8&layerLab=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new()
+        {
+            NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$")
+        }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // No synthetic terrain here: C# owns every impact, and the Layer Lab reads the current cache without rebuilding it.
+        await Page.WaitForFunctionAsync("""
+            async () => {
+                const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                const d = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                return d?.hunt1Terrain?.regionalRepaints >= 3 &&
+                    d.hunt1Terrain.snapshotRevision === d.hunt1Terrain.paintedRevision &&
+                    d.hunt1Terrain.dugBlocks > 0;
+            }
+            """, null, new() { Timeout = 90000 });
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "CAPTURE GLITCH EVIDENCE" }).ClickAsync();
+        var download = Page.Locator("a[download^='wyrmforge-terrain-']");
+        await Expect(download).ToBeVisibleAsync(new() { Timeout = 30000 });
+        var report = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+            async () => {
+                const link = document.querySelector("a[download^='wyrmforge-terrain-']");
+                return await (await fetch(link.href)).json();
+            }
+            """);
+        Assert.AreEqual(0, report.GetProperty("pixelComparison").GetProperty("mismatched").GetInt32(),
+            "Live damage must not create rectangular albedo patches absent from an independent full repaint.");
+        Assert.AreEqual(report.GetProperty("diagnostics").GetProperty("snapshotRevision").GetInt32(),
+            report.GetProperty("diagnostics").GetProperty("lastPaintedRevision").GetInt32(),
+            "Evidence must be captured from a fully updated cache revision.");
+    }
+
 }
