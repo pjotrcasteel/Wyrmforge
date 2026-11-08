@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    composeTerrainSplatPixels,
     BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
+import { TILE, MEGA, generateTileSet, normalFromTile } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
 
 function recorder() {
     const calls = [], cues = [];
@@ -628,4 +630,70 @@ test('raised soil is grass-capped, not bare ground', () => {
     assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 5), GRASS_TOP[0]);
     assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 0), GRASS_TOP[0]);
     assert.notEqual(topFaceColor(0, TERRAIN_MATERIAL.Soil, -1), GRASS_TOP[0]);
+});
+
+
+const SPLAT_KINDS = ['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop',
+    'rubbleTop', 'lavaTop', 'slabTop', 'pathTop'];
+
+function splatAtlasFixture() {
+    const textures = generateTileSet(0), atlas = {};
+    for (const kind of SPLAT_KINDS) {
+        const tile = textures[kind][0];
+        atlas[kind] = [{ width: tile.width, sourcePixels: tile.data,
+            normalTwin: { sourcePixels: normalFromTile(tile, 2.4, 0) } }];
+    }
+    return atlas;
+}
+
+function sampledSplatPixel(atlas, kind, column, row, x, y, normal = false) {
+    const source = atlas[SPLAT_KINDS[kind]][0];
+    const bytes = normal ? source.normalTwin.sourcePixels : source.sourcePixels;
+    const offset = (((row % MEGA) * TILE + y) * source.width + (column % MEGA) * TILE + x) * 4;
+    return Array.from(bytes.subarray(offset, offset + 4));
+}
+
+test('owned splat composition agrees with independent per-pixel atlas oracle for varied masks and wrap positions', () => {
+    const atlas = splatAtlasFixture();
+    const coordinates = [[18, 49], [18, 50], [15, 48], [14, 51], [17, 51], [14, 53], [20, 58], [18, 58]];
+    const maps = coordinates.map((_, tile) => {
+        const main = [0, 1, 9, 9, 1, 0, 0, 1][tile];
+        const first = [1, 0, 0, 0, 9, 1, 1, 0][tile];
+        const last = tile === 3 ? 1 : first;
+        const map = new Uint8Array(TILE * TILE).fill(main);
+        for (let i = 0; i < 101; i++) map[(i * (tile % 2 ? 43 : 37) + tile * 13) % map.length] = last;
+        if (tile === 3) for (let i = 0; i < 151; i++) map[(i * 53 + 7) % map.length] = 0;
+        return map;
+    });
+    const outputs = maps.map((map, i) => composeTerrainSplatPixels(map, atlas, ...coordinates[i]));
+    for (const [index, map] of maps.entries()) {
+        const [column, row] = coordinates[index];
+        const composed = outputs[index];
+        for (let pixel = 0; pixel < map.length; pixel++) {
+            const x = pixel % TILE, y = Math.floor(pixel / TILE), kind = map[pixel];
+            for (const [channel, normal] of [['albedo', false], ['normal', true]]) {
+                assert.deepEqual(Array.from(composed[channel].subarray(pixel * 4, pixel * 4 + 4)),
+                    sampledSplatPixel(atlas, kind, column, row, x, y, normal),
+                    `tile ${index}, ${channel}, pixel ${pixel}: authored material identity must win`);
+            }
+        }
+    }
+    const retained = new Uint8ClampedArray(outputs[0].albedo);
+    composeTerrainSplatPixels(maps.at(-1), atlas, 20, 59);
+    assert.deepEqual(outputs[0].albedo, retained, 'subsequent splats cannot mutate earlier tile bytes');
+});
+
+test('sub-12-pixel islands retain the majority material for both albedo and normals', () => {
+    const atlas = splatAtlasFixture();
+    const map = new Uint8Array(TILE * TILE).fill(9);
+    for (let i = 0; i < 11; i++) map[i * 31] = 0;
+    const composed = composeTerrainSplatPixels(map, atlas, 15, 48);
+    assert.equal(composed.passes, 1);
+    for (let i = 0; i < 11; i++) {
+        const pixel = i * 31, x = pixel % TILE, y = Math.floor(pixel / TILE);
+        assert.deepEqual(Array.from(composed.albedo.subarray(pixel * 4, pixel * 4 + 4)),
+            sampledSplatPixel(atlas, 9, 15, 48, x, y));
+        assert.deepEqual(Array.from(composed.normal.subarray(pixel * 4, pixel * 4 + 4)),
+            sampledSplatPixel(atlas, 9, 15, 48, x, y, true));
+    }
 });

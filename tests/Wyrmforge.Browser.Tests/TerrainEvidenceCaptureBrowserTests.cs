@@ -15,11 +15,11 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
 
-        var mismatched = await Page.EvaluateAsync<int[]>("""
+        var comparisons = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
             async () => {
                 const { TerrainCanvasCache, mergeTerrainFrame, paintTerrainCell, TERRAIN_MATERIAL } =
-                    await import('/js/arena-terrain-canvas.js?v=20261108-terrain-evidence-v1');
-                const { captureTerrainViewport } =
+                    await import('/js/arena-terrain-canvas.js?v=20261108-owned-splat-fix-v1');
+                const { captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } =
                     await import('/js/arena-terrain-evidence.js?v=20261108-terrain-evidence-v1');
                 const columns = 12, rows = 14;
                 const source = {
@@ -34,9 +34,16 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
                 const result = [];
                 const compare = frame => {
                     cache.update(frame, 0);
-                    const capture = captureTerrainViewport(cache, frame, camera, 0,
-                        paintTerrainCell, 32, 2);
-                    result.push(capture.pixelComparison.mismatched);
+                    const full = new TerrainCanvasCache();
+                    full.update({ ...frame, kindMaps: new Map() }, 0);
+                    const regional = captureTerrainViewport(cache, frame, camera, 0,
+                        paintTerrainCell, 32, 2).pixelComparison;
+                    const rebuilt = captureTerrainViewport(full, frame, camera, 0,
+                        paintTerrainCell, 32, 2).pixelComparison;
+                    const a = sampleCachedTerrainViewport(cache, camera, 2);
+                    const b = sampleCachedTerrainViewport(full, camera, 2);
+                    const parity = compareTerrainPixels(a.pixels, b.pixels, a.width);
+                    result.push({ revision: frame.revision, regional, rebuilt, parity });
                 };
                 const initial = mergeTerrainFrame(null, source);
                 compare(initial);
@@ -55,8 +62,50 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             }
             """);
 
-        CollectionAssert.AreEqual(new[] { 0, 0, 0 }, mismatched,
-            "One-shot independent terrain viewport must not invent differences absent from the ground cache.");
+        foreach (var entry in comparisons.EnumerateArray())
+        {
+            var regional = entry.GetProperty("regional");
+            var rebuilt = entry.GetProperty("rebuilt");
+            var parity = entry.GetProperty("parity");
+            var revision = entry.GetProperty("revision").GetInt32();
+            Assert.AreEqual(0, parity.GetProperty("mismatched").GetInt32(),
+                $"Regional cache must equal a fresh full rebuild byte-for-byte: {entry}");
+            Assert.AreEqual(regional.GetProperty("mismatched").GetInt32(),
+                rebuilt.GetProperty("mismatched").GetInt32(),
+                $"Both caches must agree equally with the independent painter: {entry}");
+            Assert.AreEqual(regional.GetProperty("maxDelta").GetInt32(),
+                rebuilt.GetProperty("maxDelta").GetInt32(),
+                $"Both caches must have the same maximum channel delta: {entry}");
+
+            var mismatch = regional.GetProperty("mismatched").GetInt32();
+            if (revision == 1)
+            {
+                Assert.AreEqual(0, mismatch, $"Intact terrain must agree exactly with the independent painter: {entry}");
+                continue;
+            }
+
+            // Linux WebKit can round translucent crater-depth cues differently between
+            // the normal cached Canvas2D backend and the read-frequent reference.
+            // These are at most two channel values, confined to the excavated block.
+            // Material splats remain independently tested byte-for-byte in every browser.
+            Assert.IsTrue(regional.GetProperty("maxDelta").GetInt32() <= 2,
+                $"A changed texture or minority-material mask must never pass as rounding: {entry}");
+            if (mismatch == 0)
+            {
+                continue;
+            }
+
+            var bounds = regional.GetProperty("bounds");
+            var minX = (6 * 32 - 37) * 2;
+            var maxX = (7 * 32 - 37) * 2 - 1;
+            var minY = (6 * 32 - 51) * 2;
+            var maxY = (7 * 32 + 12 - 51) * 2 - 1;
+            Assert.IsTrue(bounds.GetProperty("x0").GetInt32() >= minX &&
+                bounds.GetProperty("x1").GetInt32() <= maxX &&
+                bounds.GetProperty("y0").GetInt32() >= minY &&
+                bounds.GetProperty("y1").GetInt32() <= maxY,
+                $"Only the excavated block may have reference-backend blending differences: {entry}");
+        }
     }
     /// <summary>A real automated Hunt must preserve its grass/road pixel identity through successive C# terrain impacts.</summary>
     [TestMethod]
@@ -117,7 +166,11 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             result.GetProperty("previousFullRepaints").GetInt32(), "A real forced cache rebuild must occur.");
         Assert.AreEqual(0, cacheParity,
             $"Real Hunt cache must be independent of its partial-repaint history at the exact same revision " +
-            $"(cache-vs-rebuilt={cacheParity}, independent-reference before={before}, after={after}, revision={revision}).");
+            $"(cache-vs-rebuilt={cacheParity}, cache-bounds={result.GetProperty("cacheParity").GetProperty("bounds")}, " +
+            $"cache-first={result.GetProperty("cacheParity").GetProperty("first")}, " +
+            $"mask-parity={result.GetProperty("mapParity")}, changed={result.GetProperty("changedBlocks")}, " +
+            $"seed={result.GetProperty("visualSeed")}, band={result.GetProperty("influenceBand")}, " +
+            $"independent-reference before={before}, after={after}, revision={revision}).");
     }
 
 }
