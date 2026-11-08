@@ -65,7 +65,7 @@ export async function decodeImage(image) {
 
 function townSources(scene) {
     const images = [...scene.querySelectorAll('img[src]')].filter(img => img.getAttribute('src'));
-    const svgSources = [...new Set([...scene.querySelectorAll('svg image[href], svg image[xlink\\:href]')]
+    const svgSources = [...new Set([...scene.querySelectorAll('svg image')]
         .map(node => node.getAttribute('href') || node.getAttribute('xlink:href'))
         .filter(href => href && !href.startsWith('#')))];
     return { images, svgSources };
