@@ -440,13 +440,28 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChooseMapNodeAsync(string id)
     {
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
-        if (node is null || simulation?.ChooseMapNode(id) != true) return;
-        if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
-            throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
-        ShowMapMoment(node);
-        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
-        await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
-        await InvokeAsync(StateHasChanged);
+        if (node is null || simulation is null) return;
+        // The JS overlay must visibly cover the prior map before the C# terrain generator runs.
+        if (arenaModule is not null) await arenaModule.InvokeVoidAsync("beginHuntEntry", CancellationToken.None, canvas);
+        try
+        {
+            if (!simulation.ChooseMapNode(id))
+            {
+                if (arenaModule is not null) await arenaModule.InvokeVoidAsync("cancelHuntEntry", CancellationToken.None, canvas);
+                return;
+            }
+            if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
+                throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
+            ShowMapMoment(node);
+            await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
+            await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            if (arenaModule is not null) await arenaModule.InvokeVoidAsync("cancelHuntEntry", CancellationToken.None, canvas);
+            throw;
+        }
     }
 
     private async Task UseCheckpointActionAsync(RunCheckpointActionId id)
