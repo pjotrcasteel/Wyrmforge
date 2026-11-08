@@ -1,4 +1,4 @@
-/* A deliberately short startup ceremony, separate from Blazor so it also renders while WASM downloads. */
+/* A startup ceremony held until the actual welcome/town art is ready, independent of Blazor boot. */
 body.igniting #app { visibility: hidden; }
 
 .ignition-screen {
@@ -18,6 +18,7 @@ body.igniting #app { visibility: hidden; }
     transition: opacity .52s ease, visibility .52s ease;
 }
 
+.ignition-screen.ignition-entering { transition: none; }
 .ignition-screen.ignition-complete {
     opacity: 0;
     visibility: hidden;
