@@ -12,11 +12,16 @@ internal sealed class EnemyCollisionSolver
     private const double CellSize = 112;
     private const double Tolerance = 0.0001;
     private const int RelaxationPasses = 4;
+
+    // Tiny grounded-body gap: sprites no longer occupy the same world space,
+    // while Hollowed still reach their victim with their existing contact attack.
+    internal const double HollowPlayerGap = 1.5;
     private readonly Dictionary<(int X, int Y), List<int>> cells = [];
 
-    public void Resolve(IReadOnlyList<EnemyState> enemies, ArenaEnvironmentState? environment, double width, double height)
+    public void Resolve(IReadOnlyList<EnemyState> enemies, ArenaEnvironmentState? environment, double width, double height,
+        Vector2D? playerPosition = null, double playerRadius = 0)
     {
-        if (enemies.Count < 2) return;
+        if (enemies.Count == 0 || (enemies.Count < 2 && playerPosition is null)) return;
 
         var maxRadius = 0d;
         foreach (var enemy in enemies)
@@ -82,12 +87,46 @@ internal sealed class EnemyCollisionSolver
                     }
                 }
             }
+            // The hunter is an immovable circle for the Hollowed only. Resolve
+            // this after enemy/enemy relaxation so crowd pressure cannot shove
+            // an attacker straight through the player's body.
+            if (playerPosition is { } center && playerRadius > 0)
+                moved |= SeparateHollowsFromPlayer(enemies, center, playerRadius, environment, width, height);
             if (!moved) break;
         }
     }
 
+    private static bool SeparateHollowsFromPlayer(IReadOnlyList<EnemyState> enemies, Vector2D center, double radius,
+        ArenaEnvironmentState? environment, double width, double height)
+    {
+        var moved = false;
+        foreach (var enemy in enemies)
+        {
+            if (enemy.Kind != EnemyKind.Hollow || enemy.Health <= 0 || IsAnchored(enemy))
+                continue;
+
+            var minimum = radius + enemy.Radius + HollowPlayerGap;
+            var difference = enemy.Position - center;
+            var distance = difference.Length;
+            if (distance >= minimum - Tolerance) continue;
+
+            // Exact overlap needs a stable direction; it must not use gameplay RNG.
+            var normal = distance > Tolerance ? difference * (1 / distance) : (enemy.Id % 4 switch
+            {
+                0 => new Vector2D(1, 0),
+                1 => new Vector2D(0, 1),
+                2 => new Vector2D(-1, 0),
+                _ => new Vector2D(0, -1),
+            });
+            var before = enemy.Position;
+            Move(enemy, normal * (minimum - distance), environment, width, height);
+            moved |= enemy.Position != before;
+        }
+        return moved;
+    }
+
     private static bool IsAnchored(EnemyState enemy) =>
-        enemy.Speed <= 0 || enemy.Statuses.TimeScale(false) <= 0 ||
+        enemy.Speed <= 0 || enemy.EmergeRemaining > 0 || enemy.Statuses.TimeScale(false) <= 0 ||
         enemy.Kind is EnemyKind.ReliquaryWard or EnemyKind.CrystalWard or EnemyKind.Reliquary or EnemyKind.ReliquaryOfGlass
             or EnemyKind.BellWarden or EnemyKind.BellOfWinter;
 

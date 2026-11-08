@@ -12,6 +12,54 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class EnemyCollisionSolverTests
 {
     [TestMethod]
+    public void Resolve_SingleHollowOverlappingPlayer_SeparatesDeterministicallyWithoutMovingHunter()
+    {
+        var hunter = new Vector2D(200, 200);
+        var hollow = new EnemyState(7, hunter, 11, 100, 40, EnemyKind.Hollow);
+        var solver = new EnemyCollisionSolver();
+
+        solver.Resolve([hollow], null, 800, 600, hunter, 12);
+
+        var minimum = 11 + 12 + EnemyCollisionSolver.HollowPlayerGap;
+        Assert.IsGreaterThanOrEqualTo(minimum - 0.0001, Vector2D.Distance(hollow.Position, hunter));
+        var first = hollow.Position;
+        hollow.Position = hunter;
+        solver.Resolve([hollow], null, 800, 600, hunter, 12);
+        Assert.AreEqual(first, hollow.Position, "Replays must never choose a random separation normal.");
+        Assert.AreEqual(new Vector2D(200, 200), hunter);
+    }
+
+    [TestMethod]
+    public void Resolve_HollowPack_AvoidsHunterWithoutChangingOtherSpecies()
+    {
+        var hunter = new Vector2D(200, 200);
+        var pack = Enumerable.Range(1, 8).Select(id =>
+            new EnemyState(id, hunter, 11, 100, 40, EnemyKind.Hollow)).ToList();
+        var ashling = new EnemyState(99, new Vector2D(400, 400), 8, 100, 40, EnemyKind.Ashling);
+        pack.Add(ashling);
+
+        new EnemyCollisionSolver().Resolve(pack, null, 800, 600, hunter, 12);
+
+        foreach (var hollow in pack.Where(enemy => enemy.Kind == EnemyKind.Hollow))
+            Assert.IsGreaterThanOrEqualTo(hollow.Radius + 12 + EnemyCollisionSolver.HollowPlayerGap - 0.0001,
+                Vector2D.Distance(hollow.Position, hunter));
+        Assert.AreEqual(new Vector2D(400, 400), ashling.Position);
+    }
+
+    [TestMethod]
+    public void Resolve_AnchoredHollow_DoesNotSlideWhileFrozenOrEmerging()
+    {
+        var hunter = new Vector2D(200, 200);
+        var fixedEnemy = new EnemyState(5, hunter, 11, 100, 0, EnemyKind.Hollow);
+        var emerging = new EnemyState(6, hunter, 11, 100, 40, EnemyKind.Hollow) { EmergeRemaining = 1 };
+
+        new EnemyCollisionSolver().Resolve([fixedEnemy, emerging], null, 800, 600, hunter, 12);
+
+        Assert.AreEqual(hunter, fixedEnemy.Position);
+        Assert.AreEqual(hunter, emerging.Position);
+    }
+
+    [TestMethod]
     public void Resolve_SamePosition_SeparatesEnemiesWithoutRandomness()
     {
         var left = new EnemyState(1, new Vector2D(200, 200), 11, 100, 10);

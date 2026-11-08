@@ -6,6 +6,7 @@ using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Tests.Runs.Development;
 
@@ -41,6 +42,45 @@ public sealed class DevelopmentEnemyTests
             Assert.AreEqual(0, first.CompletedMapNodes.Count);
             Assert.IsFalse(first.IsEnded);
         }
+    }
+
+    [TestMethod]
+    public void ActualHollowedLabTick_PushesTheMonsterOutOfTheMageWithoutMovingTheMage()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var before = run.CreateSnapshot();
+        var enemies = (List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        enemies.Single().Position = new Vector2D(before.Player.X, before.Player.Y);
+
+        var snapshot = run.Tick(0, default, 800, 600);
+        var hollow = snapshot.Enemies.Single();
+        var separation = Math.Sqrt(Math.Pow(hollow.X - snapshot.Player.X, 2) +
+            Math.Pow(hollow.Y - snapshot.Player.Y, 2));
+
+        Assert.IsGreaterThanOrEqualTo(hollow.Radius + snapshot.Player.Radius +
+            EnemyCollisionSolver.HollowPlayerGap - 0.0001, separation);
+        Assert.AreEqual(before.Player.X, snapshot.Player.X);
+        Assert.AreEqual(before.Player.Y, snapshot.Player.Y);
+        Assert.AreEqual(before.Player.Radius, snapshot.Player.Radius);
+    }
+
+    [TestMethod]
+    public void ActualHollowedLabTick_ContinuesReachingTheMageWithoutPhasingThrough()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var approached = false;
+        for (var frame = 0; frame < 240; frame++)
+        {
+            var snapshot = run.Tick(0.05, default, 800, 600);
+            var hollow = snapshot.Enemies.Single();
+            var distance = Math.Sqrt(Math.Pow(hollow.X - snapshot.Player.X, 2) +
+                Math.Pow(hollow.Y - snapshot.Player.Y, 2));
+            var contactDistance = hollow.Radius + snapshot.Player.Radius + EnemyCollisionSolver.HollowPlayerGap;
+            Assert.IsGreaterThanOrEqualTo(contactDistance - 0.0001, distance);
+            approached |= distance <= contactDistance + 0.5;
+        }
+        Assert.IsTrue(approached, "The Hollowed must still close to claw reach; separation cannot stop combat.");
     }
 
     [TestMethod]
