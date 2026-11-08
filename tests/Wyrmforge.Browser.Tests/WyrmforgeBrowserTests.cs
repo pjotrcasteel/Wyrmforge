@@ -2218,6 +2218,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("[data-hud='health']")).ToContainTextAsync("/");
         await Expect(Page.Locator(".orb-secondary")).ToBeVisibleAsync();
         await Expect(Page.Locator(".orb-secondary [data-hud]")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".orb-health .crystal-orb-fill")).ToHaveCSSAsync(
+            "background-image", new System.Text.RegularExpressions.Regex("health-liquid\\.svg"));
+        await Expect(Page.Locator(".orb-secondary .crystal-orb-core")).ToHaveCSSAsync(
+            "background-image", new System.Text.RegularExpressions.Regex("resource-empty\\.svg"));
         var state = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
             const value = document.querySelector('[data-hud=health]').textContent;
             const bar = document.querySelector('.combat-health-track');
