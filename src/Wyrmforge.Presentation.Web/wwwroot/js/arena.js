@@ -23,7 +23,7 @@ import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } fr
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { torchSprites } from './arena-torch-sprites.js';
 import {
-    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
+    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, authoredPending, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
     setAuthoredRenderMode, emissionIntensity,
 } from './authored-characters.js?v=20261108-mage-head-v2';
@@ -50,6 +50,7 @@ import { preloadBellWardenImpact } from './arena-bell-warden-impact.js';
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './art-atlas.js';
+import { createHuntEntryGate, huntEntryReadiness, huntEntrySceneKey } from './hunt-entry-gate.js?v=20261108-hunt-entry-readiness-v1';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
@@ -76,13 +77,13 @@ function requestSharedGpuWorld(state, quality = 'mobile') {
 export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
-    loadArt(new URL('../art/', import.meta.url).href);
-    preloadFireballV5();
+    const atlasLoad = loadArt(new URL('../art/', import.meta.url).href);
+    const fireballLoad = preloadFireballV5();
     preloadMireHoundVfx();
     preloadBellWardenImpact();
     preloadAshfangGroundFlames();
-    preloadPaintedEnemies();
-    preloadHollowSprites();
+    const paintedLoad = preloadPaintedEnemies();
+    const hollowLoad = preloadHollowSprites();
     preloadHollowClawVfx();
     preloadHollowHitVfx();
     ashlingSprites.preload();
@@ -90,6 +91,12 @@ export function initializeArena(canvas, dotNetReference) {
     preloadCrawlOut();
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
+    // This promise settles on real decoded atlas/VFX results; failed optional
+    // sheets retain their existing game fallbacks, never an indefinite spinner.
+    state.entryAssetsSettled = false;
+    Promise.allSettled([atlasLoad, fireballLoad, paintedLoad, hollowLoad])
+        .then(() => { if (state.active) state.entryAssetsSettled = true; });
+    state.entryGate = createHuntEntryGate(canvas.closest('.game-screen') ?? canvas.parentElement);
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
     if (settings) {
         settings.value = state.damageNumberMode;
@@ -345,6 +352,7 @@ export function disposeArena(canvas) {
     if (state.damageNumberSettings) state.damageNumberSettings.removeEventListener('change', state.onDamageNumberModeChanged);
     state.g4Review?.dispose();
     state.layerLab?.dispose();
+    state.entryGate?.dispose();
     state.gpuWorld?.dispose();
     state.gpuScratchPool?.clear();
     if (state.gpuPresentation) {
@@ -401,6 +409,9 @@ function createState(canvas, dotNetReference) {
         displaySimulationMilliseconds: 0,
         displayBridgeMilliseconds: 0,
         animationFrame: 0,
+        entryPaintedKey: null,
+        entryAssetsSettled: false,
+        entryGate: null,
     };
 }
 
@@ -414,7 +425,15 @@ function frame(state, timestamp) {
         // A C# bootstrap snapshot can carry a placeholder 800x600 world, Arcane
         // school and no terrain. Do not show it as a torn/black G4 Hunt frame.
         const waitingForWorld = state.g4StageFrames && !hasAuthoritativeHuntWorld(state.latestSnapshot);
-        if (state.latestSnapshot && !waitingForWorld) draw(state, state.latestSnapshot, rect.width, rect.height);
+        if (state.latestSnapshot && !waitingForWorld) {
+            draw(state, state.latestSnapshot, rect.width, rect.height);
+            // The scene may become visible only after its current authoritative
+            // terrain revision was actually painted by the game renderer.
+            const terrain = state.latestSnapshot.environment?.terrain;
+            if (terrain && state.terrainFrame?.revision === terrain.revision &&
+                state.terrainCache?.revision === terrain.revision)
+                state.entryPaintedKey = huntEntrySceneKey(state.latestSnapshot);
+        }
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
         state.renderingError = null;
@@ -432,6 +451,25 @@ function frame(state, timestamp) {
         state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
     }
 
+    if (state.entryGate) {
+        const snapshot = state.latestSnapshot;
+        const relevantEnemies = (snapshot?.enemies ?? []).map(enemy => ENEMY_CHARACTERS.get(Number(enemy.kind)))
+            .filter(Boolean);
+        const pendingActors = state.authoredCharacters && (
+            authoredPending('Wizard') || relevantEnemies.some(name => authoredPending(name)));
+        state.entryGate.update(snapshot, huntEntryReadiness(snapshot, {
+            terrainFrame: state.terrainFrame,
+            terrainCache: state.terrainCache,
+            atlasSettled: state.entryAssetsSettled,
+            authoredPending: pendingActors,
+            gpuWorld: state.gpuWorld,
+            gpuError: state.gpuError,
+            renderingFailed: state.renderingFailed,
+            renderError: state.renderError,
+            framePresented: state.entryPaintedKey === huntEntrySceneKey(snapshot),
+        }));
+    }
+
     state.g4Review?.record(timestamp, {
         playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended &&
             (!state.g4StageFrames || hasAuthoritativeHuntWorld(state.latestSnapshot))),
@@ -446,11 +484,12 @@ function frame(state, timestamp) {
 function startSimulationFrame(state, timestamp, rect) {
     if (state.simulationBusy) return;
     state.simulationBusy = true;
-    const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
+    const delta = state.entryGate?.isBlocking() ? 0 : Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
+    const movement = state.entryGate?.isBlocking() ? { x: 0, y: 0 }
+        : state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
         : state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
-    const aim = getArenaAim(state);
+    const aim = state.entryGate?.isBlocking() ? { x: 0, y: 0 } : getArenaAim(state);
     const bridgeStarted = performance.now();
 
     state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaStickAim(state, aim))
@@ -459,6 +498,10 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
+            // Activate the veil as soon as this C# snapshot declares a real
+            // playable terrain. This happens before the next animation frame.
+            if (huntEntrySceneKey(snapshot))
+                state.entryGate?.update(snapshot, 'terrain');
             requestTerrainFrame(state, snapshot);
             if (snapshot.environment?.greybox && snapshot.lighting)
                 requestSharedGpuWorld(state, 'mobile');
