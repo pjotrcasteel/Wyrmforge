@@ -522,7 +522,7 @@ function startSimulationFrame(state, timestamp, rect) {
     const request = entryBlocked
         ? state.dotNetReference.invokeMethodAsync('PreviewFrame')
         : state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y,
-            getArenaPropFocus(state), isArenaStickAim(state, aim));
+            getArenaPropFocus(state), isArenaStickAim(state, aim), state.reducedMotion.matches);
     request.then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
