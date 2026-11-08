@@ -151,20 +151,31 @@ internal static class ArcaneWheelLayout
         }
         var from = Position(PassiveTreeCatalog.Get(connection.From), active);
         var to = Position(PassiveTreeCatalog.Get(connection.To), active);
-        var lastDash = connection.From.LastIndexOf('-');
-        if (connection.From.StartsWith("constellation-Fire-", StringComparison.Ordinal)
-            && lastDash > "constellation-Fire-".Length
-            && char.IsAsciiDigit(connection.From[lastDash - 1])
-            && connection.To.LastIndexOf('-') == lastDash
-            && connection.From.AsSpan(0, lastDash).SequenceEqual(connection.To.AsSpan(0, lastDash)))
+        if (connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal))
         {
-            var bend = 0.16;
-            var mid = new Point((from.X + to.X) / 2 - (to.Y - from.Y) * bend,
-                (from.Y + to.Y) / 2 + (to.X - from.X) * bend);
-            return Polyline([from, mid, to]);
+            var length = Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
+            var bend = connection.From == "fire-blast-shaping" ? -1 : 1;
+            // Keep short links close to their endpoints and give the long
+            // Fire approaches a wider sweep. Rotation uses the same geometry.
+            return CurvedLink(from, to, bend * Math.Min(120, length * .12), length);
         }
         return Polyline([from, to]);
     }
+    private static string CurvedLink(Point from, Point to, double bend, double length)
+    {
+        if (length <= 0) return Polyline([from, to]);
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var points = new Point[9];
+        for (var step = 0; step < points.Length; step++)
+        {
+            var t = step / (points.Length - 1d);
+            var offset = Math.Sin(Math.PI * t) * bend / length;
+            points[step] = new(from.X + dx * t - dy * offset, from.Y + dy * t + dx * offset);
+        }
+        return Polyline(points);
+    }
+
     private static string Polyline(IEnumerable<Point> points) => string.Join(" ", points.Select((point, index) =>
         string.Create(CultureInfo.InvariantCulture, $"{(index == 0 ? "M" : "L")} {point.X:0.##} {point.Y:0.##}")));
 }
