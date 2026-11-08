@@ -21,11 +21,13 @@ public static class PassiveTreeCatalog
         .. StormPassiveNodes.All,
         .. ArcanePassiveNodes.All,
         .. HybridPassiveNodes.All,
+        .. ArcaneConstellations.Nodes(),
     ];
 
     public static IReadOnlyList<PassiveTreeConnection> Connections { get; } =
     [
         .. FireOuterNodes.Connections,
+        .. ArcaneConstellations.Connections(),
         new(OriginId, "fire-start"),
         new(OriginId, "frost-start"),
         new(OriginId, "storm-start"),
