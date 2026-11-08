@@ -51,7 +51,7 @@ import { preloadBellWardenImpact } from './arena-bell-warden-impact.js';
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './art-atlas.js';
-import { createHuntEntryGate, huntEntryReadiness, huntEntrySceneKey } from './hunt-entry-gate.js?v=20261108-hunt-entry-readiness-v1';
+import { createHuntEntryGate, huntEntryReadiness, huntEntrySceneKey } from './hunt-entry-gate.js?v=20261108-hunt-entry-early-v2';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
@@ -73,6 +73,21 @@ function requestSharedGpuWorld(state, quality = 'mobile') {
         if (state.active) state.gpuWorld = new HuntGpuWorld({ quality, projection: state.debug.shear ? 'metric' : 'legacy' });
     }).catch(error => { state.gpuError = String(error); })
         .finally(() => { state.gpuPending = false; });
+}
+
+// Called from the map selection handler before the expensive synchronous C# site build.
+export async function beginHuntEntry(canvas) {
+    const state = arenas.get(canvas);
+    if (!state?.active) return;
+    state.entryGate?.arm();
+    state.entryPaintedKey = null;
+    // Two animation frames give iPhone Safari a paint opportunity before generation.
+    // This is not artificial loading progress or a post-readiness timer.
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+export function cancelHuntEntry(canvas) {
+    arenas.get(canvas)?.entryGate?.cancel();
 }
 
 export function initializeArena(canvas, dotNetReference) {
