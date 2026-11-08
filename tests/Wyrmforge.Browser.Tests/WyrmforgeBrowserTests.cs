@@ -2833,7 +2833,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             Assert.IsNotNull(objective);
             Assert.IsGreaterThan(vitals.Y, 844 * .65, "The four-slot HUD belongs at the bottom, not across the combat view.");
             Assert.IsLessThanOrEqualTo(objective.Y + objective.Height, vitals.Y + 2, "The compact trail cue belongs above the HUD.");
-            Assert.IsLessThanOrEqualTo(390, vitals.X + vitals.Width + 1, "HUD should remain visible at phone width.");
+            Assert.IsLessThanOrEqualTo(vitals.X + vitals.Width, 391, "HUD should remain visible at phone width.");
             await Expect(Page.Locator(".arena-top-hud")).ToHaveCountAsync(0);
             await Expect(Page.Locator(".arcane-hud-row .crystal-orb")).ToHaveCountAsync(2);
             await Expect(Page.Locator(".arcane-hud-row .spell-slot")).ToHaveCountAsync(2);
