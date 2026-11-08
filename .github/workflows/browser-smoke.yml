@@ -104,7 +104,7 @@ jobs:
           for attempt in 1 2 3 4; do
             rm -rf artifacts/playable-preview
             mkdir -p artifacts/playable-preview
-            if gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$ARTIFACT_NAME"                 --dir artifacts/playable-preview; then
+            if gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$ARTIFACT_NAME" --dir artifacts/playable-preview; then
               test -f artifacts/playable-preview/wwwroot/index.html
               exit 0
             fi
