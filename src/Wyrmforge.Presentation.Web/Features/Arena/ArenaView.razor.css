@@ -785,7 +785,8 @@
 .run-state-dock {
     bottom: max(142px, calc(env(safe-area-inset-bottom) + 138px));
 }
-.first-hunt-hint { top: max(66px, calc(env(safe-area-inset-top) + 58px)); }
+/* Keep early movement guidance below brief encounter phase cues. */
+.first-hunt-hint { top: max(116px, calc(env(safe-area-inset-top) + 108px)); }
 .encounter-change { top: max(72px, calc(env(safe-area-inset-top) + 64px)); }
 .trail-exit-instruction { top: max(75px, calc(env(safe-area-inset-top) + 66px)); }
 
