@@ -478,282 +478,150 @@
 
 /* Pixel-art Hunt HUD. Separate transparent 64/48px authored sprite layers are
    composed over real simulation values; no pre-filled, unchanging HUD screenshots. */
+/* The artwork is one continuous chassis. Percentage positions are normalized
+   to its 3:1 canvas so live readouts stay seated at every viewport size. */
 .arcane-hunt-hud {
-    --orb-size: clamp(64px, 23.5vw, 91px);
-    --spell-size: clamp(49px, 15vw, 58px);
     position: fixed;
     z-index: 6;
     bottom: max(7px, calc(env(safe-area-inset-bottom) + 4px));
     left: 50%;
-    display: grid;
-    justify-items: center;
-    gap: 0;
+    display: block;
     width: min(366px, calc(100vw - 14px));
+    aspect-ratio: 3;
     min-width: 0;
     min-height: 0;
     margin: 0;
     padding: 0;
     transform: translateX(-50%);
+    border: 0;
+    background: url('art/hunt-hud/nexus-chassis.webp') center / 100% 100% no-repeat;
+    box-shadow: none;
     color: #f6e3cb;
     font-variant-numeric: tabular-nums;
     pointer-events: none;
 }
 
-.arcane-hunt-hud .arcane-hud-row {
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    isolation: isolate;
-    width: 100%;
-}
-
-/* A single bronze chassis joins the sockets while leaving the playfield open above them. */
-.arcane-hunt-hud .arcane-hud-row::before {
-    position: absolute;
-    z-index: -1;
-    inset: auto calc(var(--orb-size) * .46) 1px;
-    height: calc(var(--spell-size) * .62);
-    background: url('art/hunt-hud/socket-bridge.svg') center / 100% 100% no-repeat;
-    image-rendering: pixelated;
-    content: '';
-}
-
+.arcane-hunt-hud .arcane-hud-row { position: absolute; inset: 0; }
 .arcane-hunt-hud .crystal-orb,
 .arcane-hunt-hud .spell-slot {
-    position: relative;
+    position: absolute;
     display: grid;
     place-items: center;
-    flex: 0 0 var(--orb-size);
-    width: var(--orb-size);
     min-width: 0;
-    height: var(--orb-size);
     aspect-ratio: 1;
     margin: 0;
     padding: 0;
     border: 0;
-    border-radius: 0;
     background: transparent;
     box-shadow: none;
-    isolation: isolate;
 }
-
-.arcane-hunt-hud .spell-slot {
-    --spell-accent: #f4ac53;
-    --ready-angle: 360deg;
-    --shade-angle: 0deg;
-    flex-basis: var(--spell-size);
-    width: var(--spell-size);
-    height: var(--spell-size);
-    margin-bottom: 7px;
-}
-.arcane-hunt-hud .defensive-spell { --spell-accent: #8cc7f8; }
-
-.arcane-hunt-hud .crystal-orb::after,
-.arcane-hunt-hud .spell-slot::after {
-    position: absolute;
-    z-index: 4;
-    inset: 0;
-    border: 0;
-    border-radius: 0;
-    background: url('art/hunt-hud/orb-frame.svg') center / 100% 100% no-repeat;
-    image-rendering: pixelated;
-    content: '';
-    pointer-events: none;
-}
-.arcane-hunt-hud .spell-slot::after {
-    background-image: url('art/hunt-hud/spell-frame.svg');
-}
-
-.arcane-hunt-hud .crystal-orb > .crystal-orb-core {
-    position: absolute;
-    z-index: 1;
-    inset: 13%;
-    display: block;
-    width: auto;
-    height: auto;
-    overflow: hidden;
-    border: 0;
-    border-radius: 50%;
-    background: #180e1c;
-    clip-path: circle(50%);
-    box-shadow: none;
-}
-.arcane-hunt-hud .orb-health > .crystal-orb-core {
-    background: #1e0d19;
-}
-
-/* This pixel texture is a FULL-SIZE layer which is cropped, not stretched.
-   The JavaScript supplies --health-unfilled from the authoritative HP snapshot. */
+.arcane-hunt-hud .orb-health { left: 6.81%; top: 15.88%; width: 18.42%; height: auto; }
+.arcane-hunt-hud .orb-secondary { left: 74.6%; top: 15.88%; width: 18.42%; }
+.arcane-hunt-hud .crystal-orb-core { position: absolute; inset: 0; overflow: hidden; border-radius: 50%; }
 .arcane-hunt-hud .orb-health .crystal-orb-fill {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    background: url('art/hunt-hud/health-liquid.svg') center / 100% 100% no-repeat;
-    image-rendering: pixelated;
+    background: url('art/hunt-hud/nexus-ruby.webp') center / 100% 100% no-repeat;
     clip-path: inset(var(--health-unfilled, 0%) 0 0 0);
     transition: clip-path .1s linear;
-    box-shadow: none;
 }
-
-.arcane-hunt-hud .crystal-orb-facets { display: none; }
 .arcane-hunt-hud .orb-health-number {
-    position: relative;
-    z-index: 5;
-    align-self: center;
-    margin-top: 0;
+    z-index: 1;
     color: #fff2e7;
-    font: 750 clamp(.58rem, 3vw, .85rem)/1 Georgia, 'Times New Roman', serif;
-    text-shadow: 1px 2px #140611, -1px -1px #18080f;
+    font: 750 clamp(.57rem, 2.75vw, .78rem)/1 Georgia, serif;
+    text-shadow: 1px 1px #170711;
     white-space: nowrap;
 }
 
-/* The vacant well shares the health socket’s bronze frame. */
-.arcane-hunt-hud .orb-secondary > .crystal-orb-core {
-    background: #160d24 url('art/hunt-hud/resource-empty.svg') center / 100% 100% no-repeat;
-    image-rendering: pixelated;
+.arcane-hunt-hud .spell-slot {
+    --spell-accent: #ffc166;
+    --ready-angle: 360deg;
+    --shade-angle: 0deg;
+    top: 21.7%;
+    width: 14%;
 }
-
+.arcane-hunt-hud .primary-spell { left: 34.48%; }
+.arcane-hunt-hud .defensive-spell { left: 51.01%; --spell-accent: #85d4ff; }
 .arcane-hunt-hud .spell-slot-art {
     position: absolute;
-    z-index: 1;
-    inset: 15%;
+    inset: 8%;
     display: grid;
     place-items: center;
-    width: auto;
-    height: auto;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    gap: 0;
     overflow: hidden;
-    border: 0;
     border-radius: 50%;
-    background: #180e17;
-    clip-path: circle(50%);
 }
-.arcane-hunt-hud .primary-spell .spell-slot-art { background: #2b110d; }
-.arcane-hunt-hud .defensive-spell .spell-slot-art { background: #101429; }
-.arcane-hunt-hud .defensive-placeholder { display: none; }
-
-.arcane-hunt-hud .spell-slot-art .locked-spell-art {
-    width: 77%;
-    height: 77%;
-    image-rendering: pixelated;
-}
-.arcane-hunt-hud .spell-slot .spell-cooldown-shade {
+.arcane-hunt-hud .locked-spell-art { width: 72%; height: 72%; }
+.arcane-hunt-hud .spell-cooldown-shade,
+.arcane-hunt-hud .spell-ready-ring {
     position: absolute;
-    z-index: 2;
-    inset: 15%;
-    border: 0;
+    inset: 8%;
     border-radius: 50%;
-    background: conic-gradient(from -90deg, #080610d8 0deg var(--shade-angle),
-        transparent var(--shade-angle) 360deg);
+}
+.arcane-hunt-hud .spell-cooldown-shade {
+    background: conic-gradient(#080610ba 0deg var(--shade-angle), transparent var(--shade-angle));
     opacity: 0;
-    pointer-events: none;
 }
-.arcane-hunt-hud .spell-slot.is-recovering .spell-cooldown-shade { opacity: 1; }
-.arcane-hunt-hud .spell-slot .spell-ready-ring {
-    position: absolute;
-    z-index: 3;
-    inset: 7%;
-    border-radius: 50%;
-    background: conic-gradient(from -90deg, var(--spell-accent) 0deg var(--ready-angle),
-        #2d2535 var(--ready-angle) 360deg);
-    -webkit-mask: radial-gradient(transparent 65%, #000 68% 75%, transparent 78%);
-    mask: radial-gradient(transparent 65%, #000 68% 75%, transparent 78%);
-    pointer-events: none;
+.arcane-hunt-hud .is-recovering .spell-cooldown-shade { opacity: 1; }
+.arcane-hunt-hud .spell-ready-ring {
+    inset: 0;
+    background: conic-gradient(var(--spell-accent) 0deg var(--ready-angle), transparent var(--ready-angle));
+    mask: radial-gradient(transparent 64%, #000 67% 71%, transparent 73%);
 }
-.arcane-hunt-hud .spell-slot.is-locked { --ready-angle: 0deg; filter: saturate(.58); }
-.arcane-hunt-hud .spell-slot.is-locked .spell-slot-art { opacity: .68; }
+.arcane-hunt-hud .is-locked .spell-ready-ring { display: none; }
 .arcane-hunt-hud .spell-cooldown-label {
     position: absolute;
-    z-index: 5;
-    bottom: 10%;
-    left: 50%;
-    min-height: .6rem;
-    transform: translateX(-50%);
+    bottom: 6%;
     color: #fff1df;
-    font: 750 clamp(.48rem, 1.9vw, .62rem)/1 system-ui, sans-serif;
+    font: 750 clamp(.44rem, 1.7vw, .58rem)/1 system-ui, sans-serif;
     text-shadow: 0 1px 3px #000;
-    white-space: nowrap;
 }
-.arcane-hunt-hud .spell-slot.is-locked .spell-cooldown-label {
-    bottom: 12%;
-    color: #b8adbf;
-    font-size: .44rem;
-}
+.arcane-hunt-hud .is-locked .spell-cooldown-label { color: #b8adbf; }
 
 .arcane-hunt-hud ::deep .combat-spell-badge {
     display: grid;
     place-items: center;
+    width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
     box-shadow: none;
-    gap: 0;
 }
-.arcane-hunt-hud ::deep .combat-spell-badge .px-icon {
-    display: block;
-    width: 32px;
-    height: 32px;
-    image-rendering: pixelated;
-    filter: none;
-}
-.arcane-hunt-hud ::deep .combat-spell-badge .hunt-hud-pixel-icon {
-    display: block;
-    width: min(31px, 90%);
-    height: min(31px, 90%);
+.arcane-hunt-hud ::deep .hunt-hud-pixel-icon {
+    width: 90%;
+    aspect-ratio: 1;
     object-fit: contain;
     image-rendering: pixelated;
 }
+.arcane-hunt-hud ::deep .combat-spell-badge .px-icon { width: 70%; height: 70%; }
 .arcane-hunt-hud ::deep .combat-spell-badge b { display: none; }
 
 .arcane-hunt-hud .arcane-xp-row {
-    display: flex;
+    position: absolute;
+    inset: 78.5% 8.4% auto;
+    height: 5.3%;
+    display: grid;
+    grid-template-columns: 9% 1fr 23%;
     align-items: center;
-    gap: 5px;
-    position: relative;
-    width: calc(100% - 18px);
-    min-height: 21px;
-    margin: -3px 0 0;
-    padding: 4px 8px;
-    border: 3px solid transparent;
-    border-image: url('art/hunt-hud/xp-frame.svg') 4 fill / 3px / 0 stretch;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
+    gap: 4%;
     color: #f0d4ad;
-    font: 700 clamp(.54rem, 2.65vw, .72rem)/1 Georgia, serif;
+    font: 700 clamp(.47rem, 2.35vw, .64rem)/1 Georgia, serif;
+    text-align: center;
     white-space: nowrap;
 }
-.arcane-hunt-hud .arcane-xp-row strong,
-.arcane-hunt-hud .arcane-xp-row span {
-    flex: 0 0 auto;
-    font-size: inherit;
-}
-.arcane-hunt-hud .arcane-xp-row strong {
-    padding-inline: 3px 6px;
-    border-inline-end: 1px solid #80563e;
-}
 .arcane-hunt-hud .combat-xp-track {
-    flex: 1 1 auto;
-    min-width: 16px;
-    height: 6px;
+    height: 100%;
+    min-width: 0;
     overflow: hidden;
-    border: 1px solid #6a426e;
-    border-radius: 0;
-    background: #180e23;
+    background: #261a30;
 }
 .arcane-hunt-hud .combat-xp-track > div {
     width: 0;
     height: 100%;
-    border: 0;
-    border-radius: 0;
-    background: linear-gradient(#d3a4ef 0 25%, #9c61c2 25% 75%, #643b89 75%);
-    box-shadow: none;
+    background: linear-gradient(#d4a1ff 0 25%, #a55be5 25% 80%, #723ea4 80%);
 }
 
 .run-state-dock { bottom: max(125px, calc(env(safe-area-inset-bottom) + 118px)); }
@@ -761,20 +629,8 @@
 .encounter-change { top: max(72px, calc(env(safe-area-inset-top) + 64px)); }
 .trail-exit-instruction { top: max(75px, calc(env(safe-area-inset-top) + 66px)); }
 
-@media (max-width: 360px) {
-    .arcane-hunt-hud {
-        --orb-size: clamp(64px, 23vw, 82px);
-        --spell-size: 49px;
-        width: calc(100vw - 12px);
-    }
-    .arcane-hunt-hud .arcane-xp-row { gap: 3px; padding-inline: 5px; }
-}
 @media (max-height: 520px) and (orientation: landscape) {
-    .arcane-hunt-hud {
-        --orb-size: 56px;
-        --spell-size: 43px;
-        width: min(315px, calc(100vw - 18px));
-    }
+    .arcane-hunt-hud { width: min(285px, calc(100vw - 18px)); }
 }
 @media (prefers-reduced-motion: reduce) {
     .arcane-hunt-hud .orb-health .crystal-orb-fill { transition: none; }

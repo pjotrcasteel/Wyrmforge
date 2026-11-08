@@ -26,9 +26,9 @@ export function createSpellBadge(spell) {
     };
     // Real, separable 32px art: the selected spell stays independent of its cooldown clock.
     const layeredAssets = {
-        'Fire Bolt': 'spell-fireball.svg',
+        'Fire Bolt': 'nexus-ember.webp',
         'Cinder Needle': 'spell-fireball.svg',
-        'Warding Pulse': 'spell-ward.svg',
+        'Warding Pulse': 'nexus-ward.webp',
     };
     const asset = layeredAssets[spell.name];
     const art = document.createElement(asset ? 'img' : 'span');
