@@ -59,12 +59,14 @@
             const reveal = () => {
                 const remaining = Math.max(0, minimumIntroMs - (performance.now() - startedAt));
                 window.setTimeout(() => {
+                    splash.classList.remove("ignition-entering");
                     document.body.classList.remove("igniting");
                     splash.classList.add("ignition-complete");
                 }, remaining);
             };
             const beginTown = (requireTown = false) => {
                 if (!sceneReadiness) return;
+                splash.classList.add("ignition-entering");
                 splash.classList.remove("ignition-complete", "ignition-failed");
                 retry.hidden = true;
                 status.textContent = "AWAKENING THE REFUGE";
