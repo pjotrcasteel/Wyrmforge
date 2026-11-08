@@ -275,3 +275,16 @@ test('paused snapshots update the baseline without replaying accumulated damage 
     assert.deepEqual(collectSoundEvents(tracker, paused, 100), []);
     assert.deepEqual(collectSoundEvents(tracker, resumed, 200), []);
 });
+
+test('Hollowed attack windup enters the shared audio event stream once', () => {
+    const tracker = createSoundEventTracker();
+    const snapshot = progress => frame({ enemies: [{
+        entityId: 42, kind: 0, x: 500, y: 500, hitFlash: false,
+        telegraph: { kind: 'hollow-grasp', progress },
+    }] });
+    assert.deepEqual(collectSoundEvents(tracker, frame(), 0), []);
+    assert.deepEqual(collectSoundEvents(tracker, snapshot(0.1), 100), ['hollow-attack-windup']);
+    assert.deepEqual(collectSoundEvents(tracker, snapshot(0.4), 150), []);
+    assert.deepEqual(collectSoundEvents(tracker, frame(), 300), []);
+    assert.deepEqual(collectSoundEvents(tracker, snapshot(0.1), 500), ['hollow-attack-windup']);
+});

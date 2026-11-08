@@ -78,3 +78,35 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
 });
+
+test('claw swipe audio follows the visual swing once, not contact DPS or a hit',()=>{
+ const state=mod.createHollowState(),events=[];
+ const contact=snapshot({player:{x:38,y:20,radius:9}});
+ for(let t=0;t<=.9;t+=.05)mod.updateHollowSprites(state,contact,t,false,e=>events.push(e));
+ assert.deepEqual(events,[{entityId:7,kind:'hollow-claw-swipe',x:20,y:20}]);
+ for(let t=.95;t<=1.2;t+=.05)mod.updateHollowSprites(state,contact,t,false,e=>events.push(e));
+ assert.equal(events.length,1);
+});
+test('paused and frozen Hollowed cannot emit a late swipe',()=>{
+ for(const flag of ['paused','frozen']){
+  const state=mod.createHollowState(),events=[];
+  const contact=snapshot({player:{x:38,y:20,radius:9}});
+  mod.updateHollowSprites(state,contact,0,false,e=>events.push(e));
+  for(let t=.05;t<=.8;t+=.05){
+   const blocked=flag==='paused'?{...contact,paused:true}:{...contact,enemies:[enemy({frozen:true})]};
+   mod.updateHollowSprites(state,blocked,t,false,e=>events.push(e));
+  }
+  assert.deepEqual(events,[]);
+ }
+});
+
+test('a crowd emits one swipe per attacker and no repeat on duplicate render snapshots',()=>{
+ const state=mod.createHollowState(),events=[];
+ const group=snapshot({enemies:[enemy({entityId:7}),enemy({entityId:8,x:22})],
+  player:{x:38,y:20,radius:9}});
+ for(let t=0;t<=.8;t+=.05){
+  mod.updateHollowSprites(state,group,t,false,e=>events.push(e));
+  mod.updateHollowSprites(state,group,t,false,e=>events.push(e));
+ }
+ assert.deepEqual(events.map(e=>e.entityId).sort(),[7,8]);
+});

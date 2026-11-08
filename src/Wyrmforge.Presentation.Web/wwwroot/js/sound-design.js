@@ -19,6 +19,7 @@
         'frost-impact': { label: 'Frost impact — brittle collapse', bus: 'combat', volume: 0.28, cooldown: 180, duration: 0.32, priority: 2 },
         'lightning-impact': { label: 'Storm impact — crack and discharge', bus: 'combat', volume: 0.27, cooldown: 180, duration: 0.26, priority: 2 },
         'enemy-down': { label: 'Enemy down — fading ember', bus: 'combat', volume: 0.24, cooldown: 1100, duration: 0.34, priority: 1 },
+        'hollow-claw-swipe': { label: 'Hollowed — physical claw swipe', bus: 'combat', volume: 0.24, cooldown: 115, duration: 0.48, priority: 1 },
         'hollow-approach': { label: 'Hollowed — ragged undead breath', bus: 'combat', volume: 0.22, cooldown: 6500, duration: 0.62, priority: 0 },
         'hollow-hit': { label: 'Hollowed — damaged flesh', bus: 'combat', volume: 0.25, cooldown: 480, duration: 0.26, priority: 1 },
         'hollow-death': { label: 'Hollowed — fading final breath', bus: 'combat', volume: 0.30, cooldown: 480, duration: 0.70, priority: 2 },

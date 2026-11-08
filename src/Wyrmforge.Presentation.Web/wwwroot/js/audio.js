@@ -215,7 +215,7 @@
             !document.querySelector?.('.game-screen')) return;
         creaturesPrefetched = true;
         for (const family of ['hollow', 'ashling']) {
-            for (const action of ['approach', 'hit', 'death']) {
+            for (const action of family === 'hollow' ? ['approach', 'hit', 'death', 'claw-swipe'] : ['approach', 'hit', 'death']) {
                 const entry = recordedManifest.cues?.[family + '-' + action];
                 for (const take of entry?.variants ?? []) void loadRecordedBuffer(take).catch(() => {});
             }

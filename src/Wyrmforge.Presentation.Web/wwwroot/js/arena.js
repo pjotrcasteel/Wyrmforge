@@ -265,7 +265,11 @@ function draw(state, snapshot, width, height) {
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
-    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches, event => {\n        // Cue remains silent until its original recording is installed in the manifest.\n        // Never substitute the Hollowed hurt/death samples for an attack.\n        if (event.kind === 'hollow-claw-swipe' && Number.isFinite(snapshot.player?.x) &&
+                Number.isFinite(snapshot.player?.y) &&
+                (event.x - snapshot.player.x) ** 2 + (event.y - snapshot.player.y) ** 2 <= 260 ** 2) {
+                window.wyrmforgeAudio?.play?.('hollow-claw-swipe');
+            }\n    });
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
     drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
     drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);

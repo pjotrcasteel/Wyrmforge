@@ -31,7 +31,7 @@ export function hollowDirection(dx,dy,previous){
     if(old>=0&&Math.abs((angle-old*45+540)%360-180)<27.5)return previous;
     return headings[Math.round(angle/45)%8];
 }
-export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
+export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false,onAttackSound=null){
     const hud=Number(snapshot.hud?.seconds??0);
     if(seconds<state.last||hud<state.lastHud){Object.assign(state,createHollowState());}
     const dt=state.last==null?0:Math.max(0,Math.min(.1,seconds-state.last));
@@ -69,9 +69,9 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         const player=snapshot.player;
         const touching=player&&Math.hypot(enemy.x-player.x,enemy.y-player.y)<=(Number(enemy.radius)||11)+(Number(player.radius)||0);
         if(advancing&&touching&&pose.attackAt==null){
-            pose.attackAt=pose.age;pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
+            pose.attackAt=pose.age;pose.attackSoundEmitted=false;pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         }
-        // Continue steering the existing action toward its target. Changing
+        // The original claw VFX begins around 0.36s into the 16-frame attack.\n        // Trigger the *swipe* here, never a confirmed-hit sound: contact damage is continuous DPS.\n        if(advancing&&pose.attackAt!=null&&!pose.attackSoundEmitted&&pose.age-pose.attackAt>=.36){\n            pose.attackSoundEmitted=true;\n            onAttackSound?.({entityId:id,kind:'hollow-claw-swipe',x:enemy.x,y:enemy.y});\n        }\n        // Continue steering the existing action toward its target. Changing
         // direction never creates a new action token or restarts either clip.
         if(advancing&&pose.attackAt!=null&&player)pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         // Playback uses a common controller; only the contact signal belongs
