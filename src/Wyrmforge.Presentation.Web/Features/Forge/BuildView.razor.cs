@@ -14,6 +14,7 @@ public partial class BuildView : IAsyncDisposable
 {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
+    [Parameter] public bool FirstPointGuide { get; set; }
     [Parameter] public FireballCoreState? FireballCore { get; set; }
     [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
     [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
