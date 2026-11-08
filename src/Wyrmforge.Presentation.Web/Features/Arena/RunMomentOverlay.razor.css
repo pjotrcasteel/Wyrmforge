@@ -36,7 +36,7 @@
 
 .run-moment.upgrade-moment {
     top: auto;
-    bottom: max(110px, calc(env(safe-area-inset-bottom) + 100px));
+    bottom: max(148px, calc(env(safe-area-inset-bottom) + 140px));
     width: min(330px, calc(100vw - 32px));
     padding: 8px 12px;
     gap: 2px;
