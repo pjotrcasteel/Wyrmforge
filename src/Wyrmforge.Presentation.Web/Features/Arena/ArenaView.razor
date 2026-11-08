@@ -104,26 +104,6 @@
         </div>
     </div>
 
-    @* Keep the goal readable, but not in a second combat HUD across the top of the screen. *@
-    @if (MapCombatActive && CurrentMapNode is { } activeNode)
-    {
-        <section class="encounter-objective compact-hunt-objective" aria-label="Current encounter objective">
-            <span title="@activeNode.Name · @activeNode.EncounterName">TRAIL @(CompletedMapNodes.Count + 1)</span>
-            <em class="encounter-phase">@EncounterPhaseLabel <small data-trail="phase-time"></small></em>
-            <strong data-trail="objective">@CurrentMapNodeKills/@CurrentMapNodeKillsRequired kills</strong>
-            <div class="trail-progress" role="progressbar" aria-label="Trail progress" aria-valuemin="0" aria-valuemax="100">
-                <i data-trail="progress"></i>
-            </div>
-        </section>
-    }
-    else if (EvacuationActive)
-    {
-        <section class="encounter-objective compact-hunt-objective evacuation" aria-label="Evacuation countdown">
-            <span>EVACUATION</span>
-            <strong>@Math.Ceiling(EvacuationRemainingSeconds).ToString("0")s</strong>
-        </section>
-    }
-
     @if (simulation?.TrailExitPending == true && !trailTransition)
     {
         <div class="trail-exit-instruction" role="status" aria-live="polite">
