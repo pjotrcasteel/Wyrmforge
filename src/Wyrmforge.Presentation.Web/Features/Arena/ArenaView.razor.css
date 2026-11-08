@@ -496,10 +496,10 @@
 }
 
 .arcane-hud-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1.16fr) minmax(0, .88fr) minmax(0, .88fr) minmax(0, 1.16fr);
+    display: flex;
+    justify-content: space-between;
     align-items: end;
-    gap: clamp(2px, .7vw, 5px);
+    gap: 4px;
     width: 100%;
 }
 
@@ -518,6 +518,8 @@
 }
 
 .arcane-hunt-hud .crystal-orb {
+    flex: 0 0 clamp(60px, 20vw, 100px);
+    width: clamp(60px, 20vw, 100px);
     overflow: visible;
     border: 0;
     background: radial-gradient(circle, #30202b 0 65%, #966e50 68%, #160f17 73%, #0a080d 78%);
@@ -602,6 +604,8 @@
 }
 
 .arcane-hunt-hud .spell-slot {
+    flex: 0 0 clamp(47px, 16vw, 78px);
+    width: clamp(47px, 16vw, 78px);
     --spell-accent: #eb9558;
     --ready-angle: 360deg;
     --shade-angle: 0deg;
