@@ -26,6 +26,7 @@ public partial class BuildView : IAsyncDisposable
         await ResetViewAsync();
     }
 
+    [Parameter] public bool FirstPointGuide { get; set; }
     [Parameter] public FireballCoreState? FireballCore { get; set; }
     [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
     [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
@@ -342,7 +343,7 @@ public partial class BuildView : IAsyncDisposable
     private async Task FocusSchoolAsync(PassiveSchool school)
     {
         inspectedSchool = school;
-        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, school == ActiveSchool ? 740 : ArcaneWheelLayout.SigilRadius * .63);
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, school == ActiveSchool || SchoolInvestment(school) > 0 ? 740 : ArcaneWheelLayout.SigilRadius * .63);
         inspectorOpen = false;
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);
     }

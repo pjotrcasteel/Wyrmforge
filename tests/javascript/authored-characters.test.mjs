@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { MAGE_VISUAL_SCALE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/mage-visual-profile.js';
 import {
     DIRECTIONS, ENEMY_CHARACTERS, AUTHORED_SETS, crawlOutFrame, resolveCharacter, ashfangPose, CAST_RELEASE_AT, pickDirection, pickDirectionFromAngle, frameAtTime, frameAtPhase, clipDuration,
     createAuthoredState, updateAuthoredEnemies, updateAuthoredWizard, corpsePose, CORPSE_SECONDS,
@@ -256,4 +257,13 @@ test('a boss in the exposed gap after its big move plays the authored stagger an
     assert.equal(pose.frame, manifests.get('Bell-Warden-normal').actions.stagger.framesPerDirection - 1, 'it holds the last frame');
     pose = run(boss({ recovering: false }), 3.2);
     assert.notEqual(pose.action, 'stagger');
+});
+
+test('authored wizard uses the same grounded one-head scale for albedo, emissive and barrier', () => {
+    // The 48px authored sprite is intentionally taller; its actual asset
+    // remains untouched and drawGrounded keeps the same authoritative foot Y.
+    assert.equal(Math.round(manifests.get('Wizard').canvas[1] * MAGE_VISUAL_SCALE), 56);
+    const runtime = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js', import.meta.url), 'utf8');
+    assert.equal(runtime.match(/\{ radius, scale: MAGE_VISUAL_SCALE \}/g)?.length, 2);
+    assert.ok(runtime.includes('ctx.scale(MAGE_VISUAL_SCALE, MAGE_VISUAL_SCALE)'));
 });

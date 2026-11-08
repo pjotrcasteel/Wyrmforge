@@ -267,17 +267,21 @@ public sealed partial class RunSimulation
     private BellWardenRenderSnapshot? CreateBellWardenSnapshot() => BellWardenStage switch
     {
         BellWardenStage.Tolling => new("tolling", bellWardenSpot.X, bellWardenSpot.Y, Math.Clamp(1 - bellWardenTimer / BellWardenEntranceSeconds, 0, 1), 1,
-            false, 0, BellRoadVariant),
+            false, 0, BellRoadVariant) { Z = GroundUnitsAt(bellWardenSpot) },
         BellWardenStage.Fight when bellWarden is { Health: > 0, BellWarden: { } bell } warden => new("fight", warden.Position.X, warden.Position.Y, 1,
-            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), bell.Cracked, bell.CrackProgress),
+            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), bell.Cracked, bell.CrackProgress) { Z = GroundUnitsAt(warden.Position) },
         BellWardenStage.Fight when bellWarden is { Health: > 0, WinterBell: { } winter } warden => new("fight", warden.Position.X, warden.Position.Y, 1,
-            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), winter.DeepWinter, winter.RimeProgress, BellRoadVariant),
+            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), winter.DeepWinter, winter.RimeProgress, BellRoadVariant) { Z = GroundUnitsAt(warden.Position) },
         _ => null,
     };
 
     private IReadOnlyList<BellShockwaveRenderSnapshot> CreateBellShockwaveSnapshots() => bellShockwaves
         .Select(wave => new BellShockwaveRenderSnapshot(wave.Center.X, wave.Center.Y, wave.Radius, BellSmashRadius, BellShockwaveMaxRadius,
-            Math.Clamp(wave.Elapsed / BellShockwaveDelaySeconds, 0, 1), wave.Expanding))
+            Math.Clamp(wave.Elapsed / BellShockwaveDelaySeconds, 0, 1), wave.Expanding)
+        {
+            AgeSeconds = wave.Elapsed,
+            Z = GroundUnitsAt(wave.Center),
+        })
         .ToArray();
 
     private sealed class BellShockwaveState(Vector2D center)

@@ -43,6 +43,18 @@ test('contact only drives presentation; attack freezes and recovers',()=>{
  assert.deepEqual(contact.player,{x:38,y:20,radius:9});assert.equal(contact.enemies[0].x,20);
 });
 
+test('Hollowed begins clawing at grounded contact range without overlapping the mage',()=>{
+ const state=mod.createHollowState();
+ const player={x:20+11+9+1.5,y:20,radius:9};
+ mod.updateHollowSprites(state,snapshot({player}),0);
+ assert.equal(state.entities.get(7).clip,'attack');
+ assert.equal(state.entities.get(7).direction,'E');
+ assert.deepEqual(player,{x:41.5,y:20,radius:9});
+ const out=mod.createHollowState();
+ mod.updateHollowSprites(out,snapshot({player:{x:20+11+9+2.1,y:20,radius:9}}),0);
+ assert.equal(out.entities.get(7).clip,'walk');
+});
+
 test('an active attack follows a changed target direction without restarting',()=>{
  const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot({player:{x:38,y:20,radius:9}}),0);
  advance(state,snapshot({player:{x:38,y:20,radius:9}}),.05,.3);

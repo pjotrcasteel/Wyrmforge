@@ -36,15 +36,43 @@ public static class ArenaTerrainMutation
     /// <summary>The route never drops below half a metre, so its neighbouring columns always stay a single step apart.</summary>
     public const int RouteFloorMicrocells = -ArenaTerrainGrid.MaxStepMicrocells;
 
-    /// <summary>Crater radius in world units: an ordinary Fireball digs a bowl inside about one block, bigger magic more.</summary>
-    public static double RadiusUnits(int power) => power switch
+    /// <summary>
+    /// Maximum crater radius in world units. An unupgraded Fireball only chips a sub-metre patch;
+    /// stronger Fireballs progressively excavate a wider area.
+    /// </summary>
+    public static double RadiusUnits(int power) => (power switch
     {
-        <= 1 => 0.75,
-        2 => 1.25,
-        3 => 1.8,
-        4 => 2.3,
-        _ => 2.8,
-    } * ArenaTerrainGrid.CellUnits;
+        <= 1 => 0.42,
+        2 => 0.9,
+        3 => 1.4,
+        4 => 1.9,
+        _ => 2.5,
+    }) * ArenaTerrainGrid.CellUnits;
+
+    /// <summary>
+    /// Fireball upgrade ranks increase terrain power independently of their combat damage.
+    /// Detonation and Meteor Heart add further power and are capped at five by the caller.
+    /// </summary>
+    public static int FireballPowerForRank(int rank) => Math.Clamp(rank, 1, 5) switch
+    {
+        1 => 1,
+        2 or 3 => 2,
+        4 => 3,
+        _ => 4,
+    };
+
+    /// <summary>
+    /// Maximum impact depth in 12.5 cm microcells before stone wear. Level-one impacts scratch
+    /// the soil; late-game Fireballs reach below the one-metre topsoil layer into the stone.
+    /// </summary>
+    public static int CraterDepthMicrocells(int power) => power switch
+    {
+        <= 1 => 1,
+        2 => 3,
+        3 => 6,
+        4 => 10,
+        _ => 16,
+    };
 
     /// <summary>
     /// Radius in microcells of the half-sphere a side hit bites out of a face. It removes about the same volume as the cap of the
@@ -253,11 +281,14 @@ public static class ArenaTerrainMutation
                 var dy = (gy + .5) * micro - impact.Position.Y;
                 var distance = Math.Sqrt(dx * dx + dy * dy);
                 var angle = Math.Atan2(dy, dx);
-                // The reach swings between 78% and 100% of the nominal radius, so the average crater is a little smaller than a disc of that radius.
+                // Angular lobes make a broken outline; local, deterministic microcell noise breaks up
+                // the otherwise smooth circle. Neither changes the terrain outside the impact.
                 var lobes = .5 * Math.Sin(2 * angle + phases[0]) + .3 * Math.Sin(3 * angle + phases[1]) + .2 * Math.Sin(5 * angle + phases[2]);
-                var reach = radius * (.89 + .11 * lobes);
+                var rimNoise = Unit(4, gx, gy) - .5;
+                var reach = radius * Math.Min(1, .85 + .12 * lobes + .06 * rimNoise);
                 if (distance >= reach) continue;
-                var depth = (int)Math.Ceiling(power * (1 - distance * distance / (reach * reach)));
+                // The centre of an upgraded Fireball removes real layers, not just a one-microcell decal.
+                var depth = (int)Math.Ceiling(CraterDepthMicrocells(power) * (1 - distance * distance / (reach * reach)));
                 if (depth > 0) yield return (gx, gy, depth);
             }
     }

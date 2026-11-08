@@ -5,6 +5,10 @@
         <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD"
             : Level > 0 && Level % 5 == 0 ? $"LEVEL {Level} • BREAKTHROUGH" : $"LEVEL {Level} • REFINEMENT")</div>
         <h2>@(RewardSchool.HasValue ? "Strengthen your hunt" : Level > 0 && Level % 5 == 0 ? "Choose a major power" : "Refine your magic")</h2>
+        @if (FirstHuntFirstUpgrade)
+        {
+            <p class="first-hunt-upgrade-guide" data-tutorial="first-upgrade">Choose one power. It strengthens this Hunt; the Arcane Web grants permanent power afterward.</p>
+        }
         @if (Fateweave is { } weave)
         {
             <div class="fateweave-purse" aria-label="@($"Fateweave: {weave.Charges} of {weave.Capacity} rerolls left this hunt")"
@@ -62,6 +66,7 @@
 @code {
     [Parameter] public SpellSchool? RewardSchool { get; set; }
     [Parameter] public int Level { get; set; }
+    [Parameter] public bool FirstHuntFirstUpgrade { get; set; }
     [Parameter, EditorRequired] public IReadOnlyList<LevelChoice> Choices { get; set; } = Array.Empty<LevelChoice>();
     [Parameter] public EventCallback<string> OnChoose { get; set; }
     [Parameter] public FateweaveSnapshot? Fateweave { get; set; }

@@ -11,6 +11,7 @@ if (ART !== TERRAIN_ART_SCALE) throw new Error('Terrain tiles and the terrain ca
 import { drawGroundDecals } from './arena-ground-decals.js';
 import { cellShadow, shadowStyle, SHADOW_SAMPLES } from './arena-terrain-shadows.js';
 import { forestKit } from './forest-kit.js';
+import { layerLabEnabled } from './arena-layer-lab.js?v=20261108-crack-isolation-v1';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4, Boulder: 5 });
 const isUprightProp = material => material === TERRAIN_MATERIAL.Wood || material === TERRAIN_MATERIAL.Boulder;
@@ -235,11 +236,20 @@ export function mergeTerrainFrame(previous, incoming) {
     const sameSite = previous && previous.columns === incoming.columns && previous.rows === incoming.rows &&
         previous.visualSeed === visualSeed && incoming.revision >= previous.revision;
     const fine = new Map(sameSite ? previous.fine : []);
+    const changed = new Set();
     for (const block of incoming.fine ?? []) {
-        if (!block.heights?.length) fine.delete(block.index);
-        else if (isUprightProp(incoming.material?.[block.index]))
-            fine.set(block.index, { heights: block.heights.map(h => Math.min(h, TRUNK_MOUND_MICROCELLS)), topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
-        else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
+        if (!Number.isInteger(block.index) || block.index < 0 || block.index >= incoming.columns * incoming.rows) continue;
+        const before = fine.get(block.index);
+        if (!block.heights?.length) {
+            fine.delete(block.index);
+            if (before) changed.add(block.index);
+            continue;
+        }
+        const next = { heights: isUprightProp(incoming.material?.[block.index])
+            ? block.heights.map(height => Math.min(height, TRUNK_MOUND_MICROCELLS)) : block.heights,
+            topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null };
+        if (!terrainFineEqual(before, next)) changed.add(block.index);
+        fine.set(block.index, next);
     }
     // Trees and boulders are drawn as upright sprites; the terrain itself only shows a low mound under them. The real height (the coarse
     // height C# collides with) stays in `trunks` / `boulders`, and a boulder paints as stone.
@@ -256,6 +266,12 @@ export function mergeTerrainFrame(previous, incoming) {
             material[index] = TERRAIN_MATERIAL.Stone;
         }
     }
+    // Fine deltas are not the only way to change a column: coarse material or height replacements
+    // must still invalidate their faces (and neighbours), even when the server reports no fine blocks.
+    if (sameSite) {
+        for (let i = 0; i < surface.length; i++)
+            if (surface[i] !== previous.surface[i] || material[i] !== previous.material[i]) changed.add(i);
+    }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface, material, fine, trunks, boulders,
         // Damage changes physical heights, not the authored ground's splat/blend pattern. Capture it once for this site.
@@ -266,12 +282,31 @@ export function mergeTerrainFrame(previous, incoming) {
         roadNear: sameSite ? previous.roadNear : undefined,
         rockNear: sameSite ? previous.rockNear : undefined,
         visualSeed,
-        // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
-        changed: (incoming.fine ?? []).map(block => block.index),
+        // A reliable visual delta: retransmitted but identical heights/stone wear must never redraw or reupload
+        // distant undamaged terrain. A new site always repaints fully regardless of this list.
+        changed: [...changed],
+        // Road edits require a whole-site resplat, not a local dirty clip.
+        visualDeltaComplete: Boolean(sameSite && (!incoming.road?.length || terrainArrayEqual(incoming.road, previous.road))),
         // The generated crack network travels once, with the first full load; so do the road (1/16 cell polyline) and the torches.
         cracks: incoming.cracks?.length ? incoming.cracks : previous?.cracks ?? [],
         road: incoming.road?.length ? incoming.road : previous?.road ?? [],
         torches: incoming.torches?.length ? incoming.torches : previous?.torches ?? [] };
+}
+
+/** Compare source-authoritative microcell data, not object identity or server revision.
+ * Repeated damage/kill updates may resend the same block, and repainting that data must not
+ * touch its neighbours or create a new ground GPU capture.
+ */
+function terrainArrayEqual(a, b) {
+    if (a === b) return true;
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+}
+
+function terrainFineEqual(a, b) {
+    return a === b || Boolean(a && b && a.topsoil === b.topsoil && a.stoneTop === b.stoneTop &&
+        terrainArrayEqual(a.heights, b.heights) && terrainArrayEqual(a.wear, b.wear));
 }
 
 /** Height of one 12.5 cm microcolumn; whole columns answer with their single coarse height. */
@@ -327,6 +362,7 @@ function neighbourHeights(frame, column, row, microX, microY, own) {
 }
 
 function microDepthCues(ctx, frame, column, row, microX, microY, height, x, y) {
+    if (!layerLabEnabled('bakedShadows')) return 0;
     const { north, south } = neighbourHeights(frame, column, row, microX, microY, height);
     let painted = 0;
     const step = shadowStep(north - height);
@@ -337,6 +373,7 @@ function microDepthCues(ctx, frame, column, row, microX, microY, height, x, y) {
 
 /** Whole columns get the same cues as 4 px bands across their top face, grouped into runs of equal steps. */
 function wholeDepthCues(ctx, frame, column, row, height, top) {
+    if (!layerLabEnabled('bakedShadows')) return 0;
     let painted = 0;
     for (let microX = 0; microX < MICRO_PER_COLUMN;) {
         const { north } = neighbourHeights(frame, column, row, microX, 0, height);
@@ -382,11 +419,15 @@ export function terrainAtlas(band) {
                 const canvas = document.createElement('canvas');
                 canvas.width = tile.width; canvas.height = tile.height;
                 canvas.getContext('2d').putImageData(new ImageData(tile.data, tile.width, tile.height), 0, 0);
-                // Every texture carries its normal-map twin; walls lean toward the viewer.
+                // These atlas bytes never change. Compose each splat from the original pixels,
+                // not from a mutable scratch/mask canvas that Safari may consume later.
+                canvas.sourcePixels = tile.data;
                 const twin = document.createElement('canvas');
                 twin.width = tile.width; twin.height = tile.height;
                 const wall = kind.endsWith('Side');
-                twin.getContext('2d').putImageData(new ImageData(normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0), tile.width, tile.height), 0, 0);
+                const normalPixels = normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0);
+                twin.getContext('2d').putImageData(new ImageData(normalPixels, tile.width, tile.height), 0, 0);
+                twin.sourcePixels = normalPixels;
                 canvas.normalTwin = twin;
                 return canvas;
             });
@@ -399,6 +440,17 @@ export function terrainAtlas(band) {
 const texX = column => (column % MEGA) * TILE;
 const texY = row => (row % MEGA) * TILE;
 const TEXTURE_UNITS = MEGA * FACE_PIXELS;
+
+/**
+ * World-align ordinary wall strata so neighboring faces sample the same atlas row
+ * at the same projected world Y, even when their top surfaces are different heights.
+ * Grass/rock crest textures are intentionally relative to the individual wall lip.
+ * Always wrap negative world coordinates into the atlas rather than sampling outside it.
+ */
+export function wallTextureSourceY(worldY, depthFromLip = 0, crest = false) {
+    const value = crest ? depthFromLip : worldY;
+    return ((value % TEXTURE_UNITS) + TEXTURE_UNITS) % TEXTURE_UNITS;
+}
 
 /**
  * The base ground of a whole column. Patches inside it (mud, dry grass, bare rock, flagstone) and the road are laid per art pixel by
@@ -420,17 +472,34 @@ function topTileKind(band, material, height, frame, column, row, capped = true) 
 const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop', 'slabTop', 'pathTop']);
 const KIND_INDEX = Object.freeze(Object.fromEntries(TOP_KINDS.map((kind, index) => [kind, index])));
 
-let scratchCanvas = null, maskCanvas = null, maskImage = null, scratchNormalCanvas = null;
+// A submitted splat image is owned by its tile and is never repainted for another block.
+// The LRU bounds mobile memory, including the normal twin; evicted images are discarded,
+// never recycled as mutable scratch sources for deferred Canvas2D draws.
+const SPLAT_TILE_LIMIT = 512;
+const splatTiles = new Map();
+const emissiveTiles = new Map();
 
-function scratchContexts() {
-    if (typeof document === 'undefined') return null;
-    if (!scratchCanvas) {
-        scratchCanvas = document.createElement('canvas');
-        maskCanvas = document.createElement('canvas');
-        scratchNormalCanvas = document.createElement('canvas');
-        scratchCanvas.width = scratchCanvas.height = maskCanvas.width = maskCanvas.height = scratchNormalCanvas.width = scratchNormalCanvas.height = TILE;
+function cachedTile(cache, map, atlas, column, row, build) {
+    const wrapColumn = ((column % MEGA) + MEGA) % MEGA;
+    const wrapRow = ((row % MEGA) + MEGA) % MEGA;
+    const cached = cache.get(map);
+    if (cached && cached.atlas === atlas && cached.wrapColumn === wrapColumn && cached.wrapRow === wrapRow) {
+        cache.delete(map);
+        cache.set(map, cached);
+        return cached;
     }
-    return { g: scratchCanvas.getContext('2d'), m: maskCanvas.getContext('2d') };
+    const fresh = { ...build(), atlas, wrapColumn, wrapRow };
+    cache.delete(map);
+    cache.set(map, fresh);
+    if (cache.size > SPLAT_TILE_LIMIT) cache.delete(cache.keys().next().value);
+    return fresh;
+}
+
+function ownedTile(pixels) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = TILE;
+    canvas.getContext('2d').putImageData(new ImageData(pixels, TILE, TILE), 0, 0);
+    return canvas;
 }
 
 // Tileable value-noise tables (NOISE_SIZE squared, lattice every 16 and 8 world units) sampled by art pixel, so splatting is a couple of
@@ -615,54 +684,73 @@ export function terrainBaseKindMap(frame, band, column, row) {
     return kind ? kindMap(frame, band, column, row, kind, baseSurface[index]) : null;
 }
 
-/** Paints a column's top face from its kind map: the most common ground whole, every other ground through its own pixel mask. */
-function drawSplat(ctx, atlas, map, column, row, x, y) {
-    const contexts = scratchContexts();
-    if (!contexts) return 0;
-    const { g, m } = contexts;
-    const [ox, oy] = [texX(column), texY(row)];
+/**
+ * Compose the exact authored coverage into fresh RGBA buffers, including the normal
+ * twin. Only the majority-material fill and >=12-pixel minority rule from drawSplat
+ * remain. No shared mutable mask, ImageData or Canvas2D scratch surface is involved.
+ * The source atlas buffers are immutable and already in global texture coordinates.
+ */
+export function composeTerrainSplatPixels(map, atlas, column, row) {
     const counts = new Int16Array(TOP_KINDS.length);
     for (const kind of map) counts[kind]++;
     let main = 0;
     for (let kind = 1; kind < counts.length; kind++) if (counts[kind] > counts[main]) main = kind;
-    ctx.drawImage(atlas[TOP_KINDS[main]][0], ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS);
-    let painted = 1;
-    for (let kind = 0; kind < counts.length; kind++) {
-        if (kind === main || counts[kind] < 12) continue; // a handful of stray pixels is not worth a mask pass
-        const mask = maskImage ??= m.createImageData(TILE, TILE);
-        for (let i = 0; i < map.length; i++) mask.data[i * 4 + 3] = map[i] === kind ? 255 : 0;
-        m.putImageData(mask, 0, 0);
-        g.globalCompositeOperation = 'source-over';
-        g.clearRect(0, 0, TILE, TILE);
-        g.drawImage(atlas[TOP_KINDS[kind]][0], ox, oy, TILE, TILE, 0, 0, TILE, TILE);
-        g.globalCompositeOperation = 'destination-in';
-        g.drawImage(maskCanvas, 0, 0);
-        g.globalCompositeOperation = 'source-over';
-        ctx.drawImage(scratchCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
-        if (ctx.normalContext) {
-            // The same mask cuts the normal twin, so relief changes exactly where the ground does.
-            const n = scratchNormalCanvas.getContext('2d');
-            n.globalCompositeOperation = 'source-over';
-            n.clearRect(0, 0, TILE, TILE);
-            n.drawImage(atlas[TOP_KINDS[kind]][0].normalTwin, ox, oy, TILE, TILE, 0, 0, TILE, TILE);
-            n.globalCompositeOperation = 'destination-in';
-            n.drawImage(maskCanvas, 0, 0);
-            n.globalCompositeOperation = 'source-over';
-            ctx.normalContext.drawImage(scratchNormalCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
+    const passes = 1 + counts.reduce((sum, count, kind) => sum + (kind !== main && count >= 12 ? 1 : 0), 0);
+    const sources = TOP_KINDS.map(kind => atlas[kind][0]);
+    const albedo = new Uint8ClampedArray(TILE * TILE * 4);
+    const normal = new Uint8ClampedArray(TILE * TILE * 4);
+    const ox = texX(column), oy = texY(row);
+    for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
+        const i = py * TILE + px, selected = map[i];
+        const kind = selected !== main && counts[selected] < 12 ? main : selected;
+        const source = sources[kind], src = ((oy + py) * source.width + ox + px) * 4, dst = i * 4;
+        const color = source.sourcePixels, relief = source.normalTwin.sourcePixels;
+        for (let c = 0; c < 4; c++) {
+            albedo[dst + c] = color[src + c];
+            normal[dst + c] = relief[src + c];
         }
-        painted++;
     }
-    return painted;
+    return { albedo, normal, passes };
+}
+
+/** Draw one stable, fully-owned material tile; the Canvas2D backend can defer its copy safely. */
+function drawSplat(ctx, atlas, map, column, row, x, y) {
+    if (typeof document === 'undefined') return 0;
+    const tile = cachedTile(splatTiles, map, atlas, column, row, () => {
+        const composed = composeTerrainSplatPixels(map, atlas, column, row);
+        const canvas = ownedTile(composed.albedo);
+        canvas.normalTwin = ownedTile(composed.normal);
+        return { canvas, passes: composed.passes };
+    });
+    ctx.drawImage(tile.canvas, x, y, FACE_PIXELS, FACE_PIXELS);
+    return tile.passes;
 }
 
 /**
- * Lava for the emissive ground map: exactly the pixels the splat paints as lava, so the glow follows the same irregular shoreline as the
- * albedo and never fills the square of a column. Coordinates are world units; `view` only culls.
+ * The emissive shore uses the same immutable lava coverage as the albedo. Give it
+ * an independently owned, immutable tile rather than reusing the albedo's mask.
  */
+function lavaEmissiveTile(map, atlas, column, row) {
+    return cachedTile(emissiveTiles, map, atlas, column, row, () => {
+        const pixels = new Uint8ClampedArray(TILE * TILE * 4);
+        const source = atlas.lavaTop[0], ox = texX(column), oy = texY(row);
+        let hasLava = false;
+        for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
+            const i = py * TILE + px;
+            if (map[i] !== KIND_INDEX.lavaTop) continue;
+            const src = ((oy + py) * source.width + ox + px) * 4;
+            for (let c = 0; c < 4; c++) pixels[i * 4 + c] = source.sourcePixels[src + c];
+            hasLava = true;
+        }
+        return { canvas: hasLava ? ownedTile(pixels) : null };
+    }).canvas;
+}
+
+/** Lava glow is clipped to the authored splat without mutating shared scratch resources. */
 export function paintLavaEmissive(ctx, frame, band, view) {
-    const atlas = frame?.material ? terrainAtlas(band) : null, contexts = atlas ? scratchContexts() : null;
-    if (!atlas || !contexts) return 0;
-    const { g, m } = contexts, lava = KIND_INDEX.lavaTop;
+    if (!frame?.material?.includes(TERRAIN_MATERIAL.Lava) && !frame?.baseMaterial?.includes(TERRAIN_MATERIAL.Lava)) return 0;
+    const atlas = frame?.material ? terrainAtlas(band) : null;
+    if (!atlas) return 0;
     let drawn = 0;
     for (let row = Math.max(0, Math.floor(view.y / FACE_PIXELS) - 2); row < frame.rows && row * FACE_PIXELS - 4 * FACE_PIXELS < view.y + view.height; row++)
         for (let column = Math.max(0, Math.floor(view.x / FACE_PIXELS) - 1); column < frame.columns && column * FACE_PIXELS < view.x + view.width; column++) {
@@ -673,19 +761,13 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             if (!own) continue;
             const map = kindMap(frame, band, column, row, own, height);
             const tile = atlas.lavaTop[0], [ox, oy] = [texX(column), texY(row)];
-            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; } continue; }
-            let any = false;
-            const mask = maskImage ??= m.createImageData(TILE, TILE);
-            for (let i = 0; i < map.length; i++) { const isLava = map[i] === lava; mask.data[i * 4 + 3] = isLava ? 255 : 0; any ||= isLava; }
-            if (!any) continue;
-            m.putImageData(mask, 0, 0);
-            g.globalCompositeOperation = 'source-over';
-            g.clearRect(0, 0, TILE, TILE);
-            g.drawImage(tile, ox, oy, TILE, TILE, 0, 0, TILE, TILE);
-            g.globalCompositeOperation = 'destination-in';
-            g.drawImage(maskCanvas, 0, 0);
-            g.globalCompositeOperation = 'source-over';
-            ctx.drawImage(scratchCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
+            if (!map) {
+                if (own === 'lavaTop') { ctx.drawImage(tile, ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; }
+                continue;
+            }
+            const emissive = lavaEmissiveTile(map, atlas, column, row);
+            if (!emissive) continue;
+            ctx.drawImage(emissive, x, y, FACE_PIXELS, FACE_PIXELS);
             drawn++;
         }
     return drawn;
@@ -705,6 +787,7 @@ function steppedEllipse(ctx, cx, cy, rx, ry, color) {
  * standing on it. Cosmetic and baked into the terrain; the upright sprite carries the trunk and adds its own contact shadow.
  */
 function drawTrunkFoot(ctx, column, row, top) {
+    if (!layerLabEnabled('decals')) return 0;
     const cx = top.x + FACE_PIXELS / 2, cy = top.y + 9;
     steppedEllipse(ctx, cx, cy, 14, 6, 'rgba(10,6,8,.14)');
     steppedEllipse(ctx, cx, cy, 10, 4.5, 'rgba(10,6,8,.3)');
@@ -734,7 +817,8 @@ const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.2)', dirtUpper: 'rgba(6,4,8
  * and, in the living bands, over rock too (a hill is grass above and stone below); then soil, then dressed stone, the texture running
  * continuously down the wall. `sx`/`width` pick the slice of the block in world units; `column` places it inside the wrapping texture.
  */
-function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, column) {
+export function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, column) {
+    if (!layerLabEnabled('faces')) return 0;
     let painted = 0;
     const wallTop = segments.length ? segments[0].from : 0;
     const source = texX(column) + sx * ART;
@@ -751,8 +835,9 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
         const start = (wallTop - segment.from) * MICROCELL_UNITS;
         if (segment.kind === 'lava') {
             for (let drawn = 0; drawn < height;) {
-                const v = start + drawn, piece = Math.min(height - drawn, TEXTURE_UNITS - (v % TEXTURE_UNITS));
-                ctx.drawImage(atlas.lavaSide[0], source, (v % TEXTURE_UNITS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
+                const sampleY = wallTextureSourceY(y + drawn);
+                const piece = Math.min(height - drawn, TEXTURE_UNITS - sampleY);
+                ctx.drawImage(atlas.lavaSide[0], source, sampleY * ART, width * ART, piece * ART, x, y + drawn, width, piece);
                 drawn += piece;
                 painted++;
             }
@@ -763,10 +848,12 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
         const rockCrest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone;
         for (let drawn = 0; drawn < height;) {
             const v = start + drawn;
-            const crest = v < FACE_PIXELS;
-            const name = stone ? (rockCrest && crest ? (band <= 1 ? 'stoneGrassSide' : 'stoneLipSide') : 'stoneSide') : turf && crest ? 'grassSide' : 'dirtSide';
-            const piece = Math.min(height - drawn, (rockCrest || turf) && crest ? FACE_PIXELS - v : TEXTURE_UNITS - (v % TEXTURE_UNITS));
-            ctx.drawImage(atlas[name][0], source, (v % TEXTURE_UNITS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
+            const crest = (rockCrest || turf) && v < FACE_PIXELS;
+            const name = stone ? (rockCrest && crest ? (band <= 1 ? 'stoneGrassSide' : 'stoneLipSide') : 'stoneSide')
+                : crest ? 'grassSide' : 'dirtSide';
+            const sampleY = wallTextureSourceY(y + drawn, v, crest);
+            const piece = Math.min(height - drawn, TEXTURE_UNITS - sampleY, crest ? FACE_PIXELS - v : Number.POSITIVE_INFINITY);
+            ctx.drawImage(atlas[name][0], source, sampleY * ART, width * ART, piece * ART, x, y + drawn, width, piece);
             drawn += piece;
             painted++;
         }
@@ -779,6 +866,7 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
 
 /** Paints the stepped moon shadow of a whole column's top face (`levels` from cellShadow) as horizontal runs of 2-unit samples. */
 function paintShadow(ctx, levels, x, y) {
+    if (!layerLabEnabled('bakedShadows')) return 0;
     if (!levels) return 0;
     let painted = 0;
     for (let sy = 0; sy < SHADOW_SAMPLES; sy++) {
@@ -796,6 +884,13 @@ function paintShadow(ctx, levels, x, y) {
 
 /** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
 function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
+    // Diagnostic only: compare the same site with authoritative excavation visually hidden.
+    // The C# terrain, collisions, impact events and enemy simulation remain untouched.
+    if (!layerLabEnabled('excavation')) {
+        const base = { ...frame, fine: null, surface: frame.baseSurface ?? frame.surface,
+            material: frame.baseMaterial ?? frame.material };
+        return paintTerrainCell(ctx, base, band, column, row, grain);
+    }
     const { columns, rows } = frame;
     const atlas = grain ? terrainAtlas(band) : null;
     const shade = atlas ? cellShadow(frame, column, row, block.heights) : null;
@@ -841,7 +936,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const tint = heightTint(coarseHeight);
             if (tint) { ctx.fillStyle = tint; ctx.fillRect(originalTop.x, originalTop.y, originalTop.width, originalTop.height); painted++; }
             if (baseKind !== 'lavaTop') {
-                painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, originalTop);
+                if (layerLabEnabled('decals')) painted += drawGroundDecals(ctx, frame, band, column, row, coarseHeight, baseMaterial, originalTop);
                 painted += paintShadow(ctx, cellShadow(frame, column, row, coarseHeight), originalTop.x, originalTop.y);
             }
             painted += wholeDepthCues(ctx, frame, column, row, coarseHeight, originalTop);
@@ -870,7 +965,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                 ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
             if (!unchangedTop) painted++;
-            if (shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
+            if (layerLabEnabled('bakedShadows') && shade && !unchangedTop && material !== TERRAIN_MATERIAL.Lava) {
                 for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
                     const level = shade[(microY * 2 + j) * SHADOW_SAMPLES + microX * 2 + i];
                     if (!level) continue;
@@ -887,6 +982,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                 painted++;
             }
             if (!unchangedTop) painted += microDepthCues(ctx, frame, column, row, microX, microY, height, x, y - height * MICROCELL_UNITS);
+            if (!layerLabEnabled('faces')) continue;
             const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
@@ -959,7 +1055,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
         if (tileKind !== 'lavaTop') {
-            painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
+            if (layerLabEnabled('decals')) painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
             painted += paintShadow(ctx, cellShadow(frame, column, row, height), top.x, top.y);
         }
         if (material[index] === TERRAIN_MATERIAL.Wood) painted += drawTrunkFoot(ctx, column, row, top);
@@ -969,6 +1065,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         if (grain) painted += paintGrain(ctx, band, material[index], height, column, row, top, baseColor);
     }
     painted += wholeDepthCues(ctx, frame, column, row, height, top);
+    if (!layerLabEnabled('faces')) return painted;
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;
     // A whole column standing behind a subdivided one meets its microcolumns, not their average.
     if (row + 1 < rows && frame.fine?.has(index + columns)) {
@@ -1002,8 +1099,11 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
 const OCCLUSION_ROWS = 4;
 
 /**
- * Terrain columns in front of (south of) an actor that stand higher than its feet: they hide part of it.
- * Returned back to front so repainting them keeps the painter's order.
+ * Terrain to the south of an actor can hide it only where surviving physical
+ * microcolumns stand above its C# foot Z. A damaged fissure may leave 1-4px
+ * channels in a coarse 32px block: selecting/erasing the whole block would
+ * create a square dark-looking mask over the mage even where the rock is gone.
+ * Keep intact-block entries unchanged for the common fast path.
  */
 export function occludingTerrainCells(frame, groundX, groundY, groundZ, halfWidth) {
     if (!frame || !Number.isFinite(groundX) || !Number.isFinite(groundY)) return [];
@@ -1012,32 +1112,84 @@ export function occludingTerrainCells(frame, groundX, groundY, groundZ, halfWidt
     const first = Math.max(0, Math.floor((groundX - halfWidth) / FACE_PIXELS));
     const last = Math.min(columns - 1, Math.floor((groundX + halfWidth) / FACE_PIXELS));
     const cells = [];
-    for (let row = Math.max(0, footRow + 1); row <= Math.min(rows - 1, footRow + OCCLUSION_ROWS); row++)
-        for (let column = first; column <= last; column++)
-            if (surface[row * columns + column] * MICROCELL_UNITS > groundZ + 1) cells.push({ column, row });
+    for (let row = Math.max(0, footRow + 1); row <= Math.min(rows - 1, footRow + OCCLUSION_ROWS); row++) {
+        for (let column = first; column <= last; column++) {
+            const index = row * columns + column;
+            const fine = frame.fine?.get(index);
+            if (!fine) {
+                if (surface[index] * MICROCELL_UNITS > groundZ + 1) cells.push({ column, row });
+                continue;
+            }
+            const microcells = [];
+            for (let index = 0; index < fine.heights.length; index++) {
+                if (fine.heights[index] * MICROCELL_UNITS > groundZ + 1) microcells.push(index);
+            }
+            if (microcells.length) cells.push({ column, row, microcells });
+        }
+    }
     return cells;
 }
 
-/** GPU path: remove the covered pixels from an actor's scratch tile so the lit terrain beneath shows through. */
+/**
+ * Actor-mask geometry must match the same top and exposed south-facing micro
+ * surfaces as paintFineCell(). Do not construct a coarse substitute for a
+ * fissured block: that hides the wizard behind rock which was destroyed.
+ */
+function forEachOccludingFace(frame, cell, visit) {
+    const { column, row, microcells } = cell;
+    if (!microcells) {
+        const height = frame.surface[row * frame.columns + column];
+        const top = blockTopRect(column, row, height);
+        visit(top);
+        const nextHeight = row + 1 < frame.rows
+            ? frame.surface[(row + 1) * frame.columns + column] : height;
+        const front = blockFrontRect(column, row, height, nextHeight);
+        if (front) visit(front);
+        return;
+    }
+    for (const index of microcells) {
+        const microX = index % MICRO_PER_COLUMN;
+        const microY = Math.floor(index / MICRO_PER_COLUMN);
+        const height = microHeight(frame, column, row, microX, microY);
+        const x = column * FACE_PIXELS + microX * MICRO_UNITS;
+        const y = row * FACE_PIXELS + microY * MICRO_UNITS;
+        visit({ x, y: y - height * MICROCELL_UNITS, width: MICRO_UNITS, height: MICRO_UNITS });
+        const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
+        const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
+        const south = southRow < frame.rows
+            ? microHeight(frame, column, southRow, microX, southY) : height;
+        if (height > south) {
+            visit({ x, y: y + MICRO_UNITS - height * MICROCELL_UNITS,
+                width: MICRO_UNITS, height: (height - south) * MICROCELL_UNITS });
+        }
+    }
+}
+
+/** GPU path: remove only the genuinely covering terrain faces from the actor's scratch tile. */
 export function eraseTerrainOcclusion(ctx, frame, cells) {
     if (cells.length === 0) return 0;
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = '#000';
-    for (const { column, row } of cells) {
-        const height = frame.surface[row * frame.columns + column];
-        const top = blockTopRect(column, row, height);
-        ctx.fillRect(top.x, top.y, top.width, top.height);
-        const front = blockFrontRect(column, row, height, row + 1 < frame.rows ? frame.surface[(row + 1) * frame.columns + column] : height);
-        if (front) ctx.fillRect(front.x, front.y, front.width, front.height);
-    }
+    for (const cell of cells)
+        forEachOccludingFace(frame, cell, face => ctx.fillRect(face.x, face.y, face.width, face.height));
     ctx.restore();
     return cells.length;
 }
 
-/** Canvas path: paint the covering terrain over the actor in painter's order. */
+/** Canvas path: clip damaged cells to their real micro faces before repainting the occluding rock. */
 export function repaintTerrainOcclusion(ctx, frame, band, cells, grain = true) {
-    for (const { column, row } of cells) paintTerrainCell(ctx, frame, band, column, row, grain);
+    for (const cell of cells) {
+        if (cell.microcells) {
+            ctx.save();
+            ctx.beginPath();
+            forEachOccludingFace(frame, cell,
+                face => ctx.rect(face.x, face.y, face.width, face.height));
+            ctx.clip();
+        }
+        paintTerrainCell(ctx, frame, band, cell.column, cell.row, grain);
+        if (cell.microcells) ctx.restore();
+    }
     return cells.length;
 }
 
@@ -1157,8 +1309,11 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
     const { columns, rows } = frame;
     let painted = 0;
     for (const { c0, c1, r0, r1 } of regions) {
-        // Keep existing splat maps: they describe the site's original ground, not its excavated state.
-        // Raised columns can overdraw four rows north and fronts reach south; include the source rows whose faces touch the clip.
+        // The clipped area must be an exact slice of a fresh full repaint, not a blend
+        // of old cache pixels and whichever nearby cells happened to be dirty.
+        // Scan source rows in canonical back-to-front order. Terrain can overdraw
+        // several rows above its origin and pit walls can draw below it; bounding
+        // source rows at a fixed +/- margin leaves rectangular stale patches.
         const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
         const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
         ctx.save();
@@ -1167,8 +1322,8 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
         ctx.clip();
         ctx.clearRect(clipX, clipY, clipW, clipH);
         ctx.translate(0, offsetY);
-        for (let row = Math.max(0, r0 - 8); row <= Math.min(rows - 1, r1 + 8); row++)
-            for (let column = Math.max(0, c0 - 1); column <= Math.min(columns - 1, c1 + 1); column++)
+        for (let row = 0; row < rows; row++)
+            for (let column = c0; column <= c1; column++)
                 painted += paintTerrainCell(ctx, frame, band, column, row);
         ctx.restore();
     }
@@ -1183,12 +1338,19 @@ export class TerrainCanvasCache {
     constructor(createCanvas = (width, height) => Object.assign(document.createElement('canvas'), { width, height }), withNormals = false) {
         this.createCanvas = createCanvas;
         this.withNormals = withNormals;
+        this.allowRegional = true; // Layer Lab can disable dirty-rectangle repaints without changing gameplay.
         this.normalCanvas = null;
         this.canvas = null;
         this.revision = null;
         this.visualSeed = null;
         this.band = null;
         this.repaints = 0;
+        this.fullRepaints = 0;
+        this.regionalRepaints = 0;
+        this.artKitRepaints = 0;
+        this.unchangedRevisionSkips = 0;
+        this.lastPaintReason = null;
+        this.lastDirtyBlocks = 0;
         this.totalRepaintMs = 0;
         this.maxRepaintMs = 0;
     }
@@ -1204,10 +1366,29 @@ export class TerrainCanvasCache {
         const kitReady = Boolean(forestKit());
         const visualSeed = frame.visualSeed ?? 0;
         if (this.canvas && this.visualSeed === visualSeed && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
+        // The authoritative C# revision may advance without changing a single terrain pixel
+        // (e.g. a repeated impact snapshot). Do not clear a full-screen cache or move road/grass
+        // pixels in response to a nonvisual update. A late art-kit load and new site still repaint.
+        if (this.canvas && this.revision !== null && this.visualSeed === visualSeed && this.band === band &&
+            this.kitReady === kitReady && frame.visualDeltaComplete && frame.changed?.length === 0 &&
+            frame.revision >= this.revision) {
+            this.revision = frame.revision;
+            frame.kindMaps = this.kindMaps;
+            this.unchangedRevisionSkips++;
+            this.lastDirtyBlocks = 0;
+            this.lastPaintReason = 'identical-authoritative-terrain';
+            return false;
+        }
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS * ART;
         const height = (frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2) * ART;
-        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null || this.visualSeed !== visualSeed || this.kitReady !== kitReady;
+        const kitSwitched = Boolean(this.canvas) && this.kitReady !== kitReady;
+        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height ||
+            this.band !== band || this.revision === null || this.visualSeed !== visualSeed || kitSwitched;
+        if (full) {
+            splatTiles.clear();
+            emissiveTiles.clear();
+        }
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
         if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
@@ -1217,11 +1398,20 @@ export class TerrainCanvasCache {
         baseCtx.setTransform(ART, 0, 0, ART, 0, 0);
         if (this.withNormals) this.normalCanvas.getContext('2d').setTransform(ART, 0, 0, ART, 0, 0);
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
-        const regions = !full && Array.isArray(frame.changed) ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
+        const regions = this.allowRegional && !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
+            ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
         const regional = regions.length > 0;
-        // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
+        // Excavation preserves the original site's authored splat masks; otherwise
+        // undamaged grass and road pixels would shift after every Fireball. Only a
+        // *coarse* material/height replacement of a whole block changes which map
+        // that block itself needs. Do not invalidate surrounding original masks.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
         this.kindMaps = regional || kitOnly ? this.kindMaps : new Map();
+        if (regional && frame.baseMaterial && frame.baseSurface) for (const index of frame.changed ?? []) {
+            if (frame.fine?.has(index)) continue;
+            if (frame.material[index] !== frame.baseMaterial[index] ||
+                frame.surface[index] !== frame.baseSurface[index]) this.kindMaps.delete(index);
+        }
         frame.kindMaps = this.kindMaps;
         if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS);
         else {
@@ -1233,6 +1423,11 @@ export class TerrainCanvasCache {
         this.band = band;
         this.kitReady = kitReady;
         this.repaints++;
+        if (regional) this.regionalRepaints++;
+        else this.fullRepaints++;
+        if (kitSwitched) this.artKitRepaints++;
+        this.lastDirtyBlocks = frame.changed?.length ?? 0;
+        this.lastPaintReason = kitSwitched ? 'forest-kit-loaded' : regional ? 'voxel-changes' : 'full-terrain-refresh';
         const elapsed = (globalThis.performance?.now() ?? 0) - started;
         this.totalRepaintMs += elapsed;
         this.maxRepaintMs = Math.max(this.maxRepaintMs, elapsed);

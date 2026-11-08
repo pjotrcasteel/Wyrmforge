@@ -37,6 +37,16 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+.first-hunt-upgrade-guide {
+    max-width: 420px;
+    margin: 0 auto 12px;
+    padding: 8px 10px;
+    border-left: 2px solid #d8af74;
+    background: rgba(165, 105, 48, .12);
+    color: #e8d4bc;
+    font: 600 .75rem/1.4 system-ui, sans-serif;
+}
+
 /* Fateweave: one reroll control beneath each card, a hunt-wide purse above the draft. */
 .choice-slot { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
 .choice-slot > .run-upgrade { flex: 1; }

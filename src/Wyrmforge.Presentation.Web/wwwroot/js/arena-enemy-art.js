@@ -3,6 +3,7 @@
 // and its false form);
 // C# still owns hitboxes, health, AI and attacks.
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
+import { footDrop } from './authored-grounding.js';
 const palettes = [
     {edge:'#242726',body:'#788079',shade:'#4d5d58',light:'#bcc0aa',head:'#c0bda7',eye:'#242728',weapon:'#8b9382'},
     {edge:'#0e0a08',body:'#3b2b22',shade:'#1d1511',light:'#6e5c4d',head:'#5c4433',eye:'#ff8f2e',weapon:'#c9b591'},
@@ -229,7 +230,10 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
     }
     const scale=Math.max(.62,Math.min(1.9,(Number(enemy.radius)||12)/12));
     ctx.save();ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(art,enemy.x-18*scale,enemy.y-20*scale,36*scale,44*scale);
+    // The sprite's planted foot is at the BOTTOM of its 36x44 fallback cell, not at the C# body centre.
+    // Previous y-20*scale left the feet 24*scale units below the hitbox (46 px for the Bell Warden).
+    // Match the same radius-based front-foot projection used by authored enemy poses.
+    ctx.drawImage(art,enemy.x-18*scale,enemy.y+footDrop(enemy.radius??12)-44*scale,36*scale,44*scale);
     drawEnemyLight(ctx,enemy,light,scale);
     ctx.restore();
 }

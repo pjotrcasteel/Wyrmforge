@@ -26,10 +26,15 @@ public sealed record RunRenderSnapshot(
 {
     public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
 
+    /// <summary>Authoritative active Ashfang breath-fire patches and their harmless cooling scars.</summary>
+    public IReadOnlyList<AshfangGroundFireRenderSnapshot> AshfangGroundFires { get; init; } = [];
+
     public IReadOnlyList<DamageNumberRenderSnapshot> DamageNumbers { get; init; } = [];
     /// <summary>Live damaging fields rendered through EssenceBursts; read-only evidence without duplicating geometry.</summary>
     public int BurningGroundCount { get; init; }
     public bool PresentationPaused { get; init; }
+    /// <summary>Authoritative staged walk-in: player input and combat are locked until this becomes false.</summary>
+    public bool HuntEntranceWalking { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
     public GpuLightingFrame? Lighting { get; init; }
 

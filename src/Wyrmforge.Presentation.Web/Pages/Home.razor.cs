@@ -65,6 +65,7 @@ public partial class Home
     private bool awaitingPrimaryConfirmation;
     private bool tutorialCinematic;
     private bool unlockCinematic;
+    private bool firstWebRequested;
     private bool leaderboardOpen;
     private bool ForgeAvailable => firstHunt.AtlasUnlocked && (essenceVault.TotalCount > 0 || forgeProgression.Discovered.Count > 0);
     private bool playtestFeedbackOpen;
@@ -107,6 +108,8 @@ public partial class Home
 
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
 
+    private bool startupDataReady;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -141,6 +144,9 @@ public partial class Home
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
+        // First render has placeholder progress. Reveal the real home only after
+        // persistent unlocks, saved school, and town selections have been restored.
+        startupDataReady = true;
         StateHasChanged();
     }
 
@@ -177,6 +183,7 @@ public partial class Home
     {
         // Character creation owns magical affinity; Hunts never prompt for a new primary.
         if (characterSchool is null || preferredPrimary is null) return;
+        firstWebRequested = false;
         await TryPlayAudioAsync("hunt-start");
         hunterGain = null;
         newlyUnlockedLineages = [];
@@ -349,7 +356,11 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private void DismissUnlocks() => unlockCinematic = false;
+    private void OpenFirstArcaneWeb()
+    {
+        unlockCinematic = false;
+        firstWebRequested = true;
+    }
     private void OpenLeaderboard() => leaderboardOpen = true;
     private void CloseLeaderboard() => leaderboardOpen = false;
 

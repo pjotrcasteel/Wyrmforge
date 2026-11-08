@@ -204,6 +204,25 @@ test('Rate limit and no service secrets fails closed', async () => {
     missing.ADMIN_TOKEN = '';
     assert.equal((await admin(missing, '/v1/admin/summary')).status, 503);
 });
+
+test('Player-test Firebase origin is opt-in and exact; no wildcard origins are accepted', async () => {
+    const e = env();
+    const testOrigin = 'https://wyrmforge-player-test.web.app';
+    const payload = { consent: true, report: report() };
+
+    assert.equal((await post(e, payload, testOrigin)).status, 403);
+    e.PUBLIC_TEST_ORIGIN = testOrigin;
+    const preflight = await worker.fetch(new Request('https://collector.example.test/v1/reports', {
+        method: 'OPTIONS', headers: { Origin: testOrigin }
+    }), e);
+    assert.equal(preflight.status, 204);
+    assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), testOrigin);
+    assert.equal((await post(e, payload, testOrigin)).status, 202);
+    assert.equal((await post(e, payload, 'https://another.web.app')).status, 403);
+    assert.equal((await post(e, payload, 'https://wyrmforge-player-test.web.app.attacker.invalid')).status, 403);
+    assert.equal((await post(e, payload, e.PUBLIC_ORIGIN)).status, 202);
+});
+
 test('CORS preflight and retention cleanup', async () => {
     const e = env();
     const response = await worker.fetch(new Request('https://collector.example.test/v1/reports', { method: 'OPTIONS',

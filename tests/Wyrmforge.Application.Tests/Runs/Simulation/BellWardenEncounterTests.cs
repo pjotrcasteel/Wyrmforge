@@ -68,6 +68,41 @@ public sealed class BellWardenEncounterTests
     }
 
     [TestMethod]
+    public void BellWardenEntrance_ProjectsTheSameRaisedTerrainAsTheAuthoritativeBoss()
+    {
+        var simulation = WalkToPreLair(77);
+        SetField(simulation, "hunt1TerrainEnabled", true);
+        var road = simulation.AvailableMapNodes.Single(node => node.PreLair);
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+
+        simulation.Tick(0, default, ArenaMetricEnvelope.CombatWidth, ArenaMetricEnvelope.CombatHeight);
+        for (var time = 0d; time < 2.2; time += .05)
+        {
+            Invoke(simulation, "UpdateSpawn", .05d, ArenaMetricEnvelope.CombatWidth, ArenaMetricEnvelope.CombatHeight);
+        }
+
+        Assert.AreEqual(BellWardenStage.Tolling, simulation.BellWardenStage);
+        var mark = simulation.CreateSnapshot().BellWarden!;
+        var position = new Vector2D(mark.X, mark.Y);
+        var terrain = Field<ArenaEnvironmentState>(simulation, "arenaEnvironment").Terrain!;
+        var (column, row) = ArenaTerrainGrid.ColumnOf(position);
+        terrain.Set(column, row, 8, ArenaTerrainMaterial.Stone);
+
+        Assert.AreEqual(32d, simulation.CreateSnapshot().BellWarden!.Z,
+            "The tolling mark and entrance must be raised by the actual C# ground elevation.");
+
+        for (var time = 0d; time < 2; time += .05)
+        {
+            Invoke(simulation, "UpdateSpawn", .05d, ArenaMetricEnvelope.CombatWidth, ArenaMetricEnvelope.CombatHeight);
+        }
+
+        Assert.AreEqual(BellWardenStage.Fight, simulation.BellWardenStage);
+        var boss = simulation.CreateSnapshot();
+        var warden = boss.Enemies.Single(enemy => enemy.Kind == EnemyKind.BellWarden);
+        Assert.AreEqual(warden.Z, boss.BellWarden!.Z, "Intro and fight use one authoritative surface height.");
+    }
+
+    [TestMethod]
     public void RallyCall_StaysBounded_FarBelowTheHordePeak()
     {
         var (simulation, _, enemies) = Fight(91);

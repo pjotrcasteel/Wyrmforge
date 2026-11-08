@@ -47,7 +47,11 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
     if (!scene || cutoutCache.has(scene)) return;
     cutoutCache.add(scene);
     const base = scene.querySelector(".refuge-town-night-base");
-    if (!base) return;
+    if (!base) {
+        scene.dataset.townCutoutsStatus = "fallback";
+        return;
+    }
+    scene.dataset.townCutoutsStatus = "loading";
 
     // Debug taps inspect polygons in All/Walk/Block/Cover and choose a route in
     // Route mode. Normal gameplay, building hotspots and panning remain untouched.
@@ -142,6 +146,7 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
         if (typeof base.decode === "function") await base.decode();
         if (!scene.isConnected) return;
 
+        let complete = true;
         for (const cutout of CUTOUTS) {
             const target = scene.querySelector(`[data-town-cutout="${cutout.id}"]`);
             if (!target) continue;
@@ -149,7 +154,10 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
             canvas.width = cutout.width;
             canvas.height = cutout.height;
             const context = canvas.getContext("2d");
-            if (!context) continue;
+            if (!context) {
+                complete = false;
+                continue;
+            }
             context.drawImage(base, cutout.x, cutout.y, cutout.width, cutout.height,
                 0, 0, cutout.width, cutout.height);
             context.globalCompositeOperation = "destination-in";
@@ -158,9 +166,11 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
             target.src = canvas.toDataURL("image/png");
             target.dataset.townPngReady = "true";
         }
+        scene.dataset.townCutoutsStatus = complete ? "ready" : "fallback";
     } catch (error) {
         // The main painting remains visible. An optional foreground extraction
         // cannot break walking, navigation, town interactions or gameplay.
+        scene.dataset.townCutoutsStatus = "fallback";
         console.warn("Refuge foreground PNG generation unavailable.", error);
     }
 }

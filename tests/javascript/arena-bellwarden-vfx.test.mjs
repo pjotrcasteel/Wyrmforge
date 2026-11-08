@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar, BELL_SHOCKWAVE_THICKNESS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-bellwarden-vfx.js';
+import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar, bellWardenSurfaceY, BELL_SHOCKWAVE_THICKNESS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-bellwarden-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, tollPulsePoints, BELL_TOLL } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
 
 function mockContext() {
@@ -31,6 +31,36 @@ test('the tolling mark sits on the C# spot', () => {
     const ctx = mockContext();
     drawBellWardenGround(ctx, { bellWarden: { stage: 'tolling', x: 320, y: 180, progress: .5 } }, 0, true);
     assert.deepEqual(ctx.calls.find(c => c[0] === 'translate'), ['translate', 320, 180]);
+});
+
+test('the Bell Warden intro and mark project to the same authoritative raised ground', () => {
+    const bell = { stage: 'tolling', x: 320, y: 180, z: 64, progress: 1 };
+    const ctx = mockContext();
+    drawBellWardenGround(ctx, { bellWarden: bell }, 0, true);
+    assert.deepEqual(ctx.calls.filter(c => c[0] === 'translate'), [
+        ['translate', 320, 116], ['translate', 320, 116]
+    ], 'both rings and glyph share the raised ground anchor');
+    assert.equal(bellWardenSurfaceY(bell), 116);
+    assert.equal(bellWardenSurfaceY({ ...bell, z: 0 }), 180);
+    assert.equal(bellWardenSurfaceY({ ...bell, z: undefined }), 180, 'legacy snapshots stay level');
+});
+
+test('the Bell Warden entrance pixel art is elevated, not clipped below raised voxel ground', () => {
+    const originalDocument = globalThis.document;
+    try {
+        globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: mockContext }) };
+        const render = z => {
+            const ctx = mockContext();
+            drawBellWardenEntrance(ctx, { stage: 'tolling', variant: 'fire', x: 320, y: 180, z, progress: 1 });
+            const draw = ctx.calls.find(c => c[0] === 'drawImage');
+            assert.ok(draw, 'a real entrance sprite is submitted');
+            return draw[3];
+        };
+        assert.equal(render(64), render(0) - 64, 'the same 64-unit rise applies to the sprite and its intro mark');
+    } finally {
+        if (originalDocument === undefined) delete globalThis.document;
+        else globalThis.document = originalDocument;
+    }
 });
 
 test('a charging shockwave shows the crater and its farthest reach, never the band', () => {

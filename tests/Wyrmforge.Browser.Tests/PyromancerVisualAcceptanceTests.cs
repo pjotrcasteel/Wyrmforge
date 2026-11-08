@@ -47,7 +47,7 @@ public sealed class PyromancerVisualAcceptanceTests : PageTest
 
         var stage = Page.Locator(".atlas-stage");
         await Expect(stage).ToBeVisibleAsync();
-        await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(2);
+        await Expect(Page.Locator(".wheel-school-badge")).ToHaveCountAsync(6);
         await Expect(Page.Locator(".web-node[data-tier='major'][data-node-id='" + majorId + "']")).ToHaveCountAsync(1);
         // The Fire sector is already active. Its large outer emblem is intentionally offscreen
         // at phone detail zoom; clicking it here would fail without testing the major socket.

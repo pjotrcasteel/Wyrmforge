@@ -358,12 +358,13 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             await Page.WaitForFunctionAsync(@"() => {
                 const progress = document.querySelector('.map-run-progress');
                 const chartReturned = progress?.getClientRects().length > 0 && progress.textContent?.includes('1 cleared');
-                const continueVisible = [...document.querySelectorAll('button')].some(button =>
-                    button.textContent?.trim() === 'Continue' && button.getClientRects().length > 0);
+                const continueVisible = [...document.querySelectorAll('.trail-clear-transition button')].some(button =>
+                    button.textContent?.trim().toLowerCase() === 'continue' && button.getClientRects().length > 0);
                 return chartReturned || continueVisible;
             }", null, new() { Timeout = 150000 });
             if (!await Page.Locator(".map-run-progress").IsVisibleAsync())
-                await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync();
+                await Page.GetByRole(AriaRole.Dialog, new() { Name = "Trail cleared" })
+                    .GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^continue$", RegexOptions.IgnoreCase) }).ClickAsync();
             await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 30000 });
         }
         catch
@@ -687,14 +688,21 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.EvaluateAsync("""
             async () => {
                 const module = await import('/js/arena-performance.js');
+                const { resolveArenaCamera } = await import('/js/arena-camera.js');
                 const canvas = document.querySelector('canvas.game-canvas');
                 window.__torch = { shot: null, variants: [] };
                 const tick = () => {
                     const state = module.readArenaDiagnostics(canvas), shots = window.__torch;
                     const torches = state?.hunt1Terrain?.torches ?? [];
                     shots.variants = [...new Set(torches.filter(t => t.art).map(t => t.variant))];
-                    const near = torches.find(t => t.art && state.player && Math.abs(t.x - state.player.x) < 70 && t.y < state.player.y && state.player.y - t.y < 110);
-                    if (near && !shots.shot) shots.shot = canvas.toDataURL('image/png');
+                    // Posts are deliberately 3-5 cells OFF the road (~100-160 world units).
+                    // Capture a genuinely visible loaded authored torch, not an impossible 70-unit player radius.
+                    const width = canvas.clientWidth, height = canvas.clientHeight;
+                    const camera = resolveArenaCamera(state?.world, state?.player, width, height);
+                    const visible = torches.find(t => t.art &&
+                        t.x >= camera.x + 16 && t.x <= camera.x + width - 16 &&
+                        t.y >= camera.y + 64 && t.y <= camera.y + height - 24);
+                    if (visible && !shots.shot) shots.shot = canvas.toDataURL('image/png');
                     requestAnimationFrame(tick);
                 };
                 tick();
@@ -716,7 +724,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
         var result = await Page.EvaluateAsync<string>("""
             async () => {
-                const m = await import('/js/authored-characters.js');
+                const m = await import('/js/authored-characters.js?v=20261108-voxel-actor-grounding-v1');
                 for (const name of m.AUTHORED_SETS) m.preloadAuthoredCharacter(name);
                 const started = performance.now();
                 while (m.AUTHORED_SETS.some(name => !m.authoredCharacter(name)) && performance.now() - started < 30000) await new Promise(r => setTimeout(r, 100));

@@ -27,6 +27,12 @@ public sealed class ArenaTerrainGrid
     public const int MicroPerColumn = 8;
     public const int MicroCount = MicroPerColumn * MicroPerColumn;
     public const double MicroUnits = CellUnits / MicroPerColumn;
+    /// <summary>Physical radius of an upright trunk; the foliage and its square terrain column are not collision.</summary>
+    public const double TreeTrunkRadiusUnits = 8;
+    /// <summary>The tree sprite's foot is eight world units north of its column centre.</summary>
+    public const double TreeFootRaiseUnits = 8;
+    /// <summary>Physical radius of a roadside torch's visible post/base, not its flame or light pool.</summary>
+    public const double TorchBaseRadiusUnits = 6;
 
     private readonly short[] surface;
     private readonly short[] stoneTop;
@@ -61,10 +67,13 @@ public sealed class ArenaTerrainGrid
     /// <summary>Seeds purely visual ground variety (which patches are mud, dry grass or rubble); gameplay never reads it.</summary>
     public int VisualSeed { get; private set; }
     public void SetVisualSeed(int seed) => VisualSeed = seed;
+    /// <summary>Separate physical fuel-moisture seed; fire never reads the visual-only grass/mud seed.</summary>
+    public int FireMoistureSeed { get; private set; }
+    public void SetFireMoistureSeed(int seed) => FireMoistureSeed = seed;
     public void SetCracks(IReadOnlyList<int[]> cracks) => Cracks = cracks;
     /// <summary>The road's centre line as x, y pairs in 1/16 cell units (a smooth curve, from the generator); presentation paints the dirt road along it.</summary>
     public IReadOnlyList<int> Road { get; private set; } = [];
-    /// <summary>Roadside torch posts as x, y pairs in 1/16 cell units: static, non-colliding, each a warm point light in the lighting snapshot.</summary>
+    /// <summary>Roadside torch posts as x, y pairs in 1/16 cell units: small solid bases, each a warm point light in the lighting snapshot.</summary>
     public IReadOnlyList<int> Torches { get; private set; } = [];
     public void SetRoad(IReadOnlyList<int> road, IReadOnlyList<int> torches) { Road = road; Torches = torches; }
     /// <summary>Increments on every change so presentation can pull only what moved.</summary>
@@ -158,7 +167,7 @@ public sealed class ArenaTerrainGrid
 
     public ArenaTerrainGrid Clone()
     {
-        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks, VisualSeed = VisualSeed, Road = Road, Torches = Torches };
+        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks, VisualSeed = VisualSeed, FireMoistureSeed = FireMoistureSeed, Road = Road, Torches = Torches };
         surface.CopyTo(copy.surface, 0);
         stoneTop.CopyTo(copy.stoneTop, 0);
         materials.CopyTo(copy.materials, 0);
@@ -312,29 +321,91 @@ public sealed class ArenaTerrainGrid
     public double? SurfaceMetersAt(Vector2D position)
     {
         var (column, row) = ColumnOf(position);
-        return Contains(column, row) ? SurfaceMeters(column, row) : null;
+        return Contains(column, row) ? WalkSurfaceAt(position, column, row) / (double)MicrocellsPerMeter : null;
     }
 
     /// <summary>
     /// A circular footprint is standable when every column it overlaps is inside the arena, not lava,
     /// and within one step of the column under its centre.
     /// </summary>
+    private bool TreeTrunkIntersects(int column, int row, Vector2D position, double radius)
+    {
+        if (Material(column, row) != ArenaTerrainMaterial.Wood || Surface(column, row) <= MaxStepMicrocells)
+        {
+            return false;
+        }
+
+        var foot = new Vector2D((column + .5) * CellUnits, (row + .5) * CellUnits - TreeFootRaiseUnits);
+        return Vector2D.Distance(position, foot) < TreeTrunkRadiusUnits + Math.Max(0, radius);
+    }
+
+    // Raised wood is an upright tree over ground, not a 1 m-wide cliff. Retain the real excavated
+    // floor if a destroyed trunk has dug below zero; keep the full Wood height for shot/terrain data.
+    private int WalkSurface(int column, int row) =>
+        Material(column, row) == ArenaTerrainMaterial.Wood ? Math.Min(0, Surface(column, row)) : Surface(column, row);
+
+    private int WalkSurfaceAt(Vector2D position, int column, int row) =>
+        TreeTrunkIntersects(column, row, position, 0) ? Surface(column, row) : WalkSurface(column, row);
+
+    // Generated torch fixtures are real posts: the flame is not solid, but the base blocks only its visible radius.
+    // All gameplay callers (player, enemies and navigation) already share IsStandable/BlocksMovement.
+    private bool TorchBaseIntersects(Vector2D position, double radius)
+    {
+        var reach = TorchBaseRadiusUnits + Math.Max(0, radius);
+        var reachSquared = reach * reach;
+        for (var index = 0; index + 1 < Torches.Count; index += 2)
+        {
+            var dx = Torches[index] * (CellUnits / 16) - position.X;
+            if (Math.Abs(dx) >= reach)
+            {
+                continue;
+            }
+
+            var dy = Torches[index + 1] * (CellUnits / 16) - position.Y;
+            if (dx * dx + dy * dy < reachSquared)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public bool IsStandable(Vector2D position, double radius)
     {
         var (column, row) = ColumnOf(position);
-        if (!Contains(column, row)) return false;
-        var centre = Surface(column, row);
+        if (!Contains(column, row))
+        {
+            return false;
+        }
+
+        if (TorchBaseIntersects(position, radius))
+        {
+            return false;
+        }
+
+        var centre = WalkSurface(column, row);
         var minColumn = (int)Math.Floor((position.X - radius) / CellUnits);
         var maxColumn = (int)Math.Floor((position.X + radius) / CellUnits);
         var minRow = (int)Math.Floor((position.Y - radius) / CellUnits);
         var maxRow = (int)Math.Floor((position.Y + radius) / CellUnits);
         for (var y = minRow; y <= maxRow; y++)
+        {
             for (var x = minColumn; x <= maxColumn; x++)
             {
-                if (!Contains(x, y)) return false;
-                if (Material(x, y) == ArenaTerrainMaterial.Lava) return false;
-                if (Math.Abs(Surface(x, y) - centre) > MaxStepMicrocells) return false;
+                if (!Contains(x, y) || Material(x, y) == ArenaTerrainMaterial.Lava)
+                {
+                    return false;
+                }
+
+                if (TreeTrunkIntersects(x, y, position, radius) ||
+                    Math.Abs(WalkSurface(x, y) - centre) > MaxStepMicrocells)
+                {
+                    return false;
+                }
             }
+        }
+
         return Material(column, row) != ArenaTerrainMaterial.Lava;
     }
 
@@ -350,7 +421,7 @@ public sealed class ArenaTerrainGrid
             if (!IsStandable(point, radius)) return true;
             var (pc, pr) = ColumnOf(previous);
             var (c, r) = ColumnOf(point);
-            if ((pc != c || pr != r) && Math.Abs(Surface(pc, pr) - Surface(c, r)) > MaxStepMicrocells) return true;
+            if ((pc != c || pr != r) && Math.Abs(WalkSurface(pc, pr) - WalkSurface(c, r)) > MaxStepMicrocells) return true;
             previous = point;
         }
         return false;
@@ -433,20 +504,32 @@ public sealed class ArenaTerrainGrid
     private bool CanWalk(int fromColumn, int fromRow, int column, int row, double radius)
     {
         if (!IsStandable(CenterOf(column, row), radius)) return false;
-        return CanStepBetween(fromColumn, fromRow, column, row);
+        return CanStepBetween(fromColumn, fromRow, column, row, radius);
     }
 
-    // A diagonal passes the shared corner, so both corner columns must be climbable to and from both ends.
-    private bool CanStepBetween(int fromColumn, int fromRow, int column, int row)
+    // A diagonal passes the shared corner; only the physical trunk footprint can obstruct it.
+    // Its whole 1 m wood column still supplies height to rendering, fire damage and line of sight.
+    private bool CanStepBetween(int fromColumn, int fromRow, int column, int row, double radius)
     {
-        if (Math.Abs(Surface(fromColumn, fromRow) - Surface(column, row)) > MaxStepMicrocells) return false;
-        if (column == fromColumn || row == fromRow) return true;
-        return Linked(fromColumn, fromRow, column, fromRow) && Linked(column, fromRow, column, row) &&
+        if (Math.Abs(WalkSurface(fromColumn, fromRow) - WalkSurface(column, row)) > MaxStepMicrocells)
+        {
+            return false;
+        }
+
+        if (column == fromColumn || row == fromRow)
+        {
+            return true;
+        }
+
+        var corner = new Vector2D(Math.Max(fromColumn, column) * CellUnits, Math.Max(fromRow, row) * CellUnits);
+        return IsStandable(corner, radius) &&
+            Linked(fromColumn, fromRow, column, fromRow) && Linked(column, fromRow, column, row) &&
             Linked(fromColumn, fromRow, fromColumn, row) && Linked(fromColumn, row, column, row);
     }
 
     private bool Linked(int fromColumn, int fromRow, int column, int row) =>
-        Math.Abs(Surface(fromColumn, fromRow) - Surface(column, row)) <= MaxStepMicrocells && Material(column, row) != ArenaTerrainMaterial.Lava;
+        Math.Abs(WalkSurface(fromColumn, fromRow) - WalkSurface(column, row)) <= MaxStepMicrocells &&
+        Material(column, row) != ArenaTerrainMaterial.Lava;
 
     /// <summary>
     /// Along the downhill path of a distance field, the farthest column within <paramref name="lookahead"/> steps that can be
@@ -469,7 +552,7 @@ public sealed class ArenaTerrainGrid
                     var (nc, nr) = (column + dx, row + dy);
                     if ((dx == 0 && dy == 0) || !Contains(nc, nr)) continue;
                     var next = cost[nr * Columns + nc];
-                    if (next < best.Cost && CanStepBetween(column, row, nc, nr)) best = (nc, nr, next);
+                    if (next < best.Cost && CanStepBetween(column, row, nc, nr, radius)) best = (nc, nr, next);
                 }
             if (best.Cost == here) break;
             (column, row) = (best.Column, best.Row);

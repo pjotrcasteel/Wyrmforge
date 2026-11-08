@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    composeTerrainSplatPixels,
+    drawWall, wallTextureSourceY,
     BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
+import { TILE, MEGA, generateTileSet, normalFromTile } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
 
 function recorder() {
     const calls = [], cues = [];
@@ -21,6 +24,56 @@ function recorder() {
 function frame(columns, rows, surface, material = null, revision = 1) {
     return { revision, columns, rows, surface, material: material ?? surface.map(() => TERRAIN_MATERIAL.Soil) };
 }
+
+test('rock, earth and lava wall textures stay world-aligned across adjacent unequal cliff heights', () => {
+    const art = TILE / 32, period = MEGA * TILE;
+    const atlas = Object.fromEntries(['stoneSide', 'stoneGrassSide', 'stoneLipSide', 'dirtSide', 'grassSide', 'lavaSide']
+        .map(name => [name, [{ name }]]));
+    const draw = (material, kind, height, column) => {
+        const slices = [];
+        const ctx = {
+            fillStyle: '',
+            fillRect() {},
+            drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
+                slices.push({ name: image.name, sx, sy, sw, sh, dx, dy, dw, dh });
+            },
+        };
+        drawWall(ctx, atlas, 0, material, [{ from: height, to: 0, kind }], column * 32, 32, 0, 128, column);
+        for (const slice of slices) {
+            assert.ok(slice.sy >= 0 && slice.sy + slice.sh <= period, 'every texture read fits inside the atlas');
+            assert.equal(slice.sy % art, 0, 'sample starts at a native art-pixel boundary');
+            assert.equal(slice.sh % art, 0, 'sample stays at an integral number of art pixels');
+        }
+        return slices;
+    };
+    const at = (slices, kind, worldY) => {
+        const slice = slices.find(part => part.name === kind && part.dy <= worldY && part.dy + part.dh > worldY);
+        assert.ok(slice, `no ${kind} covering world Y=${worldY}`);
+        return slice.sy + (worldY - slice.dy) * art;
+    };
+    for (const [material, segment, body] of [
+        [TERRAIN_MATERIAL.Stone, 'stone', 'stoneSide'],
+        [TERRAIN_MATERIAL.Soil, 'own', 'dirtSide'],
+        [TERRAIN_MATERIAL.Lava, 'lava', 'lavaSide'],
+    ]) {
+        const high = draw(material, segment, 16, 0);
+        const low = draw(material, segment, 12, 1);
+        // Two adjacent cliffs share the same projected world pixels below both crests.
+        // The old painter sampled each body's y=0 at its OWN cliff lip, shifting strata by 16 world units.
+        for (const worldY of [113, 120, 127])
+            assert.equal(at(high, body, worldY), at(low, body, worldY),
+                `${body} changes source row across the unequal-height block boundary at world Y=${worldY}`);
+        if (material === TERRAIN_MATERIAL.Stone) {
+            assert.equal(high[0].name, 'stoneGrassSide', 'a high stone face preserves its local moss/grass crest');
+            assert.equal(low[0].name, 'stoneGrassSide', 'the neighboring stone face preserves its own crest');
+            assert.equal(high[0].sy, 0);
+            assert.equal(low[0].sy, 0);
+        }
+    }
+    assert.equal(wallTextureSourceY(-1), MEGA * 32 - 1, 'raised wall face wraps before the world origin');
+    assert.equal(wallTextureSourceY(-129), MEGA * 32 - 1, 'negative atlas periods repeat seamlessly');
+    assert.equal(wallTextureSourceY(35, 7, true), 7, 'local crest starts from its own wall lip');
+});
 
 test('influence bands follow the C# Fire profile bounds', () => {
     assert.equal(influenceBandIndex(0), 0);
@@ -118,6 +171,66 @@ test('the cache repaints only when the revision or influence band changes', () =
     assert.equal(cache.update(null, 0), false);
 });
 
+test('terrain diagnostics report authoritative no-op revisions separately from real local or full repaints', () => {
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const source = { revision: 1, columns: 4, rows: 4, visualSeed: 27, surface: Array(16).fill(0),
+        material: Array(16).fill(0), fine: [] };
+    const initial = mergeTerrainFrame(null, source);
+    assert.equal(cache.update(initial, 0), true);
+    assert.equal(cache.fullRepaints, 1);
+    assert.equal(cache.lastPaintReason, 'full-terrain-refresh');
+    const repeated = mergeTerrainFrame(initial, { ...source, revision: 2 });
+    assert.equal(cache.update(repeated, 0), false);
+    assert.equal(cache.unchangedRevisionSkips, 1);
+    assert.equal(cache.lastPaintReason, 'identical-authoritative-terrain');
+    assert.equal(cache.lastDirtyBlocks, 0);
+    const heights = Array(64).fill(0);
+    heights[3] = -2;
+    const damaged = mergeTerrainFrame(repeated, { ...source, revision: 3,
+        fine: [{ index: 5, heights, topsoil: 0, stoneTop: -8 }] });
+    assert.equal(cache.update(damaged, 0), true);
+    assert.equal(cache.regionalRepaints, 1);
+    assert.equal(cache.lastDirtyBlocks, 1);
+    assert.equal(cache.lastPaintReason, 'voxel-changes');
+    assert.equal(cache.update(damaged, 1), true);
+    assert.equal(cache.fullRepaints, 2);
+    assert.equal(cache.artKitRepaints, 0);
+    assert.equal(cache.repaints, 3);
+});
+
+test('disabling incremental repaint keeps subsequent crater redraws full until restored', () => {
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const source = { revision: 1, columns: 4, rows: 4, visualSeed: 920,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [] };
+    const base = mergeTerrainFrame(null, source);
+    cache.update(base, 0);
+    assert.equal(cache.allowRegional, true, 'ordinary gameplay retains low-cost partial repaints');
+    const heights = Array(64).fill(0);
+    heights[2 * 8 + 3] = -1;
+    const damage1 = mergeTerrainFrame(base, { ...source, revision: 2,
+        fine: [{ index: 5, heights, topsoil: 0, stoneTop: -8 }] });
+    cache.allowRegional = false;
+    assert.equal(cache.update(damage1, 0), true);
+    assert.equal(cache.fullRepaints, 2, 'the next crater must be a full terrain redraw');
+    assert.equal(cache.regionalRepaints, 0);
+    const heights2 = heights.slice();
+    heights2[2 * 8 + 4] = -2;
+    const damage2 = mergeTerrainFrame(damage1, { ...source, revision: 3,
+        fine: [{ index: 5, heights: heights2, topsoil: 0, stoneTop: -8 }] });
+    assert.equal(cache.update(damage2, 0), true);
+    assert.equal(cache.fullRepaints, 3, 'every additional crater stays on the full path');
+    assert.equal(cache.regionalRepaints, 0);
+    cache.allowRegional = true;
+    const heights3 = heights2.slice();
+    heights3[2 * 8 + 5] = -3;
+    const damage3 = mergeTerrainFrame(damage2, { ...source, revision: 4,
+        fine: [{ index: 5, heights: heights3, topsoil: 0, stoneTop: -8 }] });
+    assert.equal(cache.update(damage3, 0), true);
+    assert.equal(cache.regionalRepaints, 1, 'restoring incremental mode restores the original fast path');
+});
+
 test('GPU camera captures reuse terrain textures only while pixels and viewport are identical', () => {
     const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
     const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
@@ -168,6 +281,80 @@ test('more than 40 impacted blocks never force an unconditional full terrain rep
     assert.equal(clips.length, 2, 'distant changes require two independent clips');
     assert.equal(clears.length, 2);
     assert.ok(clears.every(rect => rect[2] < 32 * 32), 'neither local clip spans the map width');
+});
+
+test('identical retransmitted fine voxels never repaint unchanged grass, road, albedo or normals', () => {
+    const created = [], cleared = [];
+    const makeCanvas = (width, height) => {
+        const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {},
+            clearRect(...area) { cleared.push(area); } };
+        const canvas = { width, height, getContext: () => ctx };
+        created.push(canvas);
+        return canvas;
+    };
+    const original = mergeTerrainFrame(null, { revision: 1, columns: 4, rows: 4, visualSeed: 71,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [] });
+    const cache = new TerrainCanvasCache(makeCanvas);
+    assert.equal(cache.update(original, 0), true);
+    const baselinePaints = cache.repaints, baselineClears = cleared.length;
+    const beforeRevision = cache.viewportRevision({ x: 2, y: 4 }, 390, 844, 2);
+    const next = mergeTerrainFrame(original, { revision: 2, columns: 4, rows: 4, visualSeed: 71,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [] });
+    assert.equal(next.visualDeltaComplete, true);
+    assert.deepEqual(next.changed, []);
+    assert.equal(cache.update(next, 0), false, 'no changed voxels mean no offscreen canvas redraw');
+    assert.equal(cache.repaints, baselinePaints);
+    assert.equal(cleared.length, baselineClears, 'do not clear any unchanged ground pixels');
+    assert.equal(cache.viewportRevision({ x: 2, y: 4 }, 390, 844, 2), beforeRevision,
+        'an identical visual frame must not invalidate GPU albedo and normal captures');
+    assert.equal(created.length, 1);
+    assert.equal(next.kindMaps, original.kindMaps, 'immutable original splat maps survive the no-op revision');
+});
+
+test('identical fine updates are ignored but excavation, stone wear and coarse changes still repaint', () => {
+    const land = { revision: 1, columns: 4, rows: 4, visualSeed: 73,
+        surface: Array(16).fill(0), material: Array(16).fill(0) };
+    const initial = mergeTerrainFrame(null, { ...land, fine: [] });
+    const base = { index: 6, heights: Array(64).fill(0), topsoil: 0, stoneTop: -8, wear: Array(64).fill(0) };
+    const chipped = mergeTerrainFrame(initial, { ...land, revision: 2, fine: [{ ...base,
+        heights: base.heights.map((v, i) => i === 14 ? -1 : v) }] });
+    assert.deepEqual(chipped.changed, [6], 'real height damage invalidates the original block');
+    const repeat = mergeTerrainFrame(chipped, { ...land, revision: 3, fine: [{ ...base,
+        heights: base.heights.map((v, i) => i === 14 ? -1 : v) }] });
+    assert.deepEqual(repeat.changed, [], 'retransmitting the same fine heights is not new damage');
+    const wear = mergeTerrainFrame(repeat, { ...land, revision: 4, fine: [{ ...base,
+        heights: base.heights.map((v, i) => i === 14 ? -1 : v),
+        wear: base.wear.map((v, i) => i === 14 ? 1 : v) }] });
+    assert.deepEqual(wear.changed, [6], 'worn stone has a new visible crack');
+    const changeMaterial = mergeTerrainFrame(wear, { ...land, revision: 5,
+        material: land.material.map((v, i) => i === 9 ? TERRAIN_MATERIAL.Stone : v), fine: [] });
+    assert.deepEqual(changeMaterial.changed, [9], 'coarse changes are never hidden by an empty fine delta');
+    const removed = mergeTerrainFrame(changeMaterial, { ...land, revision: 6,
+        material: changeMaterial.material, fine: [{ index: 6, heights: [] }] });
+    assert.deepEqual(removed.changed, [6], 'restoring whole terrain invalidates its formerly chipped face');
+    const noRepeatRemoval = mergeTerrainFrame(removed, { ...land, revision: 7,
+        material: changeMaterial.material, fine: [{ index: 6, heights: [] }] });
+    assert.deepEqual(noRepeatRemoval.changed, []);
+});
+
+test('a changed authoritative road never uses the no-op or local damage path', () => {
+    const initial = mergeTerrainFrame(null, { revision: 1, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [0, 0, 16, 16] });
+    const unchanged = mergeTerrainFrame(initial, { revision: 2, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [0, 0, 16, 16] });
+    assert.equal(unchanged.visualDeltaComplete, true);
+    const changed = mergeTerrainFrame(unchanged, { revision: 3, columns: 4, rows: 4, visualSeed: 42,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [], road: [16, 0, 16, 32] });
+    assert.equal(changed.visualDeltaComplete, false, 'changed roads affect many background splat tiles');
+    const clears = [];
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {}, clearRect(...args) { clears.push(args); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    cache.update(initial, 0);
+    const baseline = clears.length;
+    assert.equal(cache.update(unchanged, 0), false);
+    assert.equal(clears.length, baseline);
+    assert.equal(cache.update(changed, 0), true);
+    assert.equal(clears.length, baseline + 1, 'road changes clear and repaint the full source canvas');
 });
 
 test('a new site with the same terrain revision replaces the entire cached image', () => {
@@ -269,6 +456,48 @@ test('the GPU path erases the covering faces and the Canvas path repaints them b
     const repaint = recorder();
     assert.equal(repaintTerrainOcclusion(repaint, terrain, 0, cells, false), 1);
     assert.equal(repaint.calls.filter(call => call[0] === 'fillRect').length, 2);
+});
+
+test('fissures occlude the wizard only with surviving 12.5cm terrain instead of a dark full-block mask', () => {
+    // The actor stands one metre down in a cleft. The forward block's coarse
+    // height is floor level, but 62 of 64 microcolumns were destroyed to pit depth.
+    const terrain = frame(1, 2, [-8, 0]);
+    const heights = new Array(MICRO_PER_COLUMN * MICRO_PER_COLUMN).fill(-8);
+    heights[0] = 0;
+    heights[1] = 0;
+    terrain.fine = new Map([[1, { heights, topsoil: TERRAIN_MATERIAL.Soil, stoneTop: -16 }]]);
+    const cells = occludingTerrainCells(terrain, 16, 12, -32, 16);
+    assert.deepEqual(cells, [{ column: 0, row: 1, microcells: [0, 1] }],
+        'only the intact microcolumns may mask the actor in the fissure');
+
+    const erase = recorder();
+    erase.globalCompositeOperation = 'source-over';
+    const saved = [];
+    erase.save = () => saved.push(erase.globalCompositeOperation);
+    erase.restore = () => { erase.globalCompositeOperation = saved.pop(); };
+    assert.equal(eraseTerrainOcclusion(erase, terrain, cells), 1);
+    const erased = erase.calls.filter(call => call[0] === 'fillRect').map(call => call.slice(1, 5));
+    assert.deepEqual(erased, [
+        [0, 32, 4, 4], [0, 36, 4, 32],
+        [4, 32, 4, 4], [4, 36, 4, 32],
+    ], 'erasure is limited to real surviving top and front faces, not an opaque 32x32 tile');
+    assert.equal(erase.globalCompositeOperation, 'source-over', 'restore compositing for subsequent characters');
+
+    const clipped = [], paint = recorder();
+    paint.beginPath = () => {};
+    paint.rect = (x, y, w, h) => clipped.push([x, y, w, h]);
+    paint.clip = () => {};
+    assert.equal(repaintTerrainOcclusion(paint, terrain, 0, cells, false), 1);
+    assert.deepEqual(clipped, erased, 'Canvas fallback must clip to the same surviving geometry as GPU');
+
+    // A fully destroyed block can still have a stale coarse height (the
+    // authoritative damage lives in fine.heights); it cannot become a solid lid.
+    terrain.fine.get(1).heights.fill(-8);
+    assert.deepEqual(occludingTerrainCells(terrain, 16, 12, -32, 16), [],
+        'a completely destroyed forward cell is no longer an occluder');
+    terrain.fine.get(1).heights.fill(0);
+    assert.equal(occludingTerrainCells(terrain, 16, 12, -32, 16)[0].microcells.length, 64,
+        'an intact wall in front of a lower actor still hides it');
 });
 
 test('ground grain is deterministic, mostly neutral, spans five tone steps and keeps bare patches and pebbles rare', () => {
@@ -383,6 +612,31 @@ test('regional terrain repaint never invalidates the authored splat map', () => 
     assert.equal(cache.kindMaps.get(5), originalPixels, 'a hit may repaint the region, but must reuse its identical texture mask');
 });
 
+test('coarse material replacement drops only its own obsolete splat mask', () => {
+    const ctx = { ...recorder(), beginPath() {}, clip() {}, rect() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const columns = 4, rows = 4;
+    const base = mergeTerrainFrame(null, {
+        revision: 1, visualSeed: 23, columns, rows,
+        surface: new Array(16).fill(0), material: new Array(16).fill(TERRAIN_MATERIAL.Soil),
+        fine: [], road: []
+    });
+    cache.update(base, 0);
+    const obsolete = new Uint8Array([3, 4, 5]), untouched = new Uint8Array([6, 7]);
+    cache.kindMaps.set(5, obsolete);
+    cache.kindMaps.set(6, untouched);
+    const material = base.material.slice();
+    material[5] = TERRAIN_MATERIAL.Stone;
+    const changed = mergeTerrainFrame(base, {
+        revision: 2, visualSeed: 23, columns, rows,
+        surface: base.surface.slice(), material, fine: [], road: []
+    });
+    assert.deepEqual(changed.changed, [5]);
+    cache.update(changed, 0);
+    assert.equal(cache.kindMaps.has(5), false, 'the replaced coarse block cannot reuse its old grass mask');
+    assert.equal(cache.kindMaps.get(6), untouched, 'neighbouring authored grass must remain pixel-stable');
+});
+
 test('microcolumn height reads the overlay and falls back to the whole column', () => {
     const heights = new Array(64).fill(0); heights[3 * 8 + 5] = -6;
     const frame = { columns: 2, rows: 1, surface: [-2, 4], material: [0, 2], fine: new Map([[0, block(heights)]]) };
@@ -469,4 +723,70 @@ test('raised soil is grass-capped, not bare ground', () => {
     assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 5), GRASS_TOP[0]);
     assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 0), GRASS_TOP[0]);
     assert.notEqual(topFaceColor(0, TERRAIN_MATERIAL.Soil, -1), GRASS_TOP[0]);
+});
+
+
+const SPLAT_KINDS = ['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop',
+    'rubbleTop', 'lavaTop', 'slabTop', 'pathTop'];
+
+function splatAtlasFixture() {
+    const textures = generateTileSet(0), atlas = {};
+    for (const kind of SPLAT_KINDS) {
+        const tile = textures[kind][0];
+        atlas[kind] = [{ width: tile.width, sourcePixels: tile.data,
+            normalTwin: { sourcePixels: normalFromTile(tile, 2.4, 0) } }];
+    }
+    return atlas;
+}
+
+function sampledSplatPixel(atlas, kind, column, row, x, y, normal = false) {
+    const source = atlas[SPLAT_KINDS[kind]][0];
+    const bytes = normal ? source.normalTwin.sourcePixels : source.sourcePixels;
+    const offset = (((row % MEGA) * TILE + y) * source.width + (column % MEGA) * TILE + x) * 4;
+    return Array.from(bytes.subarray(offset, offset + 4));
+}
+
+test('owned splat composition agrees with independent per-pixel atlas oracle for varied masks and wrap positions', () => {
+    const atlas = splatAtlasFixture();
+    const coordinates = [[18, 49], [18, 50], [15, 48], [14, 51], [17, 51], [14, 53], [20, 58], [18, 58]];
+    const maps = coordinates.map((_, tile) => {
+        const main = [0, 1, 9, 9, 1, 0, 0, 1][tile];
+        const first = [1, 0, 0, 0, 9, 1, 1, 0][tile];
+        const last = tile === 3 ? 1 : first;
+        const map = new Uint8Array(TILE * TILE).fill(main);
+        for (let i = 0; i < 101; i++) map[(i * (tile % 2 ? 43 : 37) + tile * 13) % map.length] = last;
+        if (tile === 3) for (let i = 0; i < 151; i++) map[(i * 53 + 7) % map.length] = 0;
+        return map;
+    });
+    const outputs = maps.map((map, i) => composeTerrainSplatPixels(map, atlas, ...coordinates[i]));
+    for (const [index, map] of maps.entries()) {
+        const [column, row] = coordinates[index];
+        const composed = outputs[index];
+        for (let pixel = 0; pixel < map.length; pixel++) {
+            const x = pixel % TILE, y = Math.floor(pixel / TILE), kind = map[pixel];
+            for (const [channel, normal] of [['albedo', false], ['normal', true]]) {
+                assert.deepEqual(Array.from(composed[channel].subarray(pixel * 4, pixel * 4 + 4)),
+                    sampledSplatPixel(atlas, kind, column, row, x, y, normal),
+                    `tile ${index}, ${channel}, pixel ${pixel}: authored material identity must win`);
+            }
+        }
+    }
+    const retained = new Uint8ClampedArray(outputs[0].albedo);
+    composeTerrainSplatPixels(maps.at(-1), atlas, 20, 59);
+    assert.deepEqual(outputs[0].albedo, retained, 'subsequent splats cannot mutate earlier tile bytes');
+});
+
+test('sub-12-pixel islands retain the majority material for both albedo and normals', () => {
+    const atlas = splatAtlasFixture();
+    const map = new Uint8Array(TILE * TILE).fill(9);
+    for (let i = 0; i < 11; i++) map[i * 31] = 0;
+    const composed = composeTerrainSplatPixels(map, atlas, 15, 48);
+    assert.equal(composed.passes, 1);
+    for (let i = 0; i < 11; i++) {
+        const pixel = i * 31, x = pixel % TILE, y = Math.floor(pixel / TILE);
+        assert.deepEqual(Array.from(composed.albedo.subarray(pixel * 4, pixel * 4 + 4)),
+            sampledSplatPixel(atlas, 9, 15, 48, x, y));
+        assert.deepEqual(Array.from(composed.normal.subarray(pixel * 4, pixel * 4 + 4)),
+            sampledSplatPixel(atlas, 9, 15, 48, x, y, true));
+    }
 });

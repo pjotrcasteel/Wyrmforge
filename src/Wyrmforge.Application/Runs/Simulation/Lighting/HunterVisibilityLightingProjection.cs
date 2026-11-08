@@ -11,6 +11,14 @@ public static class HunterVisibilityLightingProjection
 {
     public const string SourceId = "hunter:night-visibility";
 
+    /// <summary>
+    /// Only legacy non-terrain scenes need the old player-following visibility pool.
+    /// The voxel Hunt has its own authoritative moon/sky light and ambient floor; adding
+    /// this strong raised point emitter there creates a moving pool resembling a flashlight.
+    /// </summary>
+    public static IReadOnlyList<LightingEmitter> CaptureForScene(Vector2D position, bool hasMoonlitTerrain) =>
+        hasMoonlitTerrain ? [] : [Capture(position)];
+
     /// <summary>Create the same stable source ID at the current C# player position each snapshot.</summary>
     public static LightingEmitter Capture(Vector2D position) =>
         new(

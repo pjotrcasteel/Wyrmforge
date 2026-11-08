@@ -20,4 +20,10 @@ public sealed record DamageNumberRenderSnapshot(
 
     /// <summary>True when a hit removes a substantial portion of the target's maximum health.</summary>
     public bool Heavy { get; init; }
+
+    /// <summary>Exact authoritative target identity; used by cosmetic hit effects without guessing from coordinates.</summary>
+    public int TargetId { get; init; }
+
+    /// <summary>Distinguishes dragon IDs from ordinary enemy IDs in presentation adapters.</summary>
+    public bool IsDragon { get; init; }
 }

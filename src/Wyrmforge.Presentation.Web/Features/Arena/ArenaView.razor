@@ -51,46 +51,54 @@
             <button type="button" @onclick="ContinueAfterTrail">CONTINUE</button>
         </div>
     }
+    @if (FirstHuntHint is { } firstHuntHint)
+    {
+        <div class="first-hunt-hint" role="status" aria-live="polite" data-tutorial="first-hunt">@firstHuntHint</div>
+    }
     @if (runMoment is { } moment)
     {
         <RunMomentOverlay Moment="moment" />
     }
 
-    <div class="arena-top-hud" aria-label="Combat HUD">
-        <section class="combat-vitals" aria-label="Player status">
-            <div class="combat-vitals-score">
-                <span data-hud="score">SCORE 0</span>
-                <span data-hud="time">0s</span>
-                <span data-hud="kills">0 KILLS</span>
-            </div>
-            <div class="combat-health-track" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
-                <div data-hud="health-fill"></div>
-            </div>
-            <div class="combat-vitals-progress">
-                <span data-hud="health" class="combat-hp-value">♥ HP 100/100</span>
-                <span data-hud="level">LV 1</span>
-                <div class="combat-xp-track"><div data-hud="xp-fill"></div></div>
-            </div>
-            <div class="combat-vitals-spells" data-hud="spells" aria-label="Equipped spells">◇I</div>
-        </section>
-        @if (MapCombatActive && CurrentMapNode is { } activeNode)
-        {
-            <section class="encounter-objective" aria-label="Current encounter objective">
-                <span title="@activeNode.Name · @activeNode.EncounterName">TRAIL @(CompletedMapNodes.Count + 1) · @WyrmrealmHabitatCatalog.DisplayName(activeNode.Habitat).ToUpperInvariant()</span>
-                <div class="encounter-objective-progress">
-                    <em class="encounter-phase">@EncounterPhaseLabel <small data-trail="phase-time"></small></em>
-                    <strong data-trail="objective">@CurrentMapNodeKills/@CurrentMapNodeKillsRequired kills</strong>
+    @* No upper status bar: real health, equipped auto-casts and Hunt XP live below the battlefield. *@
+    <div class="combat-vitals arcane-hunt-hud" aria-label="Combat HUD">
+        <div class="arcane-hud-row">
+            <div class="combat-health-track crystal-orb orb-health" role="progressbar" aria-label="Health"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" data-health-state="healthy">
+                <div class="crystal-orb-core">
+                    <div class="crystal-orb-fill" data-hud="health-fill"></div>
+                    <div class="crystal-orb-facets" aria-hidden="true"></div>
                 </div>
-                <div class="trail-progress" role="progressbar" aria-label="Trail progress" aria-valuemin="0" aria-valuemax="100"><i data-trail="progress"></i></div>
-            </section>
-        }
-        else if (EvacuationActive)
-        {
-            <section class="encounter-objective evacuation" aria-label="Evacuation countdown">
-                <span>EVACUATION</span>
-                <strong>@Math.Ceiling(EvacuationRemainingSeconds).ToString("0")s</strong>
-            </section>
-        }
+                <strong data-hud="health" class="orb-health-number">100/100</strong>
+            </div>
+            <div class="spell-slot primary-spell" data-hud-slot="primary" aria-label="Primary automatic spell">
+                <div class="spell-slot-art combat-vitals-spells" data-hud="spells" aria-label="Equipped primary spell"></div>
+                <div class="spell-cooldown-shade" aria-hidden="true"></div>
+                <div class="spell-ready-ring" aria-hidden="true"></div>
+                <strong data-hud="primary-cooldown" class="spell-cooldown-label" aria-hidden="true"></strong>
+            </div>
+            <div class="spell-slot defensive-spell is-locked" data-hud-slot="defensive" aria-label="Automatic defence not yet unlocked">
+                <div class="spell-slot-art" data-hud="defensive-spell">
+                    <img class="locked-spell-art" src="art/hunt-hud/spell-locked.svg" alt="" aria-hidden="true" />
+                </div>
+                <div class="spell-cooldown-shade" aria-hidden="true"></div>
+                <div class="spell-ready-ring" aria-hidden="true"></div>
+                <strong data-hud="defensive-cooldown" class="spell-cooldown-label" aria-hidden="true">LOCKED</strong>
+            </div>
+            <div class="crystal-orb orb-secondary" aria-label="Secondary resource slot, not yet available">
+                <div class="crystal-orb-core">
+                    <div class="crystal-orb-facets" aria-hidden="true"></div>
+                </div>
+            </div>
+        </div>
+        <div class="arcane-xp-row" aria-label="Hunt experience">
+            <strong data-hud="level">LV 1</strong>
+            <div class="combat-xp-track" role="progressbar" aria-label="Experience progress"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div data-hud="xp-fill"></div>
+            </div>
+            <span data-hud="xp-value">EXP 0/0</span>
+        </div>
     </div>
 
     @if (simulation?.TrailExitPending == true && !trailTransition)
@@ -173,7 +181,7 @@
     }
     else if (!trailTransition && CurrentChoices.Count > 0)
     {
-        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync"
+        <LevelUpOverlay Level="CurrentLevel + 1" FirstHuntFirstUpgrade="@(FirstHunt && !firstHuntUpgradeChosen)" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync"
                         Fateweave="simulation?.Fateweave" OnReroll="RerollAsync" />
     }
     else if (PendingMapChoice && !trailTransition)

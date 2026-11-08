@@ -15,18 +15,34 @@ export function createSpellBadge(spell) {
     badge.className = 'combat-spell-badge';
     badge.title = spell.evolutionName ?? spell.name;
     badge.setAttribute('aria-label', spell.contextual ? `${badge.title}, contextual auto-cast` : `${badge.title}, rank ${spell.rank}`);
-    const [color, path] = spellVisual(spell.name);
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('width', '18');
-    svg.setAttribute('height', '18');
-    svg.setAttribute('aria-hidden', 'true');
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    for (const [key, value] of Object.entries({ d:path, fill:'none', stroke:color, 'stroke-width':'1.8', 'stroke-linecap':'round', 'stroke-linejoin':'round' })) line.setAttribute(key, value);
-    svg.append(line);
+    // Draw spells from the same authored pixel atlas as the Arcane Nexus.
+    // Keep each canonical spell name/label; no fabricated spell icon or separate art style.
+    const pixelSchool = {
+        'Arcane Orb': 'arcane', 'Aether Dart': 'arcane',
+        'Fire Bolt': 'fire', 'Cinder Needle': 'fire',
+        'Frost Shard': 'frost', 'Ice Lance': 'frost',
+        'Chain Lightning': 'storm', 'Ball Lightning': 'storm',
+        'Warding Pulse': 'shield',
+    };
+    // Real, separable 32px art: the selected spell stays independent of its cooldown clock.
+    const layeredAssets = {
+        'Fire Bolt': 'spell-fireball.svg',
+        'Cinder Needle': 'spell-fireball.svg',
+        'Warding Pulse': 'spell-ward.svg',
+    };
+    const asset = layeredAssets[spell.name];
+    const art = document.createElement(asset ? 'img' : 'span');
+    if (asset) {
+        art.className = 'hunt-hud-pixel-icon';
+        art.src = new URL(`art/hunt-hud/${asset}`, document.baseURI).href;
+        art.alt = '';
+    } else {
+        art.className = `px-icon px-${pixelSchool[spell.name] ?? 'rune'}`;
+    }
+    art.setAttribute('aria-hidden', 'true');
     const rank = document.createElement('b');
     rank.textContent = spell.contextual ? 'AUTO' : ['0', 'I', 'II', 'III', 'IV', 'V'][spell.rank] ?? String(spell.rank);
-    badge.append(svg, rank);
+    badge.append(art, rank);
     if (spell.contextual) badge.classList.add('combat-spell-contextual');
     if (spell.evolutionName) badge.classList.add('combat-spell-evolved');
     return badge;

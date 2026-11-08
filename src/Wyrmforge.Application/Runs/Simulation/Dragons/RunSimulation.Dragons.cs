@@ -207,6 +207,7 @@ public sealed partial class RunSimulation
         ashfangBehavior.Reset();
         ashfangPoise = 0; ashfangStaggerLockout = 0;
         ashfangEffects.Clear();
+        ClearAshfangGroundFires();
         dragonAttackSequence = 0;
         dragonLastAttackAt = -1;
         dragonDefeat = null;
@@ -359,6 +360,7 @@ public sealed partial class RunSimulation
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
         score += (int)((dragonScore + DragonTierScore(defeatedDragon.Tier)) * depthState.ScoreMultiplier);
         dragon = null;
+        ClearAshfangGroundFires();
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
         ascendantActive = false;
@@ -384,6 +386,7 @@ public sealed partial class RunSimulation
         ashfangBehavior.Reset();
         dragonDefeat = null;
         ashfangEffects.Clear();
+        ClearAshfangGroundFires();
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
     }

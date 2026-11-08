@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Development;
@@ -92,6 +93,30 @@ public sealed class DevelopmentHuntTrialTests
         Assert.IsFalse(normal.CreateSnapshot().Dragon is not null);
         Assert.IsTrue(normal.CreateSnapshot().Paused);
         Assert.IsFalse(normal.AscendantRiteSelected);
+    }
+
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ActualWyrmLab_InitialAndRunningFramesSerializeForBrowserWithOrWithoutAutocast(bool casting)
+    {
+        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, 1, SpellId.FireBolt, 721, 390, 844)
+        {
+            Casting = casting,
+        };
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(
+            Build.SelectedNodes, setup);
+        foreach (var snapshot in new[] { run.CreateSnapshot(), run.Tick(.05, default, 390, 844) })
+        {
+            Assert.IsNotNull(snapshot.Player);
+            Assert.IsNotNull(snapshot.Dragon);
+            Assert.IsTrue(double.IsFinite(snapshot.Hud.PrimaryCooldownRemaining));
+            Assert.IsGreaterThanOrEqualTo(0, snapshot.Hud.PrimaryCooldownRemaining);
+            var json = JsonSerializer.Serialize(snapshot);
+            StringAssert.Contains(json, "\"Dragon\"");
+            StringAssert.Contains(json, "\"Player\"");
+        }
     }
 
     [TestMethod]

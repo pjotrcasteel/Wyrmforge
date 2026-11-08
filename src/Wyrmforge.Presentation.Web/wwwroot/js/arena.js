@@ -9,40 +9,51 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, paintTerrainCell, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-fissure-occlusion-v1';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
+import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-crack-isolation-v1';
+import { captureTerrainEvidence, captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
-import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js?v=20261108-crack-isolation-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { torchSprites } from './arena-torch-sprites.js';
 import {
-    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
+    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, authoredPending, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
     setAuthoredRenderMode, emissionIntensity,
-} from './authored-characters.js';
+} from './authored-characters.js?v=20261108-mage-head-v2';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
-import { drawMage, updateMageWalk } from './arena-mage.js';
+import { drawMage, updateMageWalk } from './arena-mage.js?v=20261108-mage-head-v2';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
-import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js?v=20261108-hollow-player-contact-v1';
+import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v3';
+import { preloadHollowHitVfx, drawHollowHitVfx } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h4';
+import { preloadHollowGroundVfx, createHollowGroundState, updateHollowGroundVfx, drawHollowGroundVfx, hollowGroundDiagnostics } from './hollow-ground-vfx.js?v=20261108-hollow-ground-h4';
+import { createHollowDeathVfxState, updateHollowDeathVfx, drawHollowDeathGroundVfx, drawHollowDeathAccentVfx, hollowDeathArtReady, hollowDeathVfxDiagnostics } from './hollow-death-vfx.js?v=20261108-hollow-h4';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
+import { preloadAshfangGroundFlames, drawAshfangGroundFires } from './arena-ashfang-ground-flames.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawFieldAmbushTell } from './arena-field-ambush-vfx.js';
+import { preloadMireHoundVfx, drawMireHoundGround, drawMireHoundContact } from './arena-mire-hound-vfx.js';
 import { drawTransformations } from './arena-transformation-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
+import { preloadBellWardenImpact } from './arena-bell-warden-impact.js';
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './art-atlas.js';
+import { createHuntEntryGate, huntEntryReadiness, huntEntrySceneKey } from './hunt-entry-gate.js?v=20261108-hunt-entry-early-v2';
+import { arenaFrameArguments } from './arena-frame-arguments.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
@@ -66,18 +77,49 @@ function requestSharedGpuWorld(state, quality = 'mobile') {
         .finally(() => { state.gpuPending = false; });
 }
 
-export function initializeArena(canvas, dotNetReference) {
+// Called from the map selection handler before the expensive synchronous C# site build.
+export async function beginHuntEntry(canvas) {
+    const state = arenas.get(canvas);
+    if (!state?.active) return;
+    state.entryGate?.arm();
+    state.entryPaintedKey = null;
+    // Two animation frames give iPhone Safari a paint opportunity before generation.
+    // This is not artificial loading progress or a post-readiness timer.
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+export function cancelHuntEntry(canvas) {
+    arenas.get(canvas)?.entryGate?.cancel();
+}
+
+export function initializeArena(canvas, dotNetReference, { huntEntryLoading = false } = {}) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
-    loadArt(new URL('../art/', import.meta.url).href);
-    preloadFireballV5();
-    preloadPaintedEnemies();
-    preloadHollowSprites();
+    const atlasLoad = loadArt(new URL('../art/', import.meta.url).href);
+    const fireballLoad = preloadFireballV5();
+    preloadMireHoundVfx();
+    preloadBellWardenImpact();
+    preloadAshfangGroundFlames();
+    const paintedLoad = preloadPaintedEnemies();
+    const hollowLoad = preloadHollowSprites();
+    preloadHollowClawVfx();
+    preloadHollowHitVfx();
+    preloadHollowGroundVfx();
     ashlingSprites.preload();
     for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
     preloadCrawlOut();
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
+    // This promise settles on real decoded atlas/VFX results; failed optional
+    // sheets retain their existing game fallbacks, never an indefinite spinner.
+    state.entryAssetsSettled = false;
+    Promise.allSettled([atlasLoad, fireballLoad, paintedLoad, hollowLoad])
+        .then(() => { if (state.active) state.entryAssetsSettled = true; });
+    // Labs use this same renderer but have no Hunt selection/PreviewFrame handshake.
+    // Only the production Hunt shell may install a blocking loading veil.
+    state.entryGate = huntEntryLoading
+        ? createHuntEntryGate(canvas.closest('.game-screen') ?? canvas.parentElement)
+        : null;
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
     if (settings) {
         settings.value = state.damageNumberMode;
@@ -89,6 +131,38 @@ export function initializeArena(canvas, dotNetReference) {
         settings.addEventListener('change', state.onDamageNumberModeChanged);
     }
     arenas.set(canvas, state);
+    state.layerLab = mountLayerLab(rebuildTerrain => {
+        // Only baked source-pixel switches may rebuild the cached raster.
+        // GPU, emissive, overlay, and scenery switches MUST leave its pixels untouched.
+        if (rebuildTerrain && state.terrainCache) state.terrainCache.revision = null;
+    }, async () => {
+        const snapshot = state.latestSnapshot;
+        if (!snapshot?.environment?.terrain || !state.terrainFrame || !state.terrainCache?.canvas)
+            throw new Error('Enter a Hunt and wait for the terrain to load before capturing.');
+        const rect = state.canvas.getBoundingClientRect();
+        const position = resolveArenaCamera(snapshot.world, snapshot.player, rect.width, rect.height);
+        // resolveArenaCamera carries WORLD extents for the scene renderer, not viewport size.
+        // Evidence must never allocate two full-world 2x canvases on an iPhone.
+        const camera = { x: position.x, y: position.y, width: rect.width, height: rect.height };
+        return captureTerrainEvidence({
+            sceneCanvas: state.canvas, terrainCache: state.terrainCache,
+            frame: state.terrainFrame, camera, band: huntBand(state, snapshot), paintTerrainCell,
+            worldUnitsPerCell: FACE_PIXELS, artScale: TERRAIN_ART_SCALE,
+            readServerFrame: () => state.dotNetReference.invokeMethodAsync('TerrainFrame', -1),
+            layerState: layerLabSnapshot(),
+            diagnostics: {
+                snapshotRevision: snapshot.environment.terrain.revision,
+                lastPaintedRevision: state.terrainCache.revision,
+                lastPaintReason: state.terrainCache.lastPaintReason,
+                repaints: state.terrainCache.repaints, fullRepaints: state.terrainCache.fullRepaints,
+                regionalRepaints: state.terrainCache.regionalRepaints,
+                unchangedRevisionSkips: state.terrainCache.unchangedRevisionSkips,
+                lastDirtyBlocks: state.terrainCache.lastDirtyBlocks,
+                gpuEnabled: Boolean(state.gpuWorld && layerLabEnabled('gpu')),
+                renderError: state.renderError ?? null
+            }
+        });
+    });
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
     state.lighting01 = lighting01Requested(params);
@@ -107,6 +181,64 @@ export function initializeArena(canvas, dotNetReference) {
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
     state.animationFrame = requestAnimationFrame(timestamp => frame(state, timestamp));
+}
+
+/**
+ * Opt-in Layer Lab differential. Both captures and the forced cache rebuild
+ * run in a single JS task, so an in-flight C# Frame cannot advance the terrain
+ * revision between the two images. Never used in normal gameplay.
+ */
+export function inspectTerrainCacheRebuild(canvas) {
+    const state = arenas.get(canvas);
+    if (!layerLabSnapshot().active || !state?.terrainCache?.canvas || !state.terrainFrame ||
+        !state.latestSnapshot) throw new Error('A loaded Layer Lab Hunt is required.');
+    const frame = state.terrainFrame;
+    const rect = canvas.getBoundingClientRect();
+    const cameraPosition = resolveArenaCamera(state.latestSnapshot.world, state.latestSnapshot.player,
+        rect.width, rect.height);
+    const camera = { x: cameraPosition.x, y: cameraPosition.y, width: rect.width, height: rect.height };
+    const band = huntBand(state, state.latestSnapshot);
+    const cache = state.terrainCache;
+    const measure = () => captureTerrainViewport(cache, frame, camera, band, paintTerrainCell, FACE_PIXELS,
+        TERRAIN_ART_SCALE).pixelComparison;
+    const before = measure();
+    const cachedBefore = sampleCachedTerrainViewport(cache, camera, TERRAIN_ART_SCALE);
+    // Keep the old authored masks alive across the forced rebuild for diagnosis.
+    // A changed map means stale input/invalidations, not a Canvas2D compositing issue.
+    const oldMaps = new Map(cache.kindMaps ?? []);
+    const revision = frame.revision;
+    const previousFullRepaints = cache.fullRepaints;
+    cache.revision = null;
+    cache.update(frame, band);
+    const mapDifferences = [];
+    let changedMaskPixels = 0;
+    for (const [index, beforeMap] of oldMaps) {
+        const afterMap = cache.kindMaps.get(index);
+        if (beforeMap === afterMap) continue;
+        let differing = 0;
+        if (beforeMap?.length === afterMap?.length) {
+            if (beforeMap) for (let i = 0; i < beforeMap.length; i++) if (beforeMap[i] !== afterMap[i]) differing++;
+        } else if (beforeMap || afterMap) differing = Math.max(beforeMap?.length ?? 0, afterMap?.length ?? 0);
+        if (!differing) continue;
+        changedMaskPixels += differing;
+        if (mapDifferences.length < 20) mapDifferences.push({ index, differing,
+            beforePresent: Boolean(beforeMap), afterPresent: Boolean(afterMap) });
+    }
+    const cachedAfter = sampleCachedTerrainViewport(cache, camera, TERRAIN_ART_SCALE);
+    const after = measure();
+    return {
+        revision,
+        cacheRevision: cache.revision,
+        visualSeed: frame.visualSeed,
+        influenceBand: band,
+        changedBlocks: frame.changed?.slice(0, 60) ?? [],
+        previousFullRepaints,
+        fullRepaints: cache.fullRepaints,
+        mapParity: { checked: oldMaps.size, differingBlocks: mapDifferences, differingPixels: changedMaskPixels },
+        cacheParity: compareTerrainPixels(cachedBefore.pixels, cachedAfter.pixels, cachedBefore.width),
+        referenceBefore: before,
+        referenceAfter: after
+    };
 }
 
 /** Browser-only design review: the whole Hunt 1.0 arena, painted terrain plus trees, bushes and boulders, as one unlit PNG at art density. Read-only. */
@@ -138,6 +270,7 @@ export function readArenaDiagnostics(canvas) {
     const state = arenas.get(canvas);
     if (!state) return null;
     return {
+        layerLab: layerLabSnapshot(),
         active: state.active,
         worldReady: hasAuthoritativeHuntWorld(state.latestSnapshot),
         hud: state.latestSnapshot?.hud??null,
@@ -168,6 +301,12 @@ export function readArenaDiagnostics(canvas) {
         damageNumbers: state.latestSnapshot?.damageNumbers ?? [],
         damageNumberMode: state.damageNumberMode,
         hollow: hollowDiagnostics(state.hollow),
+        hollowClawFxEnabled: state.hollowClawFxEnabled,
+        hollowHitFxEnabled: state.hollowHitFxEnabled,
+        hollowGroundFxEnabled: state.hollowGroundFxEnabled,
+        hollowGround: hollowGroundDiagnostics(state.hollowGround),
+        hollowDeathFxEnabled: state.hollowDeathFxEnabled,
+        hollowDeath: hollowDeathVfxDiagnostics(state.hollowDeath),
         ashling: ashlingSprites.diagnostics(state.ashling),
         authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -209,6 +348,14 @@ export function readArenaDiagnostics(canvas) {
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
                 paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0,
+                fullRepaints: state.terrainCache?.fullRepaints ?? 0,
+                regionalRepaints: state.terrainCache?.regionalRepaints ?? 0,
+                artKitRepaints: state.terrainCache?.artKitRepaints ?? 0,
+                unchangedRevisionSkips: state.terrainCache?.unchangedRevisionSkips ?? 0,
+                lastPaintReason: state.terrainCache?.lastPaintReason ?? null,
+                lastDirtyBlocks: state.terrainCache?.lastDirtyBlocks ?? 0,
+                authoritativeChanges: state.terrainFrame?.changed?.slice(0, 24) ?? [],
+                deltaComplete: state.terrainFrame?.visualDeltaComplete ?? false,
                 dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length,
                 torches: collectTorches(state.terrainFrame).map(torch => ({ x: torch.x, y: torch.y, variant: torch.variant, art: torchSprites(torch.variant) !== null })) }
             : null,
@@ -231,6 +378,8 @@ export function disposeArena(canvas) {
     state.detachInput?.();
     if (state.damageNumberSettings) state.damageNumberSettings.removeEventListener('change', state.onDamageNumberModeChanged);
     state.g4Review?.dispose();
+    state.layerLab?.dispose();
+    state.entryGate?.dispose();
     state.gpuWorld?.dispose();
     state.gpuScratchPool?.clear();
     if (state.gpuPresentation) {
@@ -264,6 +413,12 @@ function createState(canvas, dotNetReference) {
         enemyMotion: createEnemyMotionState(),
         paintedCorpses: {},
         hollow: createHollowState(),
+        hollowClawFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowClawFx')),
+        hollowHitFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowHitFx')),
+        hollowGroundFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowGroundFx')),
+        hollowGround: createHollowGroundState(),
+        hollowDeathFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowDeathFx')),
+        hollowDeath: createHollowDeathVfxState(),
         ashling: ashlingSprites.createState(),
         // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
         authored: createAuthoredState(),
@@ -285,6 +440,10 @@ function createState(canvas, dotNetReference) {
         displaySimulationMilliseconds: 0,
         displayBridgeMilliseconds: 0,
         animationFrame: 0,
+        entryPaintedKey: null,
+        entryTerrainSceneKey: null,
+        entryAssetsSettled: false,
+        entryGate: null,
     };
 }
 
@@ -298,10 +457,19 @@ function frame(state, timestamp) {
         // A C# bootstrap snapshot can carry a placeholder 800x600 world, Arcane
         // school and no terrain. Do not show it as a torn/black G4 Hunt frame.
         const waitingForWorld = state.g4StageFrames && !hasAuthoritativeHuntWorld(state.latestSnapshot);
-        if (state.latestSnapshot && !waitingForWorld) draw(state, state.latestSnapshot, rect.width, rect.height);
+        if (state.latestSnapshot && !waitingForWorld) {
+            draw(state, state.latestSnapshot, rect.width, rect.height);
+            // The scene may become visible only after its current authoritative
+            // terrain revision was actually painted by the game renderer.
+            const terrain = state.latestSnapshot.environment?.terrain;
+            if (terrain && state.terrainFrame?.revision === terrain.revision &&
+                state.terrainCache?.revision === terrain.revision)
+                state.entryPaintedKey = huntEntrySceneKey(state.latestSnapshot);
+        }
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
         state.renderingError = null;
+        state.renderError = null;
     } catch (error) {
         state.renderError = String(error?.stack ?? error).slice(0, 600);
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
@@ -314,6 +482,25 @@ function frame(state, timestamp) {
         state.context.setTransform(1, 0, 0, 1, 0, 0);
         state.context.fillStyle = '#14111b';
         state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
+    }
+
+    if (state.entryGate) {
+        const snapshot = state.latestSnapshot;
+        const relevantEnemies = (snapshot?.enemies ?? []).map(enemy => ENEMY_CHARACTERS.get(Number(enemy.kind)))
+            .filter(Boolean);
+        const pendingActors = state.authoredCharacters && (
+            authoredPending('Wizard') || relevantEnemies.some(name => authoredPending(name)));
+        state.entryGate.update(snapshot, huntEntryReadiness(snapshot, {
+            terrainFrame: state.terrainFrame,
+            terrainCache: state.terrainCache,
+            atlasSettled: state.entryAssetsSettled,
+            authoredPending: pendingActors,
+            gpuWorld: state.gpuWorld,
+            gpuError: state.gpuError,
+            renderingFailed: state.renderingFailed,
+            renderError: state.renderError,
+            framePresented: state.entryPaintedKey === huntEntrySceneKey(snapshot),
+        }));
     }
 
     state.g4Review?.record(timestamp, {
@@ -329,26 +516,50 @@ function frame(state, timestamp) {
 
 function startSimulationFrame(state, timestamp, rect) {
     if (state.simulationBusy) return;
+    const entryBlocked = Boolean(state.entryGate?.isBlocking());
+    // Preparing artwork never advances the C# simulation. Even Tick(0) can
+    // resolve attack/spawn actions, so use read-only snapshots instead.
+    if (entryBlocked && timestamp - (state.lastEntryPreviewTimestamp ?? 0) < 90) return;
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
+    if (entryBlocked) state.lastEntryPreviewTimestamp = timestamp;
+    const movement = entryBlocked ? { x: 0, y: 0 }
+        : state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
         : state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
-    const aim = getArenaAim(state);
+    const aim = entryBlocked ? { x: 0, y: 0 } : getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaStickAim(state, aim))
-        .then(snapshot => {
+    const request = entryBlocked
+        ? state.dotNetReference.invokeMethodAsync('PreviewFrame')
+        : state.dotNetReference.invokeMethodAsync('Frame', ...arenaFrameArguments(
+            delta, rect.width, rect.height, movement, aim, getArenaPropFocus(state),
+            isArenaStickAim(state, aim), state.reducedMotion.matches, Boolean(state.entryGate)));
+    request.then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
+            // Terrain revisions restart at each new seeded site. Reusing the old
+            // revision (often zero) would incorrectly satisfy the new scene's
+            // readiness gate and briefly reveal last site's ground.
+            const nextTerrainSite = huntEntrySceneKey(snapshot);
+            if (nextTerrainSite && nextTerrainSite !== state.entryTerrainSceneKey) {
+                state.entryTerrainSceneKey = nextTerrainSite;
+                state.terrainFrame = null;
+                if (state.terrainCache) state.terrainCache.revision = null;
+                state.entryPaintedKey = null;
+            }
+            // Activate the veil before the next scene frame while C# is immutable.
+            if (nextTerrainSite) state.entryGate?.update(snapshot, 'terrain');
             requestTerrainFrame(state, snapshot);
             if (snapshot.environment?.greybox && snapshot.lighting)
                 requestSharedGpuWorld(state, 'mobile');
-            state.simulationFrameCount++;
-            state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
-            state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
+            if (!entryBlocked) {
+                state.simulationFrameCount++;
+                state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
+                state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
+            }
         })
         .catch(error => {
             console.error('Wyrmforge arena frame failed.', error);
@@ -362,9 +573,12 @@ function requestTerrainFrame(state, snapshot) {
     const terrain = snapshot.environment?.terrain;
     if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
     state.terrainRequestBusy = true;
+    const requestedSite = huntEntrySceneKey(snapshot);
     state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
         .then(frame => {
-            if (!frame) return;
+            // A pending request from the previous site must never repaint the new one,
+            // even if both happen to carry the same numeric terrain revision.
+            if (!frame || requestedSite !== state.entryTerrainSceneKey) return;
             const previous = state.terrainFrame;
             state.terrainFrame = mergeTerrainFrame(previous, frame);
             // Revision -1 is the initial full load, not destruction.
@@ -424,7 +638,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const greybox = Boolean(snapshot.environment?.greybox);
-    let gpu = snapshot.lighting && state.gpuWorld;
+    let gpu = snapshot.lighting && layerLabEnabled('gpu') ? state.gpuWorld : null;
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
     // Retain it only as a diagnostic A/B switch; the default draws synchronously
@@ -457,6 +671,9 @@ function draw(state, snapshot, width, height) {
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    updateHollowGroundVfx(state.hollowGround, snapshot, state.hollow, state.terrainFrame);
+    updateHollowDeathVfx(state.hollowDeath, snapshot, state.hollow.clock,
+        authoredOn && authoredManifests.has('Hollowed'), state.hollow.corpses);
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
     // Every illumination cue uses the SAME authoritative lighting frame.
@@ -486,12 +703,14 @@ function draw(state, snapshot, width, height) {
         if (state.terrainFrame && snapshot.environment.terrain) {
             // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
             const terrainCache = state.terrainCache ??= new TerrainCanvasCache();
+            terrainCache.allowRegional = layerLabEnabled('incremental');
             if (gpu) terrainCache.enableNormals();
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
             artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
             if (artScale > 1) groundAlbedo = groundAlbedoView(state, camera, width, height, artScale);
-            else state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+            else if (layerLabEnabled('albedo')) state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+            else { ctx.fillStyle = '#777777'; ctx.fillRect(camera.x, camera.y, width, height); }
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
         }
@@ -516,13 +735,18 @@ function draw(state, snapshot, width, height) {
     if (!gpu) for (const layer of exitLayers) drawArenaExit(ctx, layer.exit, visualSeconds, layer.locked);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
+    if (layerLabEnabled('groundFx')) {
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
+    // In the Canvas path, physical fire decals belong under actor feet and existing telegraphs.
+    if (!gpu) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const husk of snapshot.rimeHusks ?? []) drawRimeHusk(ctx, husk);
     drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
-    drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    // Canvas paints the ground under the actors; GPU replays this overlay after compositing
+    // because GPU terrain takes its albedo from the cached terrain surface, not this Canvas.
+    if (!gpu) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawWinterBellGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     drawGlassReliquaryGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
@@ -546,6 +770,7 @@ function draw(state, snapshot, width, height) {
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
+    }
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
@@ -574,7 +799,7 @@ function draw(state, snapshot, width, height) {
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
-        ...(state.terrainFrame && snapshot.environment?.terrain
+        ...(layerLabEnabled('scenery') && state.terrainFrame && snapshot.environment?.terrain
             ? [...treeLayers(state.terrainFrame, huntBand(state, snapshot), camera, width, height), ...torchLayers(state.terrainFrame, camera, width, height)] : []),
         ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
             : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
@@ -582,11 +807,11 @@ function draw(state, snapshot, width, height) {
     // On the GPU path the ground glows (crack veins, hot craters, bedrock hint) ride the ground's emissive map and are lit surfaces
     // under every actor; the additive overlay versions below remain for the Canvas fallback.
     const view = { x: camera.x, y: camera.y, width, height };
-    const emissive = gpu && state.terrainFrame && snapshot.environment?.terrain
+    const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
-    if (emissive) state.veinSeams = emissive.seams;
-    const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
+            view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
+    state.veinSeams = emissive?.seams ?? 0;
+    const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
         groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
@@ -594,6 +819,8 @@ function draw(state, snapshot, width, height) {
             camera, worldWidth, worldHeight) : 0;
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
+        if (!layerLabEnabled('actors') && ['enemy', 'mage', 'dragon', 'dragonDeath'].includes(layer.kind)) continue;
+        if (!layerLabEnabled('scenery') && ['tree', 'torch', 'torchFlame', 'masonry'].includes(layer.kind)) continue;
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
         const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
@@ -626,14 +853,27 @@ function draw(state, snapshot, width, height) {
                 if (!(authoredOn && drawAuthoredAshfangDeath(ctx, state.ashfang))) drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
                 const enemy = layer.enemy;
+                // H3 follows actual Hollowed displacement and the existing C# crawl progress.
+                // Paint the ground contact behind its authored body, within the normal depth/GPU layer.
+                if (state.hollowGroundFxEnabled) drawHollowGroundVfx(ctx, enemy, state.hollowGround,
+                    state.terrainFrame, huntBand(state, snapshot), state.reducedMotion.matches);
+                // One atlas, two C#-timed halves: ground dust behind the actor, bite contact above.
+                drawMireHoundGround(ctx, enemy, state.reducedMotion.matches);
                 if (gpu) {
                     drawEnemy(ctx, enemy, null,
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null,
+                        Boolean(state.terrainFrame));
                 } else {
                     const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null,
+                        Boolean(state.terrainFrame));
                     drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
                 }
+                // Source-derived Gothic pixel swipe: actor-depth, eight facings, no synthetic hit.
+                if (state.hollowClawFxEnabled) drawHollowClawVfx(ctx, enemy, state.hollow, state.reducedMotion.matches);
+                // Combat-confirmed target ID and direct damage decide if a Hollowed can show a wound burst.
+                if (state.hollowHitFxEnabled) drawHollowHitVfx(ctx, enemy, snapshot.damageNumbers, state.reducedMotion.matches);
+                drawMireHoundContact(ctx, enemy, state.reducedMotion.matches);
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {
                 drawMage(ctx, layer.player ?? snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -673,27 +913,45 @@ function draw(state, snapshot, width, height) {
     }
     if (gpu) {
         try {
+            gpu.engine.setDebugView(layerLabView());
             gpu.render(ctx, state.sharedLightingFrame);
         } catch (error) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
     }
+    // Source-atlas corpse dust must be composed after GPU actors but before the
+    // shared Gothic night veil. Neither terrain albedo nor the GPU cache changes.
+    if (state.hollowDeathFxEnabled) {
+        drawHollowDeathGroundVfx(ctx, state.hollowDeath, state.terrainFrame,
+            huntBand(state, snapshot), state.reducedMotion.matches);
+        drawHollowDeathAccentVfx(ctx, state.hollowDeath, state.reducedMotion.matches);
+    }
     const glowOnGround = Boolean(emissive && gpu);
-    drawReliquaryEmergence(ctx, snapshot.reliquary);
-    drawBellWardenEntrance(ctx, snapshot.bellWarden);
+    // Keep the Warden's authoritative ring and 37-frame impact visible above the GPU
+    // presentation. Doing this before gpu.render would discard the effect on 64px/m terrain.
+    if (gpu && layerLabEnabled('postGpuFx')) drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    // The GPU composites the terrain/actors after its ground pass; replay only these bounded
+    // fire patches after that composite, never as a dirty full-terrain texture upload.
+    if (gpu && layerLabEnabled('postGpuFx')) drawAshfangGroundFires(ctx, snapshot, state.reducedMotion.matches);
+    if (layerLabEnabled('postGpuFx')) {
+        drawReliquaryEmergence(ctx, snapshot.reliquary);
+        drawBellWardenEntrance(ctx, snapshot.bellWarden);
+    }
     if (state.terrainFrame && snapshot.environment?.terrain) {
-        drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
+        if (layerLabEnabled('postGpuFx')) drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
         const nowSeconds = performance.now() / 1000;
-        if (!glowOnGround) {
-            state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+        if (!glowOnGround && layerLabEnabled('emissive')) {
+            state.veinSeams = layerLabEnabled('crackVeins')
+                ? drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches)
+                : 0;
             drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
         }
-        if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
+        if (state.destructionFx && layerLabEnabled('damageFx')) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
         // The world is drawn translated by -camera here; the furnace glow belongs to the screen edges.
         ctx.save();
         ctx.translate(camera.x, camera.y);
-        drawFireZoneVignette(ctx, width, height, huntBand(state, snapshot), nowSeconds, state.reducedMotion.matches);
+        if (layerLabEnabled('postGpuFx')) drawFireZoneVignette(ctx, width, height, huntBand(state, snapshot), nowSeconds, state.reducedMotion.matches);
         ctx.restore();
         // The calibration overlay is drawn unlit over the composite so it is readable in any light.
         if (state.blockInset ??= blockInsetOverlayEnabled())
@@ -741,7 +999,12 @@ function draw(state, snapshot, width, height) {
     // The selection emitter belongs to the authoritative GPU snapshot; avoid Canvas double-lighting.
     if (!gpu) drawSpellLightSpill(ctx, actorLightsWithoutSigilOverlay(spellLights), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
-    for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
+    for (const death of snapshot.deathBursts) {
+        // The old white ring conflicts with the approved gothic Hollowed death
+        // art. Keep it for every other entity and as an asset-load fallback.
+        if (Number(death.kind) === 0 && state.hollowDeathFxEnabled && hollowDeathArtReady()) continue;
+        drawDeathBurst(ctx, death);
+    }
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);
@@ -1263,8 +1526,9 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     });
     ctx.restore();
 }
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null, authored = null) {
-    if (authored && drawAuthoredEnemy(ctx, enemy, authored)) return;
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null,
+    authored = null, terrainGrounded = false) {
+    if (authored && drawAuthoredEnemy(ctx, enemy, authored, terrainGrounded)) return;
     if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
@@ -1496,7 +1760,7 @@ function paintAuthoredEmissive(state, gpu, layer, snapshot, captureId, tileX, ti
     setAuthoredRenderMode('emissive');
     try {
         if (layer.kind === 'enemy') {
-            drawn = drawAuthoredEnemy(surface, layer.enemy, state.authored);
+            drawn = drawAuthoredEnemy(surface, layer.enemy, state.authored, Boolean(state.terrainFrame));
             set = state.authored.enemies.get(layer.enemy.entityId)?.name;
             if (layer.enemy.invulnerable) change = layer.enemy.telegraph?.progress ?? .5;
         } else if (layer.kind === 'dragon') {
@@ -1835,5 +2099,10 @@ function groundAlbedoView(state, camera, width, height, scale) {
     g.clearRect(0, 0, pixelWidth, pixelHeight);
     g.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
     state.terrainCache.draw(g, { x: camera.x, y: camera.y, width, height });
+    if (!layerLabEnabled('albedo')) {
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        g.fillStyle = '#777777';
+        g.fillRect(0, 0, pixelWidth, pixelHeight);
+    }
     return canvas;
 }

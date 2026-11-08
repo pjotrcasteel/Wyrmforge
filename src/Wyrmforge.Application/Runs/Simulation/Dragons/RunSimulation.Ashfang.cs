@@ -51,7 +51,10 @@ public sealed partial class RunSimulation
         if (ashfangScorchTimer > 0) return;
         ashfangScorchTimer = .2;
         var reach = ashfangBehavior.Range * (.35 + .3 * (ashfangScorchCount++ % 3));
-        EnemyTerrainBlast(active.Position + ashfangBehavior.BeamDirection * reach, ashfangScorchCount % 3 == 0 ? 2 : 1);
+        var scorch = active.Position + ashfangBehavior.BeamDirection * reach;
+        EnemyTerrainBlast(scorch, ashfangScorchCount % 3 == 0 ? 2 : 1);
+        // The same real scorched point becomes temporarily dangerous, then cools into a dark mark.
+        RegisterAshfangGroundFire(scorch);
     }
 
     private void UpdateAshfangCombat(DragonState active, double delta)

@@ -120,7 +120,9 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
         const player=snapshot.player;
-        const touching=player&&Math.hypot(enemy.x-player.x,enemy.y-player.y)<=(Number(enemy.radius)||11)+(Number(player.radius)||0);
+        // Match the authoritative Hollowed contact reach after body separation;
+        // the swipe remains cosmetic and only C# applies actual damage.
+        const touching=player&&Math.hypot(enemy.x-player.x,enemy.y-player.y)<=(Number(enemy.radius)||11)+(Number(player.radius)||0)+2;
         if(advancing&&touching&&pose.attackAt==null){
             pose.attackAt=pose.age;pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         }

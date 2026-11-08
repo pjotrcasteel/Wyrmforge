@@ -11,6 +11,7 @@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
     <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
+         data-town-navigation-ready="@(townNavigationSettled ? "true" : "false")"
          data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
          data-nexus-mastery-points="@NexusMasteryPoints">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
@@ -269,6 +270,7 @@
     private void RefreshTownAgents() => townAgentJson = JsonSerializer.Serialize(crowd?.InspectAgents(),
         new JsonSerializerOptions { WriteIndented = true });
     private TownCrowd? crowd;
+    private bool townNavigationSettled;
     private readonly CancellationTokenSource loadingStop = new();
     private IJSObjectReference? foregroundModule;
     private DotNetObjectReference<CanonicalTownView>? routeClickReference;
@@ -344,7 +346,7 @@
         try
         {
             foregroundModule = await JS.InvokeAsync<IJSObjectReference>(
-                "import", "./js/refuge-foreground-cutouts.js");
+                "import", $"./js/refuge-foreground-cutouts.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
             routeClickReference = DotNetObjectReference.Create(this);
             await foregroundModule.InvokeVoidAsync("mountTownCutoutsAndRouteSelection", routeClickReference);
         }
@@ -387,6 +389,12 @@
         catch (Exception exception) when (exception is HttpRequestException or JsonException or ArgumentException)
         {
             Logger.LogWarning(exception, "Refuge navigation unavailable. Leave the painted town intact without pedestrians.");
+        }
+        finally
+        {
+            // The startup veil must not reveal the town before navigation/crowd
+            // has settled and the resulting foreground layers can be composed.
+            townNavigationSettled = true;
         }
     }
 

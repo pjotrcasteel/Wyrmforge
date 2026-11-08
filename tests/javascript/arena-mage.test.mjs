@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drawMage, magePose, mageStaffGeometry, updateMageWalk } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-mage.js';
+import { MAGE_VISUAL_SCALE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/mage-visual-profile.js';
 
 function fakeContext() {
     const calls = [];
@@ -119,4 +120,20 @@ test('the mage holds a narrow upright continuous staff through all authored pose
         mageStaffGeometry('release', poses[4][1]));
     assert.notDeepEqual(mageStaffGeometry('release', poses[4][1]),
         mageStaffGeometry('surgeRelease', poses[5][1]));
+});
+
+test('mage is about one head taller without moving the planted feet or changing player radius', () => {
+    assert.equal(Math.round(48 * MAGE_VISUAL_SCALE), 56, '48px wizard gains one ~8px head');
+    const player = { x: 100, y: 170, radius: 12, barrier: true };
+    const ctx = fakeContext();
+    drawMage(ctx, player, null, false);
+    const translate = ctx.calls.find(call => call[0] === 'translate');
+    const scale = ctx.calls.find(call => call[0] === 'scale');
+    assert.equal(translate[1], player.x);
+    assert.equal(scale[1], MAGE_VISUAL_SCALE);
+    assert.equal(scale[2], MAGE_VISUAL_SCALE);
+    assert.ok(translate[2] < player.y, 'enlarged sprite grows upward');
+    assert.ok(Math.abs(translate[2] + 15 * scale[2] - (player.y + 15)) < 1e-8,
+        'the staff and body keep the original grounded-foot pivot');
+    assert.equal(player.radius, 12, 'hitbox is unchanged');
 });

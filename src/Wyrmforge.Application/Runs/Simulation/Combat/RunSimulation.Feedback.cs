@@ -83,7 +83,7 @@ public sealed partial class RunSimulation
     private IReadOnlyList<DamageNumberRenderSnapshot> CreateDamageNumberSnapshots() =>
         damageNumbers.Select(number => new DamageNumberRenderSnapshot(number.Sequence, number.X, number.Y,
             number.Amount, number.School, number.Progress, number.Finisher, number.Empowered, number.Periodic)
-            { Flavor = number.Flavor, Heavy = number.Heavy }).ToArray();
+            { Flavor = number.Flavor, Heavy = number.Heavy, TargetId = number.TargetId, IsDragon = number.IsDragon }).ToArray();
 
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 

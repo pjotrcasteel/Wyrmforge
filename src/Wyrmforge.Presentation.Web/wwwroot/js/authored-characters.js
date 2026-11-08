@@ -8,6 +8,7 @@
 export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 import { drawEmergeParticles } from './arena-field-ambush-vfx.js';
 import { drawFootprint, drawCastShadow, footDrop } from './authored-grounding.js';
+import { MAGE_VISUAL_SCALE } from './mage-visual-profile.js';
 
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
 export const ENEMY_CHARACTERS = new Map([
@@ -378,12 +379,18 @@ export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, 
 
 /**
  * Draws one cell grounded: the footprint ellipse under the body, the silhouette cast flat across the ground, then the sprite with its front foot
- * planted `footDrop(radius)` below the C# position. `radius` is the body's collision radius. Returns false when the set is not loaded.
+ * planted at the C# terrain contact for voxel-grounded enemies. Legacy flat scenes keep the authored front-foot offset.
+ * `radius` is the body's collision radius. Returns false when the set is not loaded.
  */
-export function drawGrounded(ctx, name, actionName, direction, frame, x, y, { alpha = 1, scale = 1, radius = 11 } = {}) {
+export function drawGrounded(ctx, name, actionName, direction, frame, x, y,
+    { alpha = 1, scale = 1, radius = 11, terrainGrounded = false } = {}) {
     const set = loaded.get(name), strip = set?.strips.get(actionName);
     if (!strip) return false;
-    const feetY = y + footDrop(radius);
+    // RaisedActor already subtracts authoritative C# world Z. Adding the legacy
+    // front-foot offset again plants large enemies below the actual voxel lip,
+    // making Warden legs and ordinary mobs appear buried by solid terrain.
+    const drop = terrainGrounded ? 0 : footDrop(radius);
+    const feetY = y + drop;
     const [width, height] = set.manifest.canvas, [rootX, rootY] = set.manifest.root, spec = set.manifest.actions[actionName];
     const row = Math.max(0, set.manifest.directions.indexOf(direction)), column = Math.max(0, Math.min(spec.framesPerDirection - 1, frame));
     const glow = set.emissive?.get(actionName);
@@ -400,7 +407,7 @@ export function drawGrounded(ctx, name, actionName, direction, frame, x, y, { al
         drawGlow('emissive', alpha);
         return true;
     }
-    drawFootprint(ctx, x, y + footDrop(radius) * .4, radius, alpha);
+    drawFootprint(ctx, x, y + drop * .4, radius, alpha);
     drawCastShadow(ctx, strip, { x: column * width, y: row * height, width, height }, rootX, rootY, x, feetY, scale, alpha);
     const drawn = drawAuthoredCell(ctx, name, actionName, direction, frame, x, feetY, alpha, scale);
     if (renderMode === 'overlay' && glow) drawGlow('overlay', alpha * .9);
@@ -490,7 +497,7 @@ export const riseShake = (style, progress, id) => progress >= 1 ? 0 : Math.round
 export const wraithSink = opacity => Math.max(0, Math.min(1, 1 - (Number.isFinite(opacity) ? opacity : 1)));
 
 /** Draws an enemy from its authored pose; false when it has none (the caller then draws the old art). */
-export function drawAuthoredEnemy(ctx, enemy, state) {
+export function drawAuthoredEnemy(ctx, enemy, state, terrainGrounded = false) {
     const pose = state.enemies.get(enemy.entityId);
     const glowPass = renderMode === 'emissive';
     if (!pose) return glowPass ? false : pendingKind(enemy.kind);
@@ -498,7 +505,8 @@ export function drawAuthoredEnemy(ctx, enemy, state) {
     const opacity = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
     // A Drowned Wraith sinks into the water and rises out of it behind a clip line with ripples, instead of fading.
     if (pose.name === 'Drowned-Wraith' && opacity < 1 && !glowPass) return drawSubmerging(ctx, enemy, pose, wraithSink(opacity));
-    return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, { alpha: opacity, radius: Number(enemy.radius) || 11 });
+    return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y,
+        { alpha: opacity, radius: Number(enemy.radius) || 11, terrainGrounded });
 }
 
 function drawSubmerging(ctx, enemy, pose, sink) {
@@ -538,17 +546,24 @@ export const WIZARD_FEET_OFFSET = 12;
 
 export function drawAuthoredWizard(ctx, player, state, hit = false) {
     const wizard = state.wizard, radius = Number(player.radius) || 12, feetY = player.y + WIZARD_FEET_OFFSET;
-    if (renderMode === 'emissive') return drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY - footDrop(radius), { radius });
+    if (renderMode === 'emissive') return drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
+        player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
     // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
     ctx.save();
     if (hit) ctx.filter = 'sepia(1) saturate(3.2) hue-rotate(-35deg) brightness(1.05)';
-    const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY - footDrop(radius), { radius });
+    const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
+        player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
     ctx.restore();
     // Warding Barrier: two pale seams at the shoulders, as the old mage showed it.
     if (player.barrier) {
+        // Warding seams share the larger sprite's foot-anchored coordinate space.
+        ctx.save();
+        ctx.translate(Math.round(player.x), Math.round(feetY));
+        ctx.scale(MAGE_VISUAL_SCALE, MAGE_VISUAL_SCALE);
         ctx.fillStyle = '#a9c8d3';
-        ctx.fillRect(Math.round(player.x) - 11, feetY - 26, 3, 8);
-        ctx.fillRect(Math.round(player.x) + 8, feetY - 26, 3, 8);
+        ctx.fillRect(-11, -26, 3, 8);
+        ctx.fillRect(8, -26, 3, 8);
+        ctx.restore();
     }
     return drawn;
 }

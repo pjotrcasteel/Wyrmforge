@@ -54,6 +54,8 @@ public static class ArenaTerrainGenerator
         var rng = new Random(unchecked(seed * (int)0x9E3779B1 ^ 0x5EED7E44));
         var grid = new ArenaTerrainGrid(columns, rows);
         grid.SetVisualSeed(seed);
+        // Deterministic gameplay moisture, wholly separate from terrain skin variation.
+        grid.SetFireMoistureSeed(unchecked(seed ^ 0x3A51F22D));
         var (route, roadLine) = Rasterize(rng, columns, rows, spawn, exit);
         var protectedCells = new bool[columns * rows];
         foreach (var (rc, rr) in route)
@@ -136,7 +138,7 @@ public static class ArenaTerrainGenerator
 
     /// <summary>
     /// Torch posts along the road, one about every nine cells on alternating sides, three to five cells from its centre line (outside the flat
-    /// protected corridor), on open level ground with no tree or boulder beside it. Static and non-colliding: a light and a post for the dark road.
+    /// protected corridor), on open level ground with no tree or boulder beside it. Each base has a small physical footprint, beyond the safe road.
     /// Returns x, y pairs in 1/16 cell units.
     /// </summary>
     private static int[] PlaceTorches(ArenaTerrainGrid grid, List<(double X, double Y)> line, bool[] protectedCells)
@@ -171,6 +173,9 @@ public static class ArenaTerrainGenerator
     private static bool TorchSpot(ArenaTerrainGrid grid, bool[] protectedCells, int column, int row)
     {
         if (!grid.Contains(column, row) || column < 2 || column >= grid.Columns - 2 || protectedCells[row * grid.Columns + column]) return false;
+        // Both Hunt entry and exit sit on the central axis. Keep a hunter-width open passage there even when
+        // the winding road approaches it: a solid post must never pin the hunter against the exit approach.
+        if (Math.Abs(column + .5 - grid.Columns / 2.0) < 1.5) return false;
         for (var dy = -1; dy <= 1; dy++)
             for (var dx = -1; dx <= 1; dx++)
             {

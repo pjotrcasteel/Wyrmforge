@@ -48,6 +48,7 @@ jobs:
         working-directory: services/playtest-collector
         env:
           WYRMFORGE_D1_DATABASE_ID: ${{ vars.WYRMFORGE_D1_DATABASE_ID }}
+          WYRMFORGE_TEST_ORIGIN: ${{ vars.WYRMFORGE_TEST_ORIGIN }}
         run: npm run configure
 
       - name: Apply D1 migrations

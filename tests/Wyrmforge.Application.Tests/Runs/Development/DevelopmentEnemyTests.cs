@@ -6,6 +6,7 @@ using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Tests.Runs.Development;
 
@@ -40,6 +41,98 @@ public sealed class DevelopmentEnemyTests
             Assert.AreEqual(0, first.CreateSnapshot().Hud.Kills, $"Casting disabled {kind}");
             Assert.AreEqual(0, first.CompletedMapNodes.Count);
             Assert.IsFalse(first.IsEnded);
+        }
+    }
+
+    [TestMethod]
+    public void ActualHollowedLabTick_PushesTheMonsterOutOfTheMageWithoutMovingTheMage()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var before = run.CreateSnapshot();
+        var enemies = (List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        enemies.Single().Position = new Vector2D(before.Player.X, before.Player.Y);
+
+        var snapshot = run.Tick(0, default, 800, 600);
+        var hollow = snapshot.Enemies.Single();
+        var separation = Math.Sqrt(Math.Pow(hollow.X - snapshot.Player.X, 2) +
+            Math.Pow(hollow.Y - snapshot.Player.Y, 2));
+
+        Assert.IsGreaterThanOrEqualTo(hollow.Radius + snapshot.Player.Radius +
+            EnemyCollisionSolver.HollowPlayerGap - 0.0001, separation);
+        Assert.AreEqual(before.Player.X, snapshot.Player.X);
+        Assert.AreEqual(before.Player.Y, snapshot.Player.Y);
+        Assert.AreEqual(before.Player.Radius, snapshot.Player.Radius);
+    }
+
+    [TestMethod]
+    public void ActualHollowedLabTick_ContinuesReachingTheMageWithoutPhasingThrough()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var approached = false;
+        for (var frame = 0; frame < 240; frame++)
+        {
+            var snapshot = run.Tick(0.05, default, 800, 600);
+            var hollow = snapshot.Enemies.Single();
+            var distance = Math.Sqrt(Math.Pow(hollow.X - snapshot.Player.X, 2) +
+                Math.Pow(hollow.Y - snapshot.Player.Y, 2));
+            var contactDistance = hollow.Radius + snapshot.Player.Radius + EnemyCollisionSolver.HollowPlayerGap;
+            Assert.IsGreaterThanOrEqualTo(contactDistance - 0.0001, distance);
+            approached |= distance <= contactDistance + 0.5;
+        }
+        Assert.IsTrue(approached, "The Hollowed must still close to claw reach; separation cannot stop combat.");
+    }
+
+    [TestMethod]
+    public void ActualHollowedDamageFeedback_CarriesAuthoritativeVictimIdentity()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var enemies = (List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        var hollow = enemies.Single();
+        var startingHealth = hollow.Health;
+        var damage = startingHealth * 0.25;
+
+        var dealDamage = typeof(RunSimulation).GetMethod("DamageTarget", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        dealDamage.Invoke(run, [hollow, damage, null, null]);
+
+        var actual = run.CreateSnapshot().DamageNumbers.Single();
+        Assert.AreEqual(hollow.Id, actual.TargetId);
+        Assert.IsFalse(actual.IsDragon);
+        Assert.IsFalse(actual.Periodic);
+        Assert.IsGreaterThan(0, actual.Amount);
+        Assert.AreEqual(startingHealth - damage, hollow.Health, 0.0001);
+    }
+
+
+    [TestMethod]
+    [DataRow(EnemyKind.Hollow, false)]
+    [DataRow(EnemyKind.Hollow, true)]
+    [DataRow(EnemyKind.MireHound, false)]
+    [DataRow(EnemyKind.MireHound, true)]
+    public void ActualEnemyLab_InitialAndRunningFramesSerializeForBrowserWithOrWithoutAutocast(EnemyKind kind, bool casting)
+    {
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(
+            SelfPlayBuildCatalog.All.First().SelectedNodes,
+            new DevelopmentEnemySetup(kind, 42, 390, 844, casting) { Count = 3 });
+
+        foreach (var snapshot in new[] { run.CreateSnapshot(), run.Tick(.05, default, 390, 844) })
+        {
+            Assert.IsNotNull(snapshot.Player);
+            Assert.HasCount(3, snapshot.Enemies);
+            Assert.IsTrue(double.IsFinite(snapshot.Hud.PrimaryCooldownRemaining));
+            Assert.IsGreaterThanOrEqualTo(0, snapshot.Hud.PrimaryCooldownRemaining);
+            var json = JsonSerializer.Serialize(snapshot);
+            StringAssert.Contains(json, "\"Enemies\"");
+            StringAssert.Contains(json, "\"Player\"");
+        }
+
+        // Non-casting is still authoritative: the infinite internal cooldown
+        // must NOT leak through the JSON HUD or be reset to permit spellcasting.
+        if (!casting)
+        {
+            for (var i = 0; i < 10; i++) run.Tick(.05, default, 390, 844);
+            Assert.IsEmpty(run.CreateSnapshot().Projectiles);
         }
     }
 

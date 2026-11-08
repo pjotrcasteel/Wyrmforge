@@ -56,6 +56,7 @@ public sealed partial class RunSimulation
     private readonly Dictionary<int, double> hitFlashRemaining = [];
     private readonly List<SplashPulseState> splashPulses = [];
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
+    private readonly Dictionary<SpellId, double> spellCooldownDurations = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
     private readonly Dictionary<SpellId, int> primaryCastCounts = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0);
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
@@ -171,6 +172,13 @@ public sealed partial class RunSimulation
             aimedPropId = null;
             return CreateSnapshot();
         }
+        if (HuntEntranceActive)
+        {
+            // The ready, visible mage walks up the protected south road before enemies,
+            // timers, spellcasting, hazards or user movement are allowed to advance.
+            AdvanceHuntEntrance(delta, width, height);
+            return CreateSnapshot();
+        }
         if (trailExitPending)
         {
             delta = Math.Clamp(delta, 0, 0.05);
@@ -196,6 +204,7 @@ public sealed partial class RunSimulation
         UpdateStatusDamage(delta);
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         UpdateDragonEncounter(delta, width, height);
+        UpdateAshfangGroundFires(delta);
         UpdateSpawn(delta, width, height);
         UpdateAim(movement);
         agentSpellSound = null;
@@ -343,7 +352,19 @@ public sealed partial class RunSimulation
 
     public RunRenderSnapshot CreateSnapshot()
     {
-        var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
+        var primary = build.Spells.ActiveSpell;
+        var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud)
+        {
+            // Disabled Autocast in developer labs keeps internal cooldowns at +Infinity.
+            // A render snapshot must never expose Infinity: System.Text.Json and
+            // Blazor JSInterop reject it, which otherwise blanks both lab canvases.
+            // The simulation remains non-casting; only its HUD representation is finite.
+            PrimaryCooldownRemaining = double.IsFinite(spellCooldowns[primary])
+                ? Math.Max(0, spellCooldowns[primary]) : 0,
+            PrimaryCooldownDuration = spellCooldownDurations[primary],
+            DefensiveCooldownRemaining = contextualPolicy is null ? 0 : Math.Max(0, contextualRecovery),
+            DefensiveCooldownDuration = contextualPolicy is null ? 0 : WardingPulse.RecoverySeconds,
+        };
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
@@ -373,6 +394,16 @@ public sealed partial class RunSimulation
                 Empowered = IsWardEmpowered(enemy),
                 EmergeProgress = enemy.EmergeRemaining > 0 && enemy.EmergeTotal > 0 ? 1 - enemy.EmergeRemaining / enemy.EmergeTotal : null,
                 EmergeClip = enemy.EmergeTotal >= CrawlOutPullSeconds - .001 ? 0 : 1,
+                MireHoundVfx = enemy.MireHound is { } hound ? new MireHoundVfxRenderSnapshot(
+                    hound.Phase.ToString(),
+                    hound.Phase switch
+                    {
+                        MireHoundPhase.Windup => hound.WindupProgress,
+                        MireHoundPhase.Pounce => Math.Clamp(1 - hound.PhaseRemaining / MireHoundBehaviorState.PounceSeconds, 0, 1),
+                        MireHoundPhase.Recover => Math.Clamp(1 - hound.PhaseRemaining / MireHoundBehaviorState.RecoverSeconds, 0, 1),
+                        _ => 0,
+                    },
+                    hound.PounceDirection.X, hound.PounceDirection.Y, hound.PounceLanded) : null,
                 Invulnerable = IsTransforming(enemy),
                 Recovering = enemy is { BellWarden.Phase: BellWardenPhase.Recover } or { Reliquary.Phase: ReliquaryPhase.Recover },
             }).ToArray(),
@@ -406,8 +437,10 @@ public sealed partial class RunSimulation
         {
             BurningGroundCount = burningGrounds.Count,
             DamageNumbers = CreateDamageNumberSnapshots(),
+            HuntEntranceWalking = HuntEntranceActive,
             DragonDefeat = dragonDefeat,
             AshfangEffects = CreateAshfangEffects(),
+            AshfangGroundFires = CreateAshfangGroundFireSnapshots(),
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
@@ -450,11 +483,11 @@ public sealed partial class RunSimulation
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
             [NightSkyLightingProjection.Capture(moonlitTerrain)],
-            [HunterVisibilityLightingProjection.Capture(player.Position)],
+            HunterVisibilityLightingProjection.CaptureForScene(player.Position, moonlitTerrain),
             SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
                 elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
                 CreateFieryAreaSnapshots()),
-            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
+            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects(), CreateAshfangGroundFireSnapshots()),
             ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
             BossGlowLightingProjection.Capture(CreateDragonSnapshot(), enemies),
             lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(

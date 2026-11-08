@@ -1,12 +1,16 @@
 import { createSpellBadge } from './spell-hud.js';
+import { clampHudFraction, cooldownPresentation, healthCrystalPresentation, selectCombatSlots } from './combat-hud-state.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview } from './arena.js?v=20261106-default-hunt1-gate-v1';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview, inspectTerrainCacheRebuild as inspectBaseTerrainCacheRebuild, beginHuntEntry as beginBaseHuntEntry, cancelHuntEntry as cancelBaseHuntEntry } from './arena.js?v=20261108-lab-loading-optin-v3';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();
 // Diagnostics must read the same module instance that owns the actual Hunt canvas.
 export const readArenaDiagnostics = canvas => readBaseArenaDiagnostics(canvas);
 export const renderArenaMapOverview = canvas => renderBaseMapOverview(canvas);
+export const inspectTerrainCacheRebuild = canvas => inspectBaseTerrainCacheRebuild(canvas);
+export const beginHuntEntry = canvas => beginBaseHuntEntry(canvas);
+export const cancelHuntEntry = canvas => cancelBaseHuntEntry(canvas);
 const activeSimulationIntervalMilliseconds = 1000 / 60;
 const pausedSimulationIntervalMilliseconds = 100;
 const statusVisuals = [
@@ -50,7 +54,7 @@ export function initializeArena(canvas, dotNetReference) {
     canvas.parentElement.appendChild(state.statusCanvas);
     syncStatusCanvas(state);
     frameStates.set(canvas, state);
-    initializeBaseArena(canvas, createThrottledReference(state));
+    initializeBaseArena(canvas, createThrottledReference(state), { huntEntryLoading: true });
 }
 
 export function disposeArena(canvas) {
@@ -192,11 +196,27 @@ function drawStatusBadges(ctx, x, y, radius, statuses, large) {
 }
 
 function getCombatHud(canvas) {
-    const root = canvas.closest('.game-screen')?.querySelector('.combat-vitals');
+    const root = canvas.closest('.game-screen')?.querySelector('.arcane-hunt-hud');
     if (!root) return null;
     const get = key => root.querySelector(`[data-hud="${key}"]`);
-    return { score:get('score'),time:get('time'),kills:get('kills'),health:get('health'),
-        level:get('level'),spells:get('spells'),healthFill:get('health-fill'),xpFill:get('xp-fill') };
+    return {
+        root,
+        health: get('health'), healthFill: get('health-fill'),
+        level: get('level'), xpFill: get('xp-fill'), xpValue: get('xp-value'),
+        spells: get('spells'), defensiveSpell: get('defensive-spell'),
+        primaryCooldown: get('primary-cooldown'), defensiveCooldown: get('defensive-cooldown'),
+        primarySlot: root.querySelector('[data-hud-slot="primary"]'),
+        defensiveSlot: root.querySelector('[data-hud-slot="defensive"]'),
+    };
+}
+
+function setSpellCooldown(slot, label, remaining, duration) {
+    if (!slot) return;
+    const display = cooldownPresentation(remaining, duration);
+    slot.style.setProperty('--ready-angle', `${display.readyDegrees}deg`);
+    slot.style.setProperty('--shade-angle', `${display.shadeDegrees}deg`);
+    slot.classList.toggle('is-recovering', display.recovering);
+    if (label && label.textContent !== display.text) label.textContent = display.text;
 }
 
 function updateCombatHud(state, snapshot) {
@@ -209,32 +229,71 @@ function updateCombatHud(state, snapshot) {
     const encounter = state.canvas.closest('.game-screen')?.querySelector('.encounter-objective');
     if (encounter && snapshot.trail) {
         const trail = snapshot.trail;
-        const percent = Math.round(trail.progress * 100);
+        const percent = Math.round(clampHudFraction(trail.progress) * 100);
         const fill = encounter.querySelector('[data-trail="progress"]');
-        if (fill) { fill.style.width = `${percent}%`; fill.parentElement.setAttribute('aria-valuenow', String(percent)); }
+        if (fill) {
+            fill.style.width = `${percent}%`;
+            fill.parentElement.setAttribute('aria-valuenow', String(percent));
+        }
         const clock = encounter.querySelector('[data-trail="phase-time"]');
         const objective = encounter.querySelector('[data-trail="objective"]');
         if (clock) clock.textContent = trail.phaseStatus;
         if (objective) objective.textContent = trail.objective;
     }
-    const updateText = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
-    updateText(dom.score, `SCORE ${hud.score}`);
-    updateText(dom.time, `${hud.seconds}s`);
-    updateText(dom.kills, `${hud.kills} KILLS`);
-    updateText(dom.health, `♥ HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
-    const healthFraction = Math.max(0, Math.min(1, hud.health / Math.max(1, hud.maxHealth)));
-    const vitals = dom.health?.closest('.combat-vitals');
-    if (vitals) vitals.dataset.healthState = healthFraction <= .25 ? 'critical' : healthFraction <= .55 ? 'wounded' : 'healthy';
-    const healthTrack = dom.healthFill?.parentElement;
-    if (healthTrack) healthTrack.setAttribute('aria-valuenow', String(Math.round(healthFraction * 100)));
-    updateText(dom.level, `LV ${hud.level}`);
-    const signature = JSON.stringify(hud.spells);
-    if (dom.spells && dom.spells.dataset.loadout !== signature) {
-        dom.spells.dataset.loadout = signature;
-        dom.spells.replaceChildren(...hud.spells.filter(spell => spell.isActive !== false).map(createSpellBadge));
+    const updateText = (node, value) => {
+        if (node && node.textContent !== value) node.textContent = value;
+    };
+
+    // Left crystal orb is the real health meter; the right orb has no invented resource.
+    const { fraction: healthFraction, unfilledPercent, state: healthState } = healthCrystalPresentation(hud.health, hud.maxHealth);
+    const healthTrack = dom.healthFill?.closest('.combat-health-track');
+    if (healthTrack) {
+        healthTrack.dataset.healthState = healthState;
+        healthTrack.setAttribute('aria-valuenow', String(Math.round(healthFraction * 100)));
+        healthTrack.setAttribute('aria-valuetext', `${Math.ceil(hud.health)} of ${Math.ceil(hud.maxHealth)} health`);
     }
-    const hudPanel = dom.spells?.closest('.arena-top-hud');
-    if (hudPanel) state.canvas.closest('.game-screen')?.style.setProperty('--combat-hud-bottom', `${hudPanel.getBoundingClientRect().bottom}px`);
-    if (dom.healthFill) dom.healthFill.style.width = `${Math.max(0, Math.min(100, hud.health / Math.max(1, hud.maxHealth) * 100))}%`;
-    if (dom.xpFill) dom.xpFill.style.width = `${Math.max(0, Math.min(100, hud.experience / Math.max(1, hud.experienceToNext) * 100))}%`;
+    dom.root.dataset.healthState = healthState;
+    // Reveal a fixed-size pixel-glass texture instead of distorting an already-filled picture.
+    if (dom.healthFill) dom.healthFill.style.setProperty('--health-unfilled', `${unfilledPercent}%`);
+    updateText(dom.health, `${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
+
+    updateText(dom.level, `LV ${hud.level}`);
+    updateText(dom.xpValue, `EXP ${hud.experience}/${hud.experienceToNext}`);
+    const experienceFraction = clampHudFraction(hud.experience / Math.max(1, hud.experienceToNext));
+    if (dom.xpFill) {
+        dom.xpFill.style.width = `${experienceFraction * 100}%`;
+        dom.xpFill.parentElement?.setAttribute('aria-valuenow', String(Math.round(experienceFraction * 100)));
+    }
+
+    // Spell visuals are the actual selected primary and prepared contextual auto-cast.
+    const { primary, defensive } = selectCombatSlots(hud.spells);
+    const primarySignature = primary ? JSON.stringify(primary) : '';
+    if (dom.spells && dom.spells.dataset.loadout !== primarySignature) {
+        dom.spells.dataset.loadout = primarySignature;
+        dom.spells.replaceChildren(...(primary ? [createSpellBadge(primary)] : []));
+    }
+    if (dom.primarySlot) {
+        dom.primarySlot.setAttribute('aria-label', primary ? `Primary automatic spell: ${primary.name}` : 'Primary automatic spell');
+    }
+    setSpellCooldown(dom.primarySlot, dom.primaryCooldown, hud.primaryCooldownRemaining, hud.primaryCooldownDuration);
+
+    const defensiveSignature = defensive ? JSON.stringify(defensive) : 'locked';
+    if (dom.defensiveSpell && dom.defensiveSpell.dataset.loadout !== defensiveSignature) {
+        dom.defensiveSpell.dataset.loadout = defensiveSignature;
+        if (defensive) dom.defensiveSpell.replaceChildren(createSpellBadge(defensive));
+        // Before Hunter level 3, preserve the inactive shield art and do not show a fictional ability.
+    }
+    if (dom.defensiveSlot) {
+        dom.defensiveSlot.classList.toggle('is-locked', !defensive);
+        dom.defensiveSlot.setAttribute('aria-label', defensive
+            ? `Automatic defensive spell: ${defensive.name}` : 'Automatic defence not yet unlocked');
+    }
+    if (defensive) setSpellCooldown(dom.defensiveSlot, dom.defensiveCooldown,
+        hud.defensiveCooldownRemaining, hud.defensiveCooldownDuration);
+    else {
+        dom.defensiveSlot?.classList.remove('is-recovering');
+        dom.defensiveSlot?.style.setProperty('--ready-angle', '0deg');
+        dom.defensiveSlot?.style.setProperty('--shade-angle', '0deg');
+        updateText(dom.defensiveCooldown, 'LOCKED');
+    }
 }

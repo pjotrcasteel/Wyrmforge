@@ -311,6 +311,61 @@ public sealed class ArenaTerrainTests
     }
 
     [TestMethod]
+    public void TorchBases_BlockOnlyTheirVisiblePostAndKeepNavigationOpen()
+    {
+        var grid = new ArenaTerrainGrid(9, 9);
+        grid.SetRoad([], [3 * 16 + 8, 3 * 16 + 8]);
+        var basePoint = ArenaTerrainGrid.CenterOf(3, 3);
+        var clear = basePoint + new Vector2D(ArenaTerrainGrid.TorchBaseRadiusUnits + PlayerRadius + 1, 0);
+        var approach = basePoint + new Vector2D(ArenaTerrainGrid.CellUnits * 2, 0);
+
+        Assert.IsFalse(grid.IsStandable(basePoint, PlayerRadius), "the torch post is solid");
+        Assert.IsTrue(grid.BlocksMovement(approach, basePoint, PlayerRadius), "the player cannot pass through the post");
+        Assert.IsTrue(grid.IsStandable(clear, PlayerRadius), "the collision stops outside the post and actor radius");
+        Assert.IsFalse(grid.BlocksMovement(approach, clear, PlayerRadius), "the base has no invisible 1 m-square barrier");
+        Assert.AreEqual(clear, grid.RestrictMovement(approach, clear, PlayerRadius));
+
+        var cost = grid.DistanceFrom((5, 3), PlayerRadius);
+        Assert.AreNotEqual(ArenaTerrainGrid.Unreachable, cost[3 * grid.Columns + 1],
+            "enemy navigation must route around the little post");
+        Assert.AreEqual(ArenaTerrainGrid.Unreachable, cost[3 * grid.Columns + 3],
+            "no nav waypoint may end inside the post");
+        Assert.AreEqual(0, grid.Revision, "torch footprints never mutate the terrain");
+    }
+
+    [TestMethod]
+    public void TorchFootprints_NeverBlockTheSeededProtectedRoad()
+    {
+        for (var seed = 0; seed < 40; seed++)
+        {
+            var recipe = Make(seed, .1);
+            var grid = recipe.Grid;
+            foreach (var (column, row) in recipe.ProtectedRoute)
+            {
+                var routePoint = ArenaTerrainGrid.CenterOf(column, row);
+                for (var i = 0; i + 1 < grid.Torches.Count; i += 2)
+                {
+                    var foot = new Vector2D(grid.Torches[i] * ArenaTerrainGrid.CellUnits / 16,
+                        grid.Torches[i + 1] * ArenaTerrainGrid.CellUnits / 16);
+                    Assert.IsGreaterThanOrEqualTo(PlayerRadius + ArenaTerrainGrid.TorchBaseRadiusUnits,
+                        Vector2D.Distance(routePoint, foot),
+                        $"seed {seed}: torch foot must not overlap the protected route {column},{row}");
+                }
+            }
+
+            for (var i = 0; i + 1 < grid.Torches.Count; i += 2)
+            {
+                var footX = grid.Torches[i] * ArenaTerrainGrid.CellUnits / 16;
+                Assert.IsGreaterThanOrEqualTo(ArenaTerrainGrid.CellUnits * 1.5,
+                    Math.Abs(footX - grid.Columns * ArenaTerrainGrid.CellUnits / 2),
+                    $"seed {seed}: solid posts must leave the central exit/entry passage clear");
+            }
+
+            Assert.IsTrue(grid.IsReachable(recipe.Spawn, recipe.Exit, PlayerRadius), $"seed {seed}: protect route from torch collision");
+        }
+    }
+
+    [TestMethod]
     public void Torches_LightTheNearestStretchOfRoadAndTravelOnlyWithTheFirstFrame()
     {
         var grid = Make(7, 0.1).Grid;
@@ -357,6 +412,37 @@ public sealed class ArenaTerrainTests
             .First(cell => grid.Contains(cell.Column, cell.Row) && sheer.Surface - grid.Surface(cell.Column, cell.Row) > ArenaTerrainGrid.MaxStepMicrocells);
         Assert.IsTrue(grid.BlocksMovement(ArenaTerrainGrid.CenterOf(lower.Column, lower.Row),
             ArenaTerrainGrid.CenterOf(sheer.Column, sheer.Row), 4), "a sheer face cannot be climbed");
+    }
+
+    [TestMethod]
+    public void Trees_BlockAtTheVisibleTrunkNotAcrossTheEntireTerrainSquare()
+    {
+        var grid = new ArenaTerrainGrid(7, 7);
+        grid.Set(3, 3, 16, ArenaTerrainMaterial.Wood);
+        var trunk = new Vector2D(3.5 * ArenaTerrainGrid.CellUnits, 3.5 * ArenaTerrainGrid.CellUnits - ArenaTerrainGrid.TreeFootRaiseUnits);
+        var clear = new Vector2D(3 * ArenaTerrainGrid.CellUnits + 30, 3 * ArenaTerrainGrid.CellUnits + 30);
+        var approach = new Vector2D(clear.X, 4 * ArenaTerrainGrid.CellUnits + 16);
+
+        Assert.IsFalse(grid.IsStandable(trunk, PlayerRadius), "the physical trunk remains solid");
+        Assert.IsTrue(grid.BlocksMovement(approach, trunk, PlayerRadius), "walking into the trunk is blocked");
+        Assert.IsTrue(grid.IsStandable(clear, PlayerRadius), "the clear corner of the tree's square is traversable");
+        Assert.IsFalse(grid.BlocksMovement(approach, clear, PlayerRadius), "no invisible block extends toward the player");
+        Assert.AreEqual(clear, grid.RestrictMovement(approach, clear, PlayerRadius));
+        Assert.AreEqual(0d, grid.SurfaceMetersAt(clear), "ground beside the trunk is at floor height");
+        Assert.IsGreaterThan(1d, grid.SurfaceMetersAt(trunk)!.Value, "the actual trunk still has world height");
+    }
+
+    [TestMethod]
+    public void Trees_AllowDiagonalNavigationAroundTheirClearBackCorner()
+    {
+        var grid = new ArenaTerrainGrid(7, 7);
+        grid.Set(3, 3, 16, ArenaTerrainMaterial.Wood);
+        var start = ArenaTerrainGrid.CenterOf(2, 3);
+        var destination = ArenaTerrainGrid.CenterOf(3, 4);
+        var cost = grid.DistanceFrom((3, 4), PlayerRadius);
+
+        Assert.IsFalse(grid.BlocksMovement(start, destination, PlayerRadius));
+        Assert.AreEqual(14, cost[3 * grid.Columns + 2], "the corner is walkable without routing through the trunk");
     }
 
     [TestMethod]

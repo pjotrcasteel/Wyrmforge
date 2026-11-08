@@ -37,6 +37,20 @@
             </select>
         </label>
         <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
+        @if (kind is EnemyKind.Hollow or EnemyKind.MireHound)
+        {
+            <label>Spawn count
+                <input aria-label="Spawn count" type="number" min="1" max="64" step="1"
+                       @bind="enemyCount" @bind:after="ApplySpawnCount" />
+            </label>
+        }
+        @if (kind == EnemyKind.Hollow)
+        {
+            <label><input type="checkbox" @bind="hollowClawFxEnabled" @bind:after="SwitchHollowClawFx" /> Hollowed claw VFX</label>
+            <label><input type="checkbox" @bind="hollowHitFxEnabled" @bind:after="SwitchHollowHitFx" /> Hollowed damage VFX</label>
+            <label><input type="checkbox" @bind="hollowGroundFxEnabled" @bind:after="SwitchHollowGroundFx" /> Hollowed ground VFX</label>
+            <label><input type="checkbox" @bind="hollowDeathFxEnabled" @bind:after="SwitchHollowDeathFx" /> Hollowed death VFX</label>
+        }
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
         <label><input type="checkbox" @bind="agentFoundation" @bind:after="Restart" /> AI0 foundation (Hollow / Mire Hound)</label>
@@ -51,7 +65,7 @@
         </section>
     }
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
-        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
+        <div class="status">@kind • @enemyCount SPAWNED • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
     @if (agentFoundation || agentPerception || intelligence is not null)
     {
@@ -70,6 +84,10 @@
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "hollowClawFx")] public bool? HollowClawFxQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "hollowHitFx")] public bool? HollowHitFxQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "hollowGroundFx")] public bool? HollowGroundFxQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "hollowDeathFx")] public bool? HollowDeathFxQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
@@ -77,6 +95,7 @@
     [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "mireStyle")] public string? MireStyleQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "ai0")] public bool? AgentFoundationQuery { get; set; }
+    private static string ArenaModulePath => $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}";
     private ElementReference canvas;
     private IJSObjectReference? module;
     private DotNetObjectReference<EnemyLab>? reference;
@@ -86,6 +105,10 @@
     private int seed = 42;
     private bool autoplay = true;
     private bool casting;
+    private bool hollowClawFxEnabled = true;
+    private bool hollowHitFxEnabled = true;
+    private bool hollowGroundFxEnabled = true;
+    private bool hollowDeathFxEnabled = true;
     [Parameter, SupplyParameterFromQuery(Name = "ai1")] public bool? AgentPerceptionQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "tier")] public int? TierQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "count")] public int? CountQuery { get; set; }
@@ -107,6 +130,10 @@
         if (SeedQuery is { } value) seed = value;
         if (AutoplayQuery is { } auto) autoplay = auto;
         if (CastQuery is { } cast) casting = cast;
+        if (HollowClawFxQuery is { } claw) hollowClawFxEnabled = claw;
+        if (HollowHitFxQuery is { } hit) hollowHitFxEnabled = hit;
+        if (HollowGroundFxQuery is { } ground) hollowGroundFxEnabled = ground;
+        if (HollowDeathFxQuery is { } death) hollowDeathFxEnabled = death;
         if (PausedQuery is { } pause) paused = pause;
         if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
         if (AgentPerceptionQuery is { } ai1) agentPerception = ai1;
@@ -126,7 +153,7 @@
             // Browsers cache rejected module imports. An explicit retry uses a fresh URL;
             // successful initialization still disposes the previous canvas session.
             module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import",
-                retry ? $"./js/arena.js?retry={Guid.NewGuid():N}" : "./js/arena.js");
+                retry ? $"{ArenaModulePath}&retry={Guid.NewGuid():N}" : ArenaModulePath);
             reference ??= DotNetObjectReference.Create(this);
             await module.InvokeVoidAsync("initializeArena", canvas, reference);
             startupError = null;
@@ -163,6 +190,7 @@
     }
     private void LoadSelectedEnemy()
     {
+        if (kind is not (EnemyKind.Hollow or EnemyKind.MireHound)) enemyCount = 1;
         Restart();
         // Shareable kind links allow before/after capture with the same actor and seed.
         var url = Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
@@ -178,6 +206,39 @@
         });
         Navigation.NavigateTo(url, replace: true);
     }
+    private void ApplySpawnCount()
+    {
+        enemyCount = Math.Clamp(enemyCount, 1, 64);
+        Restart();
+        // URL keeps repeatable pack size and seed, while the real C# encounter reinitializes.
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("count", enemyCount), replace: true);
+    }
+
+    private void SwitchHollowClawFx()
+    {
+        // Reload the same encounter seed with and without the visual-only slash.
+        var value = hollowClawFxEnabled ? (bool?)null : false;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowClawFx", value), forceLoad: true, replace: true);
+    }
+
+    private void SwitchHollowHitFx()
+    {
+        var value = hollowHitFxEnabled ? (bool?)null : false;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowHitFx", value), forceLoad: true, replace: true);
+    }
+
+    private void SwitchHollowGroundFx()
+    {
+        var value = hollowGroundFxEnabled ? (bool?)null : false;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowGroundFx", value), forceLoad: true, replace: true);
+    }
+
+    private void SwitchHollowDeathFx()
+    {
+        var value = hollowDeathFxEnabled ? (bool?)null : false;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("hollowDeathFx", value), forceLoad: true, replace: true);
+    }
+
     private void SwitchMireStyle()
     {
         // Full reload is deliberate: the texture loader must choose precisely

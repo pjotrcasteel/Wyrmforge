@@ -79,7 +79,7 @@
                                         class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
                                         disabled="@(!ready)"
                                         aria-label="@(ready ? $"Choose {school.Name}" : $"{school.Name}, not yet available")"
-                                        @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
+                                        @onclick="() => ChooseSchoolAndEnterTownAsync(school.Id)">
                                     <span class="character-school-icon" aria-hidden="true"></span>
                                     <strong>@school.Name</strong>
                                     <small>@(ready ? "AVAILABLE" : "LOCKED")</small>
@@ -154,12 +154,12 @@
                 }
                 else if (SpellcraftOpen)
                 {
-                    <BuildView OnSwitchSchool="OnSwitchSchool" CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                    <BuildView OnSwitchSchool="OnSwitchSchool" FirstPointGuide="@(Progress.CompletedRuns == 1 && Selection.SpentPoints == 0)" CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
                         FocusNodeId="@nexusFocus" />
                 }
                 else
                 {
-                    <BuildView OnSwitchSchool="OnSwitchSchool" CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
+                    <BuildView OnSwitchSchool="OnSwitchSchool" FirstPointGuide="@(Progress.CompletedRuns == 1 && Selection.SpentPoints == 0)" CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
                 }
                 break;
             case ShellSection.Forge:
@@ -212,7 +212,21 @@
     [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;
-    private void EnterTown() => enteredTown = true;
+    private async Task EnterTown()
+    {
+        // The initial welcome art is ready; keep it covered until the actual
+        // town's textures, navigation, cutouts and first composited frame are ready.
+        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown");
+        enteredTown = true;
+    }
+
+    private async Task ChooseSchoolAndEnterTownAsync(DivineArchetype school)
+    {
+        // New characters see character creation first, then enter the same
+        // fully prepared town as returning players.
+        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown", true);
+        await OnChooseSchool.InvokeAsync(school);
+    }
     [Parameter] public EventCallback<string> OnPlayerNameChanged { get; set; }
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public FirstHuntProgress Progress { get; set; } = null!;
@@ -264,6 +278,7 @@
     [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
     [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
     [Parameter] public bool StartInLaboratory { get; set; }
+    [Parameter] public bool StartInFirstWeb { get; set; }
     [Parameter] public LaboratoryMutationId? LaboratoryFocus { get; set; }
 
     private bool editingName;
@@ -412,10 +427,21 @@
             await JavaScript.InvokeVoidAsync("wyrmforgeTown.mount");
     }
 
+    private bool firstWebRequestHandled;
+
+    protected override void OnParametersSet()
+    {
+        if (!StartInFirstWeb || firstWebRequestHandled) return;
+        firstWebRequestHandled = true;
+        section = ShellSection.Build;
+        facet = NexusFacet.Web;
+        nexusFocus = null;
+    }
+
     protected override void OnInitialized()
     {
         // A post-hunt research prompt opens the Nexus on the Spellcraft circle with that recipe seated (amendment §3).
-        if (StartInLaboratory) OpenSpellcraftFor(LaboratoryFocus ?? Laboratory.Tracked);
+        if (StartInLaboratory && !StartInFirstWeb) OpenSpellcraftFor(LaboratoryFocus ?? Laboratory.Tracked);
     }
 
     private enum ShellSection { Run, Gate, Build, Forge, Codex, Prepare, Options }

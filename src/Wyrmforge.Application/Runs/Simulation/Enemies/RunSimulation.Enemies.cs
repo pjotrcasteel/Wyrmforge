@@ -377,7 +377,8 @@ public sealed partial class RunSimulation
             }
 
         }
-        enemyCollisions.Resolve(enemies, mapState.EncounterActive ? arenaEnvironment : null, arenaWidth, arenaHeight);
+        enemyCollisions.Resolve(enemies, mapState.EncounterActive ? arenaEnvironment : null, arenaWidth, arenaHeight,
+            player.Position, player.Radius);
         ResolveEnemyContacts(delta);
         SinkWraiths();
         UpdateHostileProjectiles(delta);
@@ -398,7 +399,11 @@ public sealed partial class RunSimulation
         {
             if (enemy.Health <= 0 || enemy.EmergeRemaining > 0) continue;
             var statusTimeScale = enemy.Statuses.TimeScale(false);
-            if (statusTimeScale <= 0 || Vector2D.Distance(enemy.Position, player.Position) > enemy.Radius + player.Radius) continue;
+            // A separated Hollowed retains its claw/contact reach across the
+            // 1.5-unit physical gap. Other enemy attack ranges remain unchanged.
+            var contactReach = enemy.Radius + player.Radius +
+                (enemy.Kind == EnemyKind.Hollow ? EnemyCollisionSolver.HollowPlayerGap + 0.5 : 0);
+            if (statusTimeScale <= 0 || Vector2D.Distance(enemy.Position, player.Position) > contactReach) continue;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier * EliteImpact(enemy);
             if (enemy.MireHound is { Phase: MireHoundPhase.Pounce } biter)
             {

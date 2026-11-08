@@ -34,6 +34,9 @@ public partial class ArenaView : IAsyncDisposable
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
+    private bool firstHuntMovementObserved;
+    private bool firstHuntKillObserved;
+    private bool firstHuntUpgradeChosen;
     private bool previewMountainMonastery;
     private long lastAiProfilingFrame;
     private bool ChoosingPrimary => simulation is { PrimaryCommitted: false };
@@ -101,6 +104,19 @@ public partial class ArenaView : IAsyncDisposable
     private int RelicSlots => simulation?.RelicSlots ?? 0;
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
+
+    private string? FirstHuntHint
+    {
+        get
+        {
+            if (!FirstHunt || gameOverSent || ChoosingPrimary || trailTransition || runMoment is not null || !MapCombatActive
+                || simulation?.HuntEntranceActive == true || CurrentChoices.Count > 0) return null;
+            if (!firstHuntMovementObserved) return "DRAG TO MOVE • WASD / ARROW KEYS ON DESKTOP";
+            if (!firstHuntKillObserved) return "YOUR MAGIC CASTS AUTOMATICALLY • KEEP MOVING TO EVADE";
+            if (!firstHuntUpgradeChosen) return "DEFEAT ENEMIES TO EARN YOUR FIRST HUNT POWER";
+            return null;
+        }
+    }
     private int PendingEssenceCount => Math.Max(0, CurrentEssences.Count - SecuredEssenceCount);
 
     protected override void OnInitialized()
@@ -178,8 +194,17 @@ public partial class ArenaView : IAsyncDisposable
     public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame? TerrainFrame(int knownRevision) =>
         simulation?.TerrainFrame(knownRevision);
 
+    /// <summary>
+    /// Return the current authoritative scene without advancing encounter simulation.
+    /// Used only while JS waits for first terrain, atlas, actor and lighting readiness.
+    /// Even Tick(0) would run spawn and attack resolution, so startup must not Tick.
+    /// </summary>
     [JSInvokable]
-    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
+    public RunRenderSnapshot PreviewFrame() =>
+        simulation?.CreateSnapshot() ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
+
+    [JSInvokable]
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false, bool reducedMotion = false)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
@@ -213,8 +238,24 @@ public partial class ArenaView : IAsyncDisposable
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var previousRefugeReturns = current.RefugeReturns;
+        var hadHuntEntrance = current.HuntEntranceActive;
+        if (reducedMotion) current.SkipHuntEntrance();
         var input = new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         var snapshot = current.Tick(delta, input, width, height);
+        var firstHuntHintAdvanced = false;
+        if (FirstHunt && MapCombatActive && !snapshot.Ended && !hadHuntEntrance)
+        {
+            if (!firstHuntMovementObserved && Math.Abs(movementX) + Math.Abs(movementY) >= 0.35)
+            {
+                firstHuntMovementObserved = true;
+                firstHuntHintAdvanced = true;
+            }
+            if (!firstHuntKillObserved && current.CurrentMapNodeKills > 0)
+            {
+                firstHuntKillObserved = true;
+                firstHuntHintAdvanced = true;
+            }
+        }
         // Debug/automation (opt-in by URL): extra fixed ticks per frame stop at any choice, checkpoint or end so the UI still gets its turn.
         for (var extra = 1; extra < debugSpeed && !snapshot.Ended && !snapshot.Paused && !current.AtCheckpoint
             && current.PendingChoices.Count == 0 && current.PendingDragonEssenceChoices.Count == 0
@@ -225,7 +266,8 @@ public partial class ArenaView : IAsyncDisposable
         }
         if (debugGod) current.DebugRestoreHealth();
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
-        var stateChanged = hadChoices != current.PendingChoices.Count > 0
+        var stateChanged = firstHuntHintAdvanced || hadHuntEntrance && !current.HuntEntranceActive
+            || hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
             || hadRelicChoices != current.PendingRelicChoices.Count > 0
             || wasAtCheckpoint != current.AtCheckpoint
@@ -367,6 +409,7 @@ public partial class ArenaView : IAsyncDisposable
     {
         var choice = CurrentChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || simulation?.ApplyChoice(id) != true) return;
+        if (FirstHunt) firstHuntUpgradeChosen = true;
         ShowChoiceMoment(choice);
         await TryPlayAudioAsync("upgrade-choice");
         await InvokeAsync(StateHasChanged);
@@ -400,13 +443,28 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChooseMapNodeAsync(string id)
     {
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
-        if (node is null || simulation?.ChooseMapNode(id) != true) return;
-        if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
-            throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
-        ShowMapMoment(node);
-        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
-        await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
-        await InvokeAsync(StateHasChanged);
+        if (node is null || simulation is null) return;
+        // The JS overlay must visibly cover the prior map before the C# terrain generator runs.
+        if (arenaModule is not null) await arenaModule.InvokeVoidAsync("beginHuntEntry", CancellationToken.None, canvas);
+        try
+        {
+            if (!simulation.ChooseMapNode(id))
+            {
+                if (arenaModule is not null) await arenaModule.InvokeVoidAsync("cancelHuntEntry", CancellationToken.None, canvas);
+                return;
+            }
+            if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
+                throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
+            ShowMapMoment(node);
+            await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
+            await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            if (arenaModule is not null) await arenaModule.InvokeVoidAsync("cancelHuntEntry", CancellationToken.None, canvas);
+            throw;
+        }
     }
 
     private async Task UseCheckpointActionAsync(RunCheckpointActionId id)

@@ -1,6 +1,7 @@
 // The Bell Warden set piece (roster step 7). C# owns the toll timing, the marked spot, every shockwave radius and every hit;
 // this module only draws what the snapshot reports: the bell sigil it steps out of, the rolling shockwave rings, and its bar.
 import { drawEnemyPixelArt } from './arena-enemy-art.js';
+import { drawBellWardenImpact } from './arena-bell-warden-impact.js';
 
 const clamp01 = value => Math.max(0, Math.min(1, Number(value) || 0));
 const BELL_WARDEN_KIND = 9;
@@ -18,10 +19,13 @@ export const bellVariant = bellWarden => VARIANTS[bellWarden?.variant] ?? VARIAN
 // Must match RunSimulation.BellShockwaveThickness: the drawn band is the band that can hurt.
 export const BELL_SHOCKWAVE_THICKNESS = 26;
 
+/** Project the C#-authored bell position onto its voxel surface without changing the gameplay spot. */
+export const bellWardenSurfaceY = bellWarden => bellWarden.y - (Number(bellWarden.z) || 0);
+
 export function drawBellWardenGround(ctx, snapshot, seconds = 0, reducedMotion = false) {
     if (!snapshot) return;
     if (snapshot.bellWarden?.stage === 'tolling') drawTollingMark(ctx, snapshot.bellWarden, seconds, reducedMotion);
-    for (const wave of snapshot.bellShockwaves ?? []) drawShockwave(ctx, wave);
+    for (const wave of snapshot.bellShockwaves ?? []) drawShockwave(ctx, wave, reducedMotion);
 }
 
 // The Warden steps out of the tolling mark: fades in while the bell rings, so the body appears exactly where it will fight.
@@ -30,7 +34,7 @@ export function drawBellWardenEntrance(ctx, bellWarden) {
     const p = clamp01(bellWarden.progress);
     if (p < 0.35) return;
     const fade = (p - 0.35) / 0.65;
-    drawEnemyPixelArt(ctx, { kind: bellVariant(bellWarden).kind, x: bellWarden.x, y: bellWarden.y + (1 - fade) * 8, radius: 30, entityId: -1, healthRatio: 1, opacity: fade * 0.9 });
+    drawEnemyPixelArt(ctx, { kind: bellVariant(bellWarden).kind, x: bellWarden.x, y: bellWardenSurfaceY(bellWarden) + (1 - fade) * 8, radius: 30, entityId: -1, healthRatio: 1, opacity: fade * 0.9 });
 }
 
 export function drawBellWardenBar(ctx, bellWarden, width) {
@@ -78,7 +82,7 @@ function drawTollingMark(ctx, bellWarden, seconds, reducedMotion) {
     const ring = reducedMotion ? 0 : ((Number(seconds) || 0) * 1.6) % 1;
     const { markFill, markEdge, echo } = bellVariant(bellWarden);
     ctx.save();
-    ctx.translate(bellWarden.x, bellWarden.y);
+    ctx.translate(bellWarden.x, bellWardenSurfaceY(bellWarden));
     ctx.fillStyle = `rgba(${markFill.join(', ')}, ${0.14 + 0.16 * p})`;
     ctx.beginPath();
     ctx.ellipse(0, 0, r * 1.1, r * 0.55, 0, 0, Math.PI * 2);
@@ -100,7 +104,7 @@ function drawTollingMark(ctx, bellWarden, seconds, reducedMotion) {
     ctx.restore();
     // Bell glyph in the centre.
     ctx.save();
-    ctx.translate(bellWarden.x, bellWarden.y);
+    ctx.translate(bellWarden.x, bellWardenSurfaceY(bellWarden));
     ctx.fillStyle = `rgba(${markEdge.join(', ')}, ${0.5 + 0.4 * p})`;
     ctx.beginPath();
     ctx.moveTo(-7, 4);
@@ -116,10 +120,14 @@ function drawTollingMark(ctx, bellWarden, seconds, reducedMotion) {
 
 // Smash aftermath. Charging: the crater plus a dashed ring at the farthest reach, and a charge sweep. Expanding: only the
 // rolling band hurts, so it is drawn at its exact thickness; inside the crater and beyond the dashed ring are safe.
-function drawShockwave(ctx, wave) {
+function drawShockwave(ctx, wave, reducedMotion) {
     const impact = Math.max(8, Number(wave.impactRadius) || 0);
     const max = Math.max(impact, Number(wave.maxRadius) || 0);
     ctx.save();
+    // Raise the whole ground effect by C#'s terrain surface height, including the unchanged hit-band outline.
+    ctx.translate(0, -(Number(wave.z) || 0));
+    // Impact art is source-animation motion tied to wave creation; never tied to an arbitrary render timer.
+    drawBellWardenImpact(ctx, wave, reducedMotion);
     ctx.fillStyle = 'rgba(40, 28, 16, 0.32)';
     ctx.beginPath();
     ctx.arc(wave.x, wave.y, impact * 0.75, 0, Math.PI * 2);
