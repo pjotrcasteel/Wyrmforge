@@ -18,7 +18,7 @@ public sealed class AshfangSpectacleBrowserTests : PageTest
         var data = await Page.EvaluateAsync<string>("""
             async () => {
                 const base = location.origin + '/js/';
-                const authored = await import(base + 'authored-characters.js');
+                const authored = await import(base + 'authored-characters.js?v=20261108-voxel-actor-grounding-v1');
                 const vfx = await import(base + 'arena-transformation-vfx.js');
                 const sets = [['Bell-Warden-normal', 9, 36], ['Reliquary-normal', 7, 30]];
                 await Promise.all(sets.map(([name]) => authored.preloadAuthoredCharacter(name)));
