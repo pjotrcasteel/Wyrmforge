@@ -176,6 +176,8 @@ test('only the production Hunt shell enables a blocking veil; enemy and wyrm lab
         'real Hunts still load safely before the player walks in');
     assert.match(enemyLab, /InvokeVoidAsync\("initializeArena", canvas, reference\)/,
         'enemy lab uses immediate start even when viewing Hollow VFX');
+    assert.match(enemyLab, /ArenaModulePath => .*AppBuildInfo\.Version.*AppBuildInfo\.Commit/,
+        'iPhone Safari must import fresh lab JavaScript after deploy');
     assert.match(wyrmLab, /InvokeVoidAsync\("initializeArena", canvas, reference\)/,
         'Wyrm lab is also free of the Hunt loading overlay');
 });
