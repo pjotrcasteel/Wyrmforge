@@ -39,6 +39,8 @@ test('approved HUD has no top bar and no invented secondary resource', () => {
     const domain = source('src/Wyrmforge.Application/Runs/Simulation/RunSimulation.cs');
     const css = source('src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.css');
     assert.doesNotMatch(markup, /class="arena-top-hud"/);
+    assert.doesNotMatch(markup, /compact-hunt-objective/);
+    assert.doesNotMatch(markup, /Current encounter objective/);
     assert.match(markup, /class="combat-health-track crystal-orb orb-health"/);
     assert.match(markup, /data-hud="health-fill"/);
     assert.match(markup, /class="crystal-orb orb-secondary"/);
@@ -51,4 +53,12 @@ test('approved HUD has no top bar and no invented secondary resource', () => {
     assert.match(domain, /DefensiveCooldownRemaining = contextualPolicy is null/);
     assert.match(css, /art\/arcane-nexus\/socket-rim\.svg/);
     assert.match(css, /\.arcane-hunt-hud\s*\{[^}]*bottom:/s);
+    assert.match(css, /--orb-size:\s*clamp\(62px/);
+    assert.match(css, /--spell-size:\s*clamp\(48px/);
+    assert.match(css, /\.arcane-hunt-hud \.orb-health \.crystal-orb-fill/);
+    const icons = source('src/Wyrmforge.Presentation.Web/wwwroot/js/spell-hud.js');
+    assert.match(icons, /px-icon px-/);
+    assert.match(icons, /'Fire Bolt': 'fire'/);
+    const appCss = source('src/Wyrmforge.Presentation.Web/wwwroot/css/app.css');
+    assert.match(appCss, /body:has\(\.game-screen\) \[data-game-version\] \{ display: none; \}/);
 });
