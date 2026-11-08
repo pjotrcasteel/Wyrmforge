@@ -1,5 +1,18 @@
 # Wyrmforge
 
+## Start here — current gameplay and progression (5 November 2026)
+
+Wyrmforge is a mobile-first, pixel-art action roguelite. **Choose a Wyrm lineage and a playable Hunt at the World Gate, survive its branching combat trails, defeat the Wyrm, then complete extraction to secure Essence and salvage.** Back in town, invest secured resources at the **Arcane Nexus** to grow the signature spell and research or equip compatible mutators. The Arcane Web provides permanent specialization; the Codex records discoveries, enemies and historical accomplishments.
+
+- **Playable on `main`:** Fire Hunt tiers I–III, with tier-specific enemies/material eligibility and the optional earned refuge in higher Fire tiers. Frost retains its existing depth-based exploration path; this is **not** another finished five-tier lineage. Higher Fire tiers, the other school campaigns, seasonal ranked play and persistent Eternal Hunt remain future work.
+- **Permanent progress:** Fireball has five core levels. Nexus upgrades cost secured Wyrm Essences and, at higher levels, specific rare salvage. Mutators are independently researched and equipped into sockets. On `main`, core Lv.1 still has one socket. [Draft P0 PR #481](https://github.com/pjotrcasteel/Wyrmforge/pull/481) changes the first upgrade to the first socket: Lv.1 has none, Lv.2 unlocks one. Do not treat that draft as deployed.
+- **Inside a Hunt:** experience grants **temporary small refinements** and occasional major **runes or attunements** around levels 5/10/15+. The former Fireball II/III cards, extra primary spells and Rank-III evolution choices are **not** in the current live Hunt reward pool. Existing legacy records and unlocks are preserved, but historical Codex paths may not yet be attainable by new players.
+- **Review branches, not live Pages:** [P1a tier loot tables #485](https://github.com/pjotrcasteel/Wyrmforge/pull/485), [P1b material discovery #486](https://github.com/pjotrcasteel/Wyrmforge/pull/486), [P1c unified Hunt launcher #487](https://github.com/pjotrcasteel/Wyrmforge/pull/487) and [P1d refuge reward safety #488](https://github.com/pjotrcasteel/Wyrmforge/pull/488) are drafts. Until merged, the older launcher surfaces may still be visible.
+
+**Typical Fire journey:** World Gate → unlocked Hunt tier → combat routes and optional refuge → Wyrm and Essence selection → extract and secure loot → Arcane Nexus upgrade/research → prepare the next Hunt. Campaign chapters and daily quests can eventually supply starting resources, but are **not** required for this presently playable loop. Numerical balance and drop-rate tuning are deferred.
+
+The following **Prototype 0.0.x sections are a chronological development log**, not current gameplay instructions. Older rank/evolution/Atlas descriptions document experiments and must not override [canonical gameplay rules](docs/canon/magic-and-combat.md) or the implementation of live `main`.
+
 ## Prototype 0.0.180 — Hunt upgrades follow the new Main Spell design
 
 Hunts no longer offer the outdated **Fireball II/III** spell-rank upgrade cards, new primary spell cards or Rank-III evolutions. Permanent Fireball levels and researched mutations belong to the **Arcane Nexus**. Within a hunt, each normal level offers minor refinements and every fifth level offers temporary, build-defining major runes or attunement. Fateweave rerolls cannot restore obsolete choices. [Acceptance contract](docs/playtesting/2026-10-22-hunt-upgrade-cards.md).
@@ -775,7 +788,9 @@ The end-run report now summarizes the run as a story rather than only a ledger:
 
 The detailed spell, rune, relic and Wyrm sections remain available underneath.
 
-## Current top-level flow
+## Historical prototype snapshot — formerly called the current top-level flow
+
+The next three sections describe an earlier design and are retained for historical evidence. The current Fire Hunt and Nexus journey is documented at the top of this README; the authoritative design is in `docs/canon/`.
 
 **Run → Build → Forge → Codex**
 
@@ -784,7 +799,7 @@ The detailed spell, rune, relic and Wyrm sections remain available underneath.
 - **Forge** owns secured Essence, lineage discoveries, Forge Mastery and Wyrm Offerings.
 - **Codex** owns discovery/reference information for Synergies, spells, relics and Wyrms.
 
-## Current run loop
+## Historical run loop (superseded)
 
 1. Allocate a connected path through the Arcane Web.
 2. Optionally carry a forged Wyrm Offering.
@@ -797,7 +812,7 @@ The detailed spell, rune, relic and Wyrm sections remain available underneath.
 9. Return safely or descend with the previous haul banked and the next haul at risk.
 10. Bring secured Essence back to the Forge for horizontal progression.
 
-## Current systems
+## Historical systems inventory (not a release capability list)
 
 - 49-node Arcane Web with 24 points, hybrid paths, Masteries and Keystones.
 - Structured three-role roguelike level-up draft with rarity and build-aware weighting.

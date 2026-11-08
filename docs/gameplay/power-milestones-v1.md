@@ -1,5 +1,7 @@
 # WyrmForge: power milestones, minor refinements (M1)
 
+> **ARCHIVED DESIGN — superseded 29 October 2026; rechecked 5 November 2026.** This file records the earlier proposed Rank II/III/evolution level-up experiment. These are **not** live Hunt rewards. The active C# Hunt flow uses temporary refinements and eligible major runes/attunements at five-level milestones; permanent Fireball levels and mutators are purchased/researched at the Arcane Nexus. Historical requirements and outcomes below are retained as evidence, not as instructions for players or a current acceptance test. See [canonical magic and combat](../canon/magic-and-combat.md#34-hunt-upgrades-and-fateweave--locked) and [README current player journey](../../README.md#start-here--current-gameplay-and-progression-5-november-2026).
+
 ## Player feedback and confirmed problem
 The post-PR-109 iPhone build felt too easy and power arrived too quickly. The old reward pool allowed primary spell Rank II/III, +18% Potency, extra projectiles, and hosted elemental combinations before a meaningful leveling checkpoint. The experience curve was intentionally not changed in this slice, so we can isolate *reward strength* from *level frequency*.
 
