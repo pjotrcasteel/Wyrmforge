@@ -2831,9 +2831,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             var objective = await Page.GetByLabel("Current encounter objective").BoundingBoxAsync();
             Assert.IsNotNull(vitals);
             Assert.IsNotNull(objective);
-            Assert.IsGreaterThan(vitals.Y, 844 * .65, "The four-slot HUD belongs at the bottom, not across the combat view.");
-            Assert.IsLessThanOrEqualTo(objective.Y + objective.Height, vitals.Y + 2, "The compact trail cue belongs above the HUD.");
-            Assert.IsLessThanOrEqualTo(vitals.X + vitals.Width, 391, "HUD should remain visible at phone width.");
+            Assert.IsGreaterThan(844 * .65, vitals.Y, "The four-slot HUD belongs at the bottom, not across the combat view.");
+            Assert.IsLessThanOrEqualTo(vitals.Y + 2, objective.Y + objective.Height, "The compact trail cue belongs above the HUD.");
+            Assert.IsLessThanOrEqualTo(391, vitals.X + vitals.Width, "HUD should remain visible at phone width.");
             await Expect(Page.Locator(".arena-top-hud")).ToHaveCountAsync(0);
             await Expect(Page.Locator(".arcane-hud-row .crystal-orb")).ToHaveCountAsync(2);
             await Expect(Page.Locator(".arcane-hud-row .spell-slot")).ToHaveCountAsync(2);
@@ -3532,7 +3532,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var hud = await Page.Locator(".arcane-hunt-hud").BoundingBoxAsync();
         Assert.IsNotNull(box);
         Assert.IsNotNull(hud);
-        Assert.IsLessThanOrEqualTo(box.Y + box.Height, hud.Y + 2, "Upgrade feedback must not obscure the bottom HUD.");
+        Assert.IsLessThanOrEqualTo(hud.Y + 2, box.Y + box.Height, "Upgrade feedback must not obscure the bottom HUD.");
         Assert.IsLessThanOrEqualTo(width, box.X + box.Width);
         Assert.IsLessThanOrEqualTo(height, box.Y + box.Height);
         Assert.IsFalse(await moment.EvaluateAsync<bool>(@"node => {
