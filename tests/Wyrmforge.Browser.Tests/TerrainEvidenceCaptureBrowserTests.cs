@@ -15,11 +15,11 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
 
-        var mismatched = await Page.EvaluateAsync<int[]>("""
+        var comparisons = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
             async () => {
                 const { TerrainCanvasCache, mergeTerrainFrame, paintTerrainCell, TERRAIN_MATERIAL } =
                     await import('/js/arena-terrain-canvas.js?v=20261108-terrain-evidence-v1');
-                const { captureTerrainViewport } =
+                const { captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } =
                     await import('/js/arena-terrain-evidence.js?v=20261108-terrain-evidence-v1');
                 const columns = 12, rows = 14;
                 const source = {
@@ -34,9 +34,16 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
                 const result = [];
                 const compare = frame => {
                     cache.update(frame, 0);
-                    const capture = captureTerrainViewport(cache, frame, camera, 0,
-                        paintTerrainCell, 32, 2);
-                    result.push(capture.pixelComparison.mismatched);
+                    const full = new TerrainCanvasCache();
+                    full.update({ ...frame, kindMaps: new Map() }, 0);
+                    const regional = captureTerrainViewport(cache, frame, camera, 0,
+                        paintTerrainCell, 32, 2).pixelComparison;
+                    const rebuilt = captureTerrainViewport(full, frame, camera, 0,
+                        paintTerrainCell, 32, 2).pixelComparison;
+                    const a = sampleCachedTerrainViewport(cache, camera, 2);
+                    const b = sampleCachedTerrainViewport(full, camera, 2);
+                    const parity = compareTerrainPixels(a.pixels, b.pixels, a.width);
+                    result.push({ revision: frame.revision, regional, rebuilt, parity });
                 };
                 const initial = mergeTerrainFrame(null, source);
                 compare(initial);
@@ -55,8 +62,10 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             }
             """);
 
+        var mismatched = comparisons.EnumerateArray()
+            .Select(entry => entry.GetProperty("regional").GetProperty("mismatched").GetInt32()).ToArray();
         CollectionAssert.AreEqual(new[] { 0, 0, 0 }, mismatched,
-            "One-shot independent terrain viewport must not invent differences absent from the ground cache.");
+            $"Reference parity must hold. Regional, full-rebuild and independent comparison: {comparisons}");
     }
     /// <summary>A real automated Hunt must preserve its grass/road pixel identity through successive C# terrain impacts.</summary>
     [TestMethod]
@@ -117,7 +126,9 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             result.GetProperty("previousFullRepaints").GetInt32(), "A real forced cache rebuild must occur.");
         Assert.AreEqual(0, cacheParity,
             $"Real Hunt cache must be independent of its partial-repaint history at the exact same revision " +
-            $"(cache-vs-rebuilt={cacheParity}, independent-reference before={before}, after={after}, revision={revision}).");
+            $"(cache-vs-rebuilt={cacheParity}, cache-bounds={result.GetProperty("cacheParity").GetProperty("bounds")}, " +
+            $"cache-first={result.GetProperty("cacheParity").GetProperty("first")}, " +
+            $"independent-reference before={before}, after={after}, revision={revision}).");
     }
 
 }
