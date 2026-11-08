@@ -37,7 +37,7 @@ public sealed class ArcaneConstellationTests
         var selection = new PassiveTreeSelection();
         selection.SetActiveSchool(PassiveSchool.Fire);
         var nodes = PassiveTreeCatalog.All.Where(node => node.Id.StartsWith("constellation-Fire-", StringComparison.Ordinal)).ToArray();
-        Assert.AreEqual(221, nodes.Length);
+        Assert.AreEqual(225, nodes.Length);
         foreach (var node in nodes)
         {
             var plan = PassiveTreePlanner.Plan(selection, node.Id);

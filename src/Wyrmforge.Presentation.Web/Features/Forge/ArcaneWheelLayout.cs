@@ -9,6 +9,7 @@ internal static class ArcaneWheelLayout
 {
     internal const double Size = 9800;
     internal const double Center = Size / 2;
+    internal const double SigilRadius = Size * 525 / 1200;
     internal readonly record struct Point(double X, double Y);
     private static readonly PassiveSchool[] Order =
         [PassiveSchool.Fire, PassiveSchool.Frost, PassiveSchool.Arcane, PassiveSchool.Storm, PassiveSchool.Death, PassiveSchool.Binding];
@@ -87,7 +88,8 @@ internal static class ArcaneWheelLayout
             Center + Math.Sin(angle) * radius + Math.Cos(angle) * side);
     }
     internal static Point Anchor(PassiveSchool school, PassiveSchool active, double radius = 1320) => Local(school, active, 0, radius);
-    internal static Point RegionLabel(PassiveSchool school, PassiveSchool active, double side, double radius) => Local(school, active, side, radius);
+    internal static string DormantArtworkTransform(PassiveSchool active) =>
+        FormattableString.Invariant($"rotate({-60 * Array.IndexOf(Order, active)} {Center} {Center}) scale({Size / 1200})");
 
     internal static Point Position(PassiveNodeDefinition node, PassiveSchool active)
     {
@@ -104,7 +106,7 @@ internal static class ArcaneWheelLayout
         {
             // Fan the constellation lanes around the Wyrmheart. The same
             // school angle rotates the entire sector when another school is active.
-            return Polar(Angle(owner, active) + node.X / 3100, node.Y - 850);
+            return Polar(Angle(owner, active) + node.X / 4500, (node.Y - 1100) * 1.03);
         }
         if (Landmarks.TryGetValue(node.Id, out var landmark)) return Local(owner, active, landmark.Side, landmark.Radius);
         if (node.Id.EndsWith("-start", StringComparison.Ordinal)) return Local(owner, active, 0, 300);
@@ -154,10 +156,13 @@ internal static class ArcaneWheelLayout
         if (connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal))
         {
             var length = Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
+            // Keep the small facets angular. Curve the longer routes that
+            // connect them into branches, instead of outlining every loop.
+            if (length < 235 || connection.To == "constellation-Fire-approach-2-0") return Polyline([from, to]);
             var bend = connection.From == "fire-blast-shaping" ? -1 : 1;
             // Keep short links close to their endpoints and give the long
             // Fire approaches a wider sweep. Rotation uses the same geometry.
-            return CurvedLink(from, to, bend * Math.Min(120, length * .12), length);
+            return CurvedLink(from, to, bend * Math.Min(120, length * .08), length);
         }
         return Polyline([from, to]);
     }

@@ -16,22 +16,51 @@ internal static class ArcaneConstellations
             "Torch", "Charcoal", "Afterburn"], BuildStatId.BurnDamage),
     ];
     private static readonly string[] Names = ["Ward", "Spark", "Focus", "Thread", "Seal", "Trace", "Mantle", "Sign"];
-    private static readonly (int Side, int Radius)[] Offsets =
-        [(0, -170), (120, -120), (170, 0), (120, 120), (0, 170), (-120, 120), (-170, 0), (-120, -120)];
+    private static readonly (int Side, int Radius)[][] Silhouettes =
+    [
+        [(0, -190), (100, -95), (200, 0), (100, 95), (0, 190), (-100, 95), (-200, 0), (-100, -95)],
+        [(0, -190), (155, -150), (195, -25), (80, 55), (5, 190), (-115, 115), (-175, 0), (-100, -85)],
+        [(0, -200), (115, -115), (170, 5), (135, 130), (-5, 190), (-135, 130), (-170, 5), (-115, -115)],
+    ];
+    private const int NodesPerCluster = 8;
 
     // Coordinates are authored in Fire's local fan before school rotation.
     private static readonly (int Side, int Radius)[] Centers =
     [
         (-2000, 3980), (-1490, 3770), (-950, 3980), (-465, 3740), (30, 3860),
-        (525, 3990), (1000, 3780), (1500, 3910), (2000, 3990),
+        (525, 3990), (1000, 3780), (1500, 3830), (2000, 3990),
         (-2070, 4530), (-1550, 4310), (-1040, 4610), (-555, 4270), (-20, 4470),
         (500, 4560), (1020, 4310), (1510, 4470), (2030, 4550),
         (-1830, 5010), (-1410, 5150), (-950, 5230), (-440, 4870), (30, 5110),
         (565, 5160), (1110, 4890), (1600, 5110), (2070, 5030),
     ];
 
+    private static readonly (string Gate, string Destination, string Name, BuildStatId Stat, string Bonus, (int Side, int Radius)[] Steps)[] Approaches =
+    [
+        ("volcanic", "constellation-Fire-2-0", "Caldera Spine", BuildStatId.BurnDamage, "burning-ground damage",
+            [(699, 3059), (602, 3425)]),
+        ("fire-banked-embers", "constellation-Fire-8-0", "Banked Flame", BuildStatId.MutationDuration, "mutation duration",
+            [(1873, 2974)]),
+        ("fire-blast-shaping", "constellation-Fire-meridian-4", "Ashen Current", BuildStatId.MutationRadius, "mutation area",
+            [(-1878, 2834)]),
+    ];
+
+    private static string ApproachId(int route, int step) => FormattableString.Invariant($"constellation-Fire-approach-{route}-{step}");
+
     internal static IEnumerable<PassiveNodeDefinition> Nodes()
     {
+        for (var route = 0; route < Approaches.Length; route++)
+        {
+            var approach = Approaches[route];
+            for (var step = 0; step < approach.Steps.Length; step++)
+            {
+                var point = approach.Steps[step];
+                yield return new(ApproachId(route, step), $"{approach.Name} {step + 1}", $"+1% {approach.Bonus}.",
+                    PassiveNodeKind.Travel, PassiveSchool.Fire, 1, point.Side, point.Radius,
+                    PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(approach.Stat, .01)), Tier: PassiveNodeTier.Minor);
+            }
+        }
+
         int[] meridianSides = [350, 0, -500, -1250, -2000];
         for (var step = 0; step < meridianSides.Length; step++)
         {
@@ -43,9 +72,9 @@ internal static class ArcaneConstellations
 
         foreach (var (school, _, themes, specialty) in Schools)
         for (var ring = 0; ring < themes.Length; ring++)
-        for (var step = 0; step < Offsets.Length; step++)
+        for (var step = 0; step < NodesPerCluster; step++)
         {
-            var (side, radius) = Offsets[step];
+            var (side, radius) = Silhouettes[ring % Silhouettes.Length][step];
             var stat = (StableRingId(ring) < 6 ? step % 3 : (step + ring) % 6) switch
             {
                 0 => BuildStatId.MaxHealth,
@@ -84,11 +113,21 @@ internal static class ArcaneConstellations
 
     internal static IEnumerable<PassiveTreeConnection> Connections()
     {
-        foreach (var (school, gate, themes, _) in Schools)
+        for (var route = 0; route < Approaches.Length; route++)
         {
-            yield return new(gate, Id(school, 5, 0));
-            yield return new("fire-banked-embers", Id(school, 8, 0));
-            yield return new("fire-blast-shaping", TransitId(4));
+            var approach = Approaches[route];
+            var previous = approach.Gate;
+            for (var step = 0; step < approach.Steps.Length; step++)
+            {
+                var id = ApproachId(route, step);
+                yield return new(previous, id);
+                previous = id;
+            }
+            yield return new(previous, approach.Destination);
+        }
+
+        foreach (var (school, _, themes, _) in Schools)
+        {
             yield return new(Id(school, 5, 0), TransitId(0));
             for (var step = 1; step < 5; step++)
                 yield return new(TransitId(step - 1), TransitId(step));
@@ -96,13 +135,20 @@ internal static class ArcaneConstellations
             yield return new(TransitId(4), Id(school, 0, 0));
             for (var ring = 0; ring < themes.Length; ring++)
             {
-                for (var step = 0; step < Offsets.Length; step++)
-                    yield return new(Id(school, ring, step), Id(school, ring, (step + 1) % Offsets.Length));
+                // Some clusters open into a fork, with a direct inner path
+                // to one side and a small terminal investment on the other.
+                var fork = StableRingId(ring) >= 6 && ring % 3 != 0 && ring != 16;
+                for (var step = 0; step < NodesPerCluster; step++)
+                {
+                    if (fork && step == 7) continue;
+                    yield return new(Id(school, ring, step), Id(school, ring, (step + 1) % NodesPerCluster));
+                }
+
                 if (ring % 9 < 8)
                     yield return new(Id(school, ring, 2), Id(school, ring + 1, 6));
                 if (ring + 9 < themes.Length)
                     yield return new(Id(school, ring, 4), Id(school, ring + 9, 0));
-                else
+                if (fork || ring + 9 >= themes.Length)
                     yield return new(Id(school, ring, 0), Id(school, ring, 4));
                 if (ring == 23)
                     yield return new(Id(school, ring, 0), Id(school, ring, 5));
