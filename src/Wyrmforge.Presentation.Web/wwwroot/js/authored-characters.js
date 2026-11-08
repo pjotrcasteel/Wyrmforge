@@ -378,12 +378,18 @@ export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, 
 
 /**
  * Draws one cell grounded: the footprint ellipse under the body, the silhouette cast flat across the ground, then the sprite with its front foot
- * planted `footDrop(radius)` below the C# position. `radius` is the body's collision radius. Returns false when the set is not loaded.
+ * planted at the C# terrain contact for voxel-grounded enemies. Legacy flat scenes keep the authored front-foot offset.
+ * `radius` is the body's collision radius. Returns false when the set is not loaded.
  */
-export function drawGrounded(ctx, name, actionName, direction, frame, x, y, { alpha = 1, scale = 1, radius = 11 } = {}) {
+export function drawGrounded(ctx, name, actionName, direction, frame, x, y,
+    { alpha = 1, scale = 1, radius = 11, terrainGrounded = false } = {}) {
     const set = loaded.get(name), strip = set?.strips.get(actionName);
     if (!strip) return false;
-    const feetY = y + footDrop(radius);
+    // RaisedActor already subtracts authoritative C# world Z. Adding the legacy
+    // front-foot offset again plants large enemies below the actual voxel lip,
+    // making Warden legs and ordinary mobs appear buried by solid terrain.
+    const drop = terrainGrounded ? 0 : footDrop(radius);
+    const feetY = y + drop;
     const [width, height] = set.manifest.canvas, [rootX, rootY] = set.manifest.root, spec = set.manifest.actions[actionName];
     const row = Math.max(0, set.manifest.directions.indexOf(direction)), column = Math.max(0, Math.min(spec.framesPerDirection - 1, frame));
     const glow = set.emissive?.get(actionName);
@@ -400,7 +406,7 @@ export function drawGrounded(ctx, name, actionName, direction, frame, x, y, { al
         drawGlow('emissive', alpha);
         return true;
     }
-    drawFootprint(ctx, x, y + footDrop(radius) * .4, radius, alpha);
+    drawFootprint(ctx, x, y + drop * .4, radius, alpha);
     drawCastShadow(ctx, strip, { x: column * width, y: row * height, width, height }, rootX, rootY, x, feetY, scale, alpha);
     const drawn = drawAuthoredCell(ctx, name, actionName, direction, frame, x, feetY, alpha, scale);
     if (renderMode === 'overlay' && glow) drawGlow('overlay', alpha * .9);
@@ -490,7 +496,7 @@ export const riseShake = (style, progress, id) => progress >= 1 ? 0 : Math.round
 export const wraithSink = opacity => Math.max(0, Math.min(1, 1 - (Number.isFinite(opacity) ? opacity : 1)));
 
 /** Draws an enemy from its authored pose; false when it has none (the caller then draws the old art). */
-export function drawAuthoredEnemy(ctx, enemy, state) {
+export function drawAuthoredEnemy(ctx, enemy, state, terrainGrounded = false) {
     const pose = state.enemies.get(enemy.entityId);
     const glowPass = renderMode === 'emissive';
     if (!pose) return glowPass ? false : pendingKind(enemy.kind);
@@ -498,7 +504,8 @@ export function drawAuthoredEnemy(ctx, enemy, state) {
     const opacity = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
     // A Drowned Wraith sinks into the water and rises out of it behind a clip line with ripples, instead of fading.
     if (pose.name === 'Drowned-Wraith' && opacity < 1 && !glowPass) return drawSubmerging(ctx, enemy, pose, wraithSink(opacity));
-    return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, { alpha: opacity, radius: Number(enemy.radius) || 11 });
+    return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y,
+        { alpha: opacity, radius: Number(enemy.radius) || 11, terrainGrounded });
 }
 
 function drawSubmerging(ctx, enemy, pose, sink) {

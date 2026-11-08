@@ -48,6 +48,33 @@ test('the GPU passes split the sprite from its glow: albedo paints shadows and s
     setAuthoredRenderMode('overlay');
 });
 
+test('voxel-grounded large enemies use the C# surface as their true sprite-foot and shadow anchor', () => {
+    injectAuthoredSet('Test-Voxel-Warden', set(false));
+    setAuthoredRenderMode('albedo');
+    const placed = recorder();
+    assert.equal(drawGrounded(placed, 'Test-Voxel-Warden', 'idle', 'S', 0, 100, 208,
+        { radius: 40, terrainGrounded: true }), true);
+    const sprite = placed.calls.filter(call => call[0] === 'drawImage').at(-1);
+    // Manifest foot is y=76. No second downward offset may hide the legs under a ledge.
+    assert.equal(sprite[7], 208 - 76);
+    assert.equal(placed.calls.find(call => call[0] === 'translate')[2], 208,
+        'contact shadow is attached to the C# height-projected foot');
+    assert.equal(placed.calls.find(call => call[0] === 'ellipse')[2], 208,
+        'footprint is on the same terrain contact');
+    const legacy = recorder();
+    drawGrounded(legacy, 'Test-Voxel-Warden', 'idle', 'S', 0, 100, 208, { radius: 40 });
+    assert.ok(legacy.calls.filter(call => call[0] === 'drawImage').at(-1)[7] > sprite[7],
+        'legacy flat presentation retains its intentional front-foot projection');
+    setAuthoredRenderMode('emissive');
+    const glowing = recorder();
+    injectAuthoredSet('Test-Voxel-Warden-Glow', set());
+    drawGrounded(glowing, 'Test-Voxel-Warden-Glow', 'idle', 'S', 0, 100, 208,
+        { radius: 40, terrainGrounded: true });
+    assert.equal(glowing.calls.find(call => call[0] === 'drawImage')[7], sprite[7],
+        'emissive strips line up with the grounded albedo instead of floating in front of it');
+    setAuthoredRenderMode('overlay');
+});
+
 test('the second forms burn harder and a transformation swells the glow to its peak', () => {
     assert.equal(emissionIntensity('Ashfang-normal'), 1);
     assert.ok(emissionIntensity('Ashfang-enraged') > emissionIntensity('Ashfang-normal'));
