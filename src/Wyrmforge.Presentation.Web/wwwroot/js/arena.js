@@ -96,10 +96,11 @@ export function initializeArena(canvas, dotNetReference) {
         settings.addEventListener('change', state.onDamageNumberModeChanged);
     }
     arenas.set(canvas, state);
-    state.layerLab = mountLayerLab(() => {
-        // The debug switches change rasterized terrain without a server terrain revision.
-        // Force an exact full cache rebuild; regular gameplay never takes this path.
-        if (state.terrainCache) state.terrainCache.revision = null;
+    state.layerLab = mountLayerLab(rebuildTerrain => {
+        // Only baked source-pixel switches may rebuild the cached raster.
+        // GPU, emissive, overlay, and scenery switches MUST leave its pixels untouched,
+        // otherwise comparing Safari's corrupted GPU output against Canvas2D is impossible.
+        if (rebuildTerrain && state.terrainCache) state.terrainCache.revision = null;
     });
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
@@ -508,6 +509,7 @@ function draw(state, snapshot, width, height) {
         if (state.terrainFrame && snapshot.environment.terrain) {
             // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
             const terrainCache = state.terrainCache ??= new TerrainCanvasCache();
+            terrainCache.allowRegional = layerLabEnabled('incremental');
             if (gpu) terrainCache.enableNormals();
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
