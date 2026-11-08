@@ -1,8 +1,8 @@
 // H4 Hollowed death impact. Read-only C# deathBursts are the ONLY trigger.
 // The 24-frame approved Blender death/fracture and authored 4-frame deaths stay
 // untouched. Reuse the already-decoded gothic H2 hit + H3 ground sprite sheets.
-import { drawHollowDeathSplatFrame, hollowHitAtlasReady } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h2';
-import { drawHollowDeathDustFrame, hollowGroundAtlasReady, hollowGroundMaterial, HOLLOW_GROUND } from './hollow-ground-vfx.js?v=20261108-hollow-h3';
+import { drawHollowDeathSplatFrame, hollowHitAtlasReady } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h4';
+import { drawHollowDeathDustFrame, hollowGroundAtlasReady, hollowGroundMaterial, HOLLOW_GROUND } from './hollow-ground-vfx.js?v=20261108-hollow-ground-h4';
 
 export const HOLLOW_DEATH_VFX = Object.freeze({
     burstSeconds: .26, bloodSeconds: .30, dustSeconds: .36,

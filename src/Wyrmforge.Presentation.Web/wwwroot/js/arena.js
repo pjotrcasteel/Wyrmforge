@@ -34,8 +34,8 @@ import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFac
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js?v=20261108-hollow-player-contact-v1';
 import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v3';
-import { preloadHollowHitVfx, drawHollowHitVfx } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h2';
-import { preloadHollowGroundVfx, createHollowGroundState, updateHollowGroundVfx, drawHollowGroundVfx, hollowGroundDiagnostics } from './hollow-ground-vfx.js?v=20261108-hollow-h3';
+import { preloadHollowHitVfx, drawHollowHitVfx } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h4';
+import { preloadHollowGroundVfx, createHollowGroundState, updateHollowGroundVfx, drawHollowGroundVfx, hollowGroundDiagnostics } from './hollow-ground-vfx.js?v=20261108-hollow-ground-h4';
 import { createHollowDeathVfxState, updateHollowDeathVfx, drawHollowDeathGroundVfx, drawHollowDeathAccentVfx, hollowDeathArtReady, hollowDeathVfxDiagnostics } from './hollow-death-vfx.js?v=20261108-hollow-h4';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';

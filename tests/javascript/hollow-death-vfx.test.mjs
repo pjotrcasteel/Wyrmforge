@@ -16,8 +16,8 @@ const groundStub = imported(`
     export function drawHollowDeathDustFrame(...args) { globalThis.__h4Draws.push(['dust', ...args.slice(1)]); return true; }
 `);
 const source = original
-    .replace("'./hollow-hit-vfx.js?v=20261108-hollow-hit-h2'", JSON.stringify(hitStub))
-    .replace("'./hollow-ground-vfx.js?v=20261108-hollow-h3'", JSON.stringify(groundStub));
+    .replace("'./hollow-hit-vfx.js?v=20261108-hollow-hit-h4'", JSON.stringify(hitStub))
+    .replace("'./hollow-ground-vfx.js?v=20261108-hollow-ground-h4'", JSON.stringify(groundStub));
 const mod = await import(imported(source));
 const {createHollowDeathVfxState, updateHollowDeathVfx, hollowDeathContact,
     drawHollowDeathAccentVfx, drawHollowDeathGroundVfx, hollowDeathVfxDiagnostics,
