@@ -166,6 +166,13 @@ public sealed partial class RunSimulation
             aimedPropId = null;
             return CreateSnapshot();
         }
+        if (HuntEntranceActive)
+        {
+            // The ready, visible mage walks up the protected south road before enemies,
+            // timers, spellcasting, hazards or user movement are allowed to advance.
+            AdvanceHuntEntrance(delta, width, height);
+            return CreateSnapshot();
+        }
         if (trailExitPending)
         {
             delta = Math.Clamp(delta, 0, 0.05);
