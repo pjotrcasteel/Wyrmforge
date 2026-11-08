@@ -8,9 +8,6 @@ public sealed class ArcaneConstellationTests
 {
     [TestMethod]
     [DataRow(PassiveSchool.Fire, 2)]
-    [DataRow(PassiveSchool.Frost, 1)]
-    [DataRow(PassiveSchool.Storm, 1)]
-    [DataRow(PassiveSchool.Arcane, 1)]
     public void ConstellationEntryCanBeLearnedAndSurvivesSchoolSwitch(PassiveSchool school, int ring)
     {
         var selection = new PassiveTreeSelection();

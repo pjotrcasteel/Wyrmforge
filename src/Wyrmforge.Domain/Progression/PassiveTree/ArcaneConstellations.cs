@@ -10,9 +10,6 @@ internal static class ArcaneConstellations
     private static readonly (PassiveSchool School, string Gate, string[] Themes, BuildStatId Specialty)[] Schools =
     [
         (PassiveSchool.Fire, "volcanic", ["Ember", "Hearth", "Cinder", "Forge", "Pyre", "Ash"], BuildStatId.BurnDamage),
-        (PassiveSchool.Frost, "winter-shell", ["Rime", "Glacier", "Snow", "Permafrost", "Ice", "Winter"], BuildStatId.MaxHealth),
-        (PassiveSchool.Storm, "lightning-form", ["Gale", "Thunder", "Rain", "Lightning", "Tempest", "Squall"], BuildStatId.ProjectileSpeed),
-        (PassiveSchool.Arcane, "astral-barrage", ["Glyph", "Astral", "Mirror", "Rune", "Prism", "Aether"], BuildStatId.Damage),
     ];
     private static readonly string[] Names = ["Ward", "Spark", "Focus", "Thread", "Seal", "Trace", "Mantle", "Sign"];
     private static readonly (int Side, int Radius)[] Offsets =
