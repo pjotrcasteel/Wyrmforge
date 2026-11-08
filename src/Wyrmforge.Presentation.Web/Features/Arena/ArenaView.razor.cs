@@ -110,7 +110,7 @@ public partial class ArenaView : IAsyncDisposable
         get
         {
             if (!FirstHunt || gameOverSent || ChoosingPrimary || trailTransition || runMoment is not null || !MapCombatActive
-                || CurrentChoices.Count > 0) return null;
+                || simulation?.HuntEntranceActive == true || CurrentChoices.Count > 0) return null;
             if (!firstHuntMovementObserved) return "DRAG TO MOVE • WASD / ARROW KEYS ON DESKTOP";
             if (!firstHuntKillObserved) return "YOUR MAGIC CASTS AUTOMATICALLY • KEEP MOVING TO EVADE";
             if (!firstHuntUpgradeChosen) return "DEFEAT ENEMIES TO EARN YOUR FIRST HUNT POWER";
