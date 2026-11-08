@@ -562,9 +562,12 @@ function requestTerrainFrame(state, snapshot) {
     const terrain = snapshot.environment?.terrain;
     if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
     state.terrainRequestBusy = true;
+    const requestedSite = huntEntrySceneKey(snapshot);
     state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
         .then(frame => {
-            if (!frame) return;
+            // A pending request from the previous site must never repaint the new one,
+            // even if both happen to carry the same numeric terrain revision.
+            if (!frame || requestedSite !== state.entryTerrainSceneKey) return;
             const previous = state.terrainFrame;
             state.terrainFrame = mergeTerrainFrame(previous, frame);
             // Revision -1 is the initial full load, not destruction.
