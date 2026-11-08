@@ -526,7 +526,7 @@
 .arcane-hunt-hud .crystal-orb::after,
 .arcane-hunt-hud .spell-slot::after {
     position: absolute;
-    z-index: 5;
+    z-index: 0;
     inset: 0;
     border-radius: 50%;
     background: url('art/arcane-nexus/socket-rim.svg') center/100% 100% no-repeat;
@@ -537,6 +537,7 @@
 
 .arcane-hunt-hud .crystal-orb-core {
     position: absolute;
+    z-index: 1;
     inset: 12%;
     overflow: hidden;
     width: auto;
