@@ -1302,10 +1302,10 @@ export class TerrainCanvasCache {
         // that block itself needs. Do not invalidate surrounding original masks.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
         this.kindMaps = regional || kitOnly ? this.kindMaps : new Map();
-        if (regional) for (const index of frame.changed ?? []) {
+        if (regional && frame.baseMaterial && frame.baseSurface) for (const index of frame.changed ?? []) {
             if (frame.fine?.has(index)) continue;
-            if (frame.material[index] !== frame.baseMaterial?.[index] ||
-                frame.surface[index] !== frame.baseSurface?.[index]) this.kindMaps.delete(index);
+            if (frame.material[index] !== frame.baseMaterial[index] ||
+                frame.surface[index] !== frame.baseSurface[index]) this.kindMaps.delete(index);
         }
         frame.kindMaps = this.kindMaps;
         if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS);
