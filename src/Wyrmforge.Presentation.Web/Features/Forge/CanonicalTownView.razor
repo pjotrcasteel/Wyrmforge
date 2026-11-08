@@ -346,7 +346,7 @@
         try
         {
             foregroundModule = await JS.InvokeAsync<IJSObjectReference>(
-                "import", "./js/refuge-foreground-cutouts.js");
+                "import", $"./js/refuge-foreground-cutouts.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
             routeClickReference = DotNetObjectReference.Create(this);
             await foregroundModule.InvokeVoidAsync("mountTownCutoutsAndRouteSelection", routeClickReference);
         }
