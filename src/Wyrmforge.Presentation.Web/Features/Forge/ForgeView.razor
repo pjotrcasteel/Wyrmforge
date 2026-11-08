@@ -79,7 +79,7 @@
                                         class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
                                         disabled="@(!ready)"
                                         aria-label="@(ready ? $"Choose {school.Name}" : $"{school.Name}, not yet available")"
-                                        @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
+                                        @onclick="() => ChooseSchoolAsync(school.Id)">
                                     <span class="character-school-icon" aria-hidden="true"></span>
                                     <strong>@school.Name</strong>
                                     <small>@(ready ? "AVAILABLE" : "LOCKED")</small>
@@ -211,7 +211,17 @@
     [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;
-    private void EnterTown() => enteredTown = true;
+    private async Task EnterTown()
+    {
+        if (CharacterSchool is not null)
+            await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown");
+        enteredTown = true;
+    }
+    private async Task ChooseSchoolAsync(DivineArchetype school)
+    {
+        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown");
+        await OnChooseSchool.InvokeAsync(school);
+    }
     [Parameter] public EventCallback<string> OnPlayerNameChanged { get; set; }
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public FirstHuntProgress Progress { get; set; } = null!;
@@ -409,7 +419,11 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (section == ShellSection.Run && (enteredTown || SkipTitle))
+        {
             await JavaScript.InvokeVoidAsync("wyrmforgeTown.mount");
+            if (CharacterSchool is not null)
+                await JavaScript.InvokeVoidAsync("wyrmforgeStartup.townRendered");
+        }
     }
 
     private bool firstWebRequestHandled;
