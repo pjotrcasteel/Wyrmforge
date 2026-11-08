@@ -11,7 +11,7 @@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
     <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
-         data-town-navigation-ready="@townNavigationSettled"
+         data-town-navigation-ready="@(townNavigationSettled ? "true" : "false")"
          data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
          data-nexus-mastery-points="@NexusMasteryPoints">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
