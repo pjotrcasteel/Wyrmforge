@@ -393,3 +393,6 @@
 .menu-nexus .school-wheel-view .overview .web-edge.fire-constellation {
     stroke: #bd8258b8;
 }
+
+/* The active school sigil represents the central Wyrmheart in the wheel. */
+.menu-nexus .school-wheel-view .web-node.kind-origin { visibility:hidden; }

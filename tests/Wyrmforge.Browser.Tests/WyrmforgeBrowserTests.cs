@@ -4078,7 +4078,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".wheel-school-badge")).ToHaveCountAsync(6);
         var active = Page.Locator(".wheel-school-badge[data-active='true']");
         await Expect(active).ToHaveAttributeAsync("data-school", "Fire");
-        await AssertSchoolAtNorthAsync(active);
+        await AssertSchoolAtCenterAsync(active);
         await ScreenshotAsync($"arcane-wheel-start-{width}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
         await ScreenshotAsync($"arcane-wheel-overview-{width}.png");
@@ -4150,7 +4150,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         var active = Page.Locator(".wheel-school-badge[data-active='true']");
         await Expect(active).ToHaveAttributeAsync("data-school", sector);
-        await AssertSchoolAtNorthAsync(active);
+        await AssertSchoolAtCenterAsync(active);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Pyromancer sector", Exact = true }).ClickAsync();
         await Expect(active).ToHaveAttributeAsync("data-school", sector);
@@ -4301,17 +4301,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose your magic" })).ToBeVisibleAsync();
     }
 
-    private static async Task AssertSchoolAtNorthAsync(ILocator active)
+    private static async Task AssertSchoolAtCenterAsync(ILocator active)
     {
         Assert.IsTrue(await active.EvaluateAsync<bool>(@"el => {
             const world = el.closest('.arcane-web-canvas');
             const origin = world.querySelector('[data-node-id=wyrmheart]');
             const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
             return Math.abs(x - parseFloat(origin.style.left)) < .01
-                && y < parseFloat(origin.style.top)
-                && [...world.querySelectorAll('.wheel-school-badge')]
-                    .filter(badge => badge !== el).every(badge => parseFloat(badge.style.top) > y);
-        }"), "The active school must align north of the Wyrmheart regardless of world extent.");
+                && Math.abs(y - parseFloat(origin.style.top)) < .01;
+        }"), "The active school sigil must occupy the Wyrmheart center.");
     }
 
     private async Task AssertArcanePathsClearAsync()

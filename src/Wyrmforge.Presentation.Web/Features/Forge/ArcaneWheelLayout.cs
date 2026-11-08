@@ -104,7 +104,7 @@ internal static class ArcaneWheelLayout
         {
             // Fan the constellation lanes around the Wyrmheart. The same
             // school angle rotates the entire sector when another school is active.
-            return Polar(Angle(owner, active) + node.X / 3100, node.Y - 850);
+            return Polar(Angle(owner, active) + node.X / 3100, node.Y - 1100);
         }
         if (Landmarks.TryGetValue(node.Id, out var landmark)) return Local(owner, active, landmark.Side, landmark.Radius);
         if (node.Id.EndsWith("-start", StringComparison.Ordinal)) return Local(owner, active, 0, 300);

@@ -30,6 +30,16 @@ public sealed class ProgressionV13Tests : BrowserTest
         await page.Locator(".refuge-town-spot--nexus").ClickAsync();
         await page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
+        var fireSigil = page.Locator(".wheel-school-badge[data-school='Fire'][data-active='true']");
+        Assert.IsTrue(await fireSigil.EvaluateAsync<bool>(@"sigil => {
+            const map = sigil.closest('.arcane-web-canvas');
+            const heart = map.querySelector('[data-node-id=wyrmheart]');
+            const y = parseFloat(sigil.style.top);
+            return sigil.style.left === heart.style.left
+                && sigil.style.top === heart.style.top
+                && [...map.querySelectorAll('.web-node.school-fire')]
+                    .every(node => parseFloat(node.style.top) < y);
+        }"), "The Fire sigil sits at the center and all Fire nodes branch north from it.");
         var fireLink = page.Locator(".web-edge[data-from='constellation-Fire-13-3'][data-to='constellation-Fire-13-4']");
         var activeFireStroke = await fireLink.EvaluateAsync<string>("link => getComputedStyle(link).stroke");
         Assert.IsTrue(await fireLink.EvaluateAsync<bool>("link => (link.getAttribute('d').match(/L/g) ?? []).length > 1"));
