@@ -205,6 +205,7 @@ export function createBotMemory() {
         bestDistance: Number.POSITIVE_INFINITY, progressAt: 0, detourUntil: 0, detour: { x: 0, y: 0 }, holdSince: null,
         huntClosing: false, huntPosition: null, huntProgressAt: 0, lastKillCount: null, lastKillAt: null,
         roadPosition: null, roadProgressAt: 0, roadDetourUntil: 0, roadDetour: { x: 0, y: 0 }, roadDetourSide: 1,
+        exitBestDistance: Number.POSITIVE_INFINITY, exitProgressAt: null, exitRecoveryUntil: 0,
     };
 }
 
@@ -343,8 +344,26 @@ export function botMovement(snapshot, memory, now, frame = null) {
     memory.huntPosition = null;
     memory.holdSince = null;
     const dx = exit.x - player.x, dy = exit.y - player.y, distance = Math.hypot(dx, dy);
+    // The normal road preference is intentional, but collision, a deep crater or an S-bend can
+    // leave a debug bot oscillating off-road indefinitely. After a sustained failure to approach
+    // the *real* C# exit, use the terrain+prop-aware flow field temporarily to recover.
+    // This affects URL-enabled test bots only: never the normal input or terrain simulation.
+    if (memory.exitProgressAt === null || distance < memory.exitBestDistance - 8) {
+        memory.exitBestDistance = distance;
+        memory.exitProgressAt = now;
+        memory.exitRecoveryUntil = 0;
+    } else if (now - memory.exitProgressAt >= 2000 && now >= memory.exitRecoveryUntil) {
+        memory.exitRecoveryUntil = now + 3000;
+        memory.exitProgressAt = now;
+        memory.exitBestDistance = distance;
+        memory.roadDetourUntil = 0;
+    }
+    if (frame && now < memory.exitRecoveryUntil && distance > exit.radius + 12) {
+        const alternative = flowDirection(frame, player, exit, navigationProps(snapshot, frame));
+        if (alternative && (alternative.x !== 0 || alternative.y !== 0)) return alternative;
+    }
     // On the single-exit terrain trail, the protected authored road leads to that exit. A direct goal flow can
-    // instead send the bot across a cliff and trap it at the far boundary of the map.
+    // otherwise send the bot across a cliff, so use it only for sustained no-progress recovery.
     if (snapshot.exit && frame?.road?.length && distance >= 40) {
         const road = roadWalkDirection(snapshot, frame, memory, now);
         if (road && (road.x !== 0 || road.y !== 0)) return road;
