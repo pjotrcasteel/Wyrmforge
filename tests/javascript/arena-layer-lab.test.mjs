@@ -30,7 +30,7 @@ test('enabled layer lab independently isolates named layers and resets without a
         globalThis.location = { search: '?layerLab=1' };
         const lab = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-layer-lab.js?enabled-unit');
         assert.equal(lab.layerLabSnapshot().active, true);
-        assert.equal(lab.LAYER_OPTIONS.length, 13);
+        assert.equal(lab.LAYER_OPTIONS.length, 14);
         const renderer = { begin() {}, render() {}, dispose() {} };
         assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, renderer), renderer,
             'Layer Lab GPU on must return the renderer instance, not true');
@@ -41,7 +41,18 @@ test('enabled layer lab independently isolates named layers and resets without a
         lab.setLayerLabEnabled('gpu', true);
         assert.strictEqual(lab.selectHuntGpuWorld({ lights: [] }, renderer), renderer,
             'Toggling WebGL back on must recover the same GPU object');
-        assert.equal(new Set(lab.LAYER_OPTIONS.map(option => option[0])).size, 13);
+        assert.equal(new Set(lab.LAYER_OPTIONS.map(option => option[0])).size, 14);
+        assert.equal(lab.layerLabRequiresTerrainRebuild('gpu'), false,
+            'GPU switch must preserve corrupted terrain raster during isolation');
+        assert.equal(lab.layerLabRequiresTerrainRebuild('normals'), false);
+        assert.equal(lab.layerLabRequiresTerrainRebuild('damageFx'), false);
+        assert.equal(lab.layerLabRequiresTerrainRebuild('postGpuFx'), false);
+        assert.equal(lab.layerLabRequiresTerrainRebuild('faces'), true);
+        assert.equal(lab.layerLabRequiresTerrainRebuild('excavation'), true);
+        assert.equal(lab.layerLabRequiresTerrainRebuild('incremental'), true);
+        lab.setLayerLabEnabled('incremental', false);
+        assert.equal(lab.layerLabEnabled('incremental'), false);
+        lab.setLayerLabEnabled('incremental', true);
         const generation = lab.layerLabGeneration();
         lab.setLayerLabEnabled('excavation', false);
         lab.setLayerLabEnabled('normals', false);
