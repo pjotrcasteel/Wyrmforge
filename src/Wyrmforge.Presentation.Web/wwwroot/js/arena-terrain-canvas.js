@@ -817,7 +817,7 @@ const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.2)', dirtUpper: 'rgba(6,4,8
  * and, in the living bands, over rock too (a hill is grass above and stone below); then soil, then dressed stone, the texture running
  * continuously down the wall. `sx`/`width` pick the slice of the block in world units; `column` places it inside the wrapping texture.
  */
-function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, column) {
+export function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, column) {
     if (!layerLabEnabled('faces')) return 0;
     let painted = 0;
     const wallTop = segments.length ? segments[0].from : 0;
