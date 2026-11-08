@@ -437,6 +437,7 @@ function frame(state, timestamp) {
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
         state.renderingError = null;
+        state.renderError = null;
     } catch (error) {
         state.renderError = String(error?.stack ?? error).slice(0, 600);
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
