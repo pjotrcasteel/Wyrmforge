@@ -25,8 +25,8 @@ import { torchSprites } from './arena-torch-sprites.js';
 import {
     ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, authoredPending, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
-    setAuthoredRenderMode, emissionIntensity,
-} from './authored-characters.js?v=20261108-mage-head-v2';
+    setAuthoredRenderMode, enemyHasEmissivePose, emissionIntensity,
+} from './authored-characters.js?v=20261108-enemy-emissive-v1';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js?v=20261108-mage-head-v2';
@@ -58,7 +58,7 @@ import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithE
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
-import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
+import { drawEliteGround, drawEliteCrest, enemyGroundDecorationVisible } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
 import { drawDamageNumbers, loadDamageNumberMode, normalizeDamageNumberMode, saveDamageNumberMode } from './arena-damage-numbers.js';
 import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, drawRimeHusk, drawRimeArmor } from './arena-frost-vfx.js';
@@ -754,6 +754,7 @@ function draw(state, snapshot, width, height) {
     drawGlassReliquaryGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
     for (const enemy of snapshot.enemies) {
+        if (!enemyGroundDecorationVisible(enemy, lightViewport)) continue;
         drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         drawShieldGuard(ctx, enemy);
     }
@@ -995,7 +996,8 @@ function draw(state, snapshot, width, height) {
         if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
         else drawHuntHazard(ctx,hazard);
     }
-    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    // Offscreen casters can telegraph an onscreen target: do not frustum-cull these attack marks.
+    for (const enemy of snapshot.enemies) if (enemy.telegraph) drawEnemyTelegraph(ctx, enemy);
     drawTransformations(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawFieldAmbushTell(ctx, snapshot.fieldAmbush, visualSeconds, state.reducedMotion.matches);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
@@ -1762,6 +1764,9 @@ function drawDragonBreath(ctx, breath, school, dragon = null) {
  * Returns the material for the capture, or null when the actor has nothing that glows this frame.
  */
 function paintAuthoredEmissive(state, gpu, layer, snapshot, captureId, tileX, tileY, tileSize, pixelScale) {
+    // The Fire Tier I enemy strips do not currently emit light. No secondary 160px+ tile needs allocating or clearing.
+    // Evaluate the currently loaded action, not the enemy kind, so newly authored glow strips work without code changes.
+    if (layer.kind === 'enemy' && !enemyHasEmissivePose(state.authored, layer.enemy.entityId)) return null;
     const tile = (state.gpuEmissivePool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
     const surface = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
     let drawn = false, set = null, change = null;
