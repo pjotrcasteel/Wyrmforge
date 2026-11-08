@@ -194,6 +194,15 @@ public partial class ArenaView : IAsyncDisposable
     public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame? TerrainFrame(int knownRevision) =>
         simulation?.TerrainFrame(knownRevision);
 
+    /// <summary>
+    /// Return the current authoritative scene without advancing encounter simulation.
+    /// Used only while JS waits for first terrain, atlas, actor and lighting readiness.
+    /// Even Tick(0) would run spawn and attack resolution, so startup must not Tick.
+    /// </summary>
+    [JSInvokable]
+    public RunRenderSnapshot PreviewFrame() =>
+        simulation?.CreateSnapshot() ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
+
     [JSInvokable]
     public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
