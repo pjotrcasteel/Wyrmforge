@@ -479,8 +479,8 @@
 /* Pixel-art Hunt HUD. Separate transparent 64/48px authored sprite layers are
    composed over real simulation values; no pre-filled, unchanging HUD screenshots. */
 .arcane-hunt-hud {
-    --orb-size: clamp(64px, 20vw, 78px);
-    --spell-size: clamp(49px, 16vw, 61px);
+    --orb-size: clamp(64px, 23.5vw, 91px);
+    --spell-size: clamp(49px, 15vw, 58px);
     position: fixed;
     z-index: 6;
     bottom: max(7px, calc(env(safe-area-inset-bottom) + 4px));
@@ -488,7 +488,7 @@
     display: grid;
     justify-items: center;
     gap: 0;
-    width: min(344px, calc(100vw - 14px));
+    width: min(366px, calc(100vw - 14px));
     min-width: 0;
     min-height: 0;
     margin: 0;
@@ -500,11 +500,23 @@
 }
 
 .arcane-hunt-hud .arcane-hud-row {
+    position: relative;
     display: flex;
     align-items: flex-end;
-    justify-content: center;
-    gap: clamp(6px, 2.4vw, 10px);
+    justify-content: space-between;
+    isolation: isolate;
     width: 100%;
+}
+
+/* A single bronze chassis joins the sockets while leaving the playfield open above them. */
+.arcane-hunt-hud .arcane-hud-row::before {
+    position: absolute;
+    z-index: -1;
+    inset: auto calc(var(--orb-size) * .46) 1px;
+    height: calc(var(--spell-size) * .62);
+    background: url('art/hunt-hud/socket-bridge.svg') center / 100% 100% no-repeat;
+    image-rendering: pixelated;
+    content: '';
 }
 
 .arcane-hunt-hud .crystal-orb,
@@ -533,7 +545,7 @@
     flex-basis: var(--spell-size);
     width: var(--spell-size);
     height: var(--spell-size);
-    margin-bottom: 4px;
+    margin-bottom: 7px;
 }
 .arcane-hunt-hud .defensive-spell { --spell-accent: #8cc7f8; }
 
@@ -556,7 +568,7 @@
 .arcane-hunt-hud .crystal-orb > .crystal-orb-core {
     position: absolute;
     z-index: 1;
-    inset: 14%;
+    inset: 13%;
     display: block;
     width: auto;
     height: auto;
@@ -590,15 +602,14 @@
     position: relative;
     z-index: 5;
     align-self: center;
-    margin-top: 12%;
+    margin-top: 0;
     color: #fff2e7;
-    font: 750 clamp(.58rem, 2.5vw, .76rem)/1 Georgia, 'Times New Roman', serif;
+    font: 750 clamp(.58rem, 3vw, .85rem)/1 Georgia, 'Times New Roman', serif;
     text-shadow: 1px 2px #140611, -1px -1px #18080f;
     white-space: nowrap;
 }
 
-/* Empty violet crystal: decorative interior only, absolutely no resource meter. */
-.arcane-hunt-hud .orb-secondary { filter: brightness(.82) saturate(.68); }
+/* The vacant well shares the health socket’s bronze frame. */
 .arcane-hunt-hud .orb-secondary > .crystal-orb-core {
     background: #160d24 url('art/hunt-hud/resource-empty.svg') center / 100% 100% no-repeat;
     image-rendering: pixelated;
@@ -704,23 +715,28 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    width: min(326px, calc(100% - 4px));
+    position: relative;
+    width: calc(100% - 18px);
     min-height: 21px;
-    margin: -1px 0 0;
+    margin: -3px 0 0;
     padding: 4px 8px;
     border: 3px solid transparent;
     border-image: url('art/hunt-hud/xp-frame.svg') 4 fill / 3px / 0 stretch;
     border-radius: 0;
-    background: #140d1c;
+    background: transparent;
     box-shadow: none;
     color: #f0d4ad;
-    font: 700 clamp(.54rem, 2vw, .66rem)/1 Georgia, serif;
+    font: 700 clamp(.54rem, 2.65vw, .72rem)/1 Georgia, serif;
     white-space: nowrap;
 }
 .arcane-hunt-hud .arcane-xp-row strong,
 .arcane-hunt-hud .arcane-xp-row span {
     flex: 0 0 auto;
     font-size: inherit;
+}
+.arcane-hunt-hud .arcane-xp-row strong {
+    padding-inline: 3px 6px;
+    border-inline-end: 1px solid #80563e;
 }
 .arcane-hunt-hud .combat-xp-track {
     flex: 1 1 auto;
@@ -736,18 +752,18 @@
     height: 100%;
     border: 0;
     border-radius: 0;
-    background: repeating-linear-gradient(90deg, #bd83ea 0 5px, #d9a2ff 5px 7px, #a96bd4 7px 10px);
+    background: linear-gradient(#d3a4ef 0 25%, #9c61c2 25% 75%, #643b89 75%);
     box-shadow: none;
 }
 
-.run-state-dock { bottom: max(112px, calc(env(safe-area-inset-bottom) + 105px)); }
+.run-state-dock { bottom: max(125px, calc(env(safe-area-inset-bottom) + 118px)); }
 .first-hunt-hint { top: max(116px, calc(env(safe-area-inset-top) + 108px)); }
 .encounter-change { top: max(72px, calc(env(safe-area-inset-top) + 64px)); }
 .trail-exit-instruction { top: max(75px, calc(env(safe-area-inset-top) + 66px)); }
 
 @media (max-width: 360px) {
     .arcane-hunt-hud {
-        --orb-size: 64px;
+        --orb-size: clamp(64px, 23vw, 82px);
         --spell-size: 49px;
         width: calc(100vw - 12px);
     }

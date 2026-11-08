@@ -64,7 +64,7 @@ test('approved HUD has no top bar and no invented secondary resource', () => {
     assert.match(markup, /class="arcane-xp-row"/);
     assert.match(behavior, /dom\.healthFill\.style\.setProperty\('--health-unfilled'/);
     assert.match(behavior, /updateText\(dom\.xpValue/);
-    assert.match(domain, /PrimaryCooldownRemaining = Math\.Max/);
+    assert.match(domain, /PrimaryCooldownRemaining = double\.IsFinite\(spellCooldowns\[primary\]\)\s*\? Math\.Max/);
     assert.match(domain, /DefensiveCooldownRemaining = contextualPolicy is null/);
     assert.match(css, /art\/hunt-hud\/orb-frame\.svg/);
     assert.match(css, /art\/hunt-hud\/spell-frame\.svg/);
