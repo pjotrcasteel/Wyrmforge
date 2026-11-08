@@ -1099,8 +1099,11 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
 const OCCLUSION_ROWS = 4;
 
 /**
- * Terrain columns in front of (south of) an actor that stand higher than its feet: they hide part of it.
- * Returned back to front so repainting them keeps the painter's order.
+ * Terrain to the south of an actor can hide it only where surviving physical
+ * microcolumns stand above its C# foot Z. A damaged fissure may leave 1-4px
+ * channels in a coarse 32px block: selecting/erasing the whole block would
+ * create a square dark-looking mask over the mage even where the rock is gone.
+ * Keep intact-block entries unchanged for the common fast path.
  */
 export function occludingTerrainCells(frame, groundX, groundY, groundZ, halfWidth) {
     if (!frame || !Number.isFinite(groundX) || !Number.isFinite(groundY)) return [];
@@ -1109,32 +1112,84 @@ export function occludingTerrainCells(frame, groundX, groundY, groundZ, halfWidt
     const first = Math.max(0, Math.floor((groundX - halfWidth) / FACE_PIXELS));
     const last = Math.min(columns - 1, Math.floor((groundX + halfWidth) / FACE_PIXELS));
     const cells = [];
-    for (let row = Math.max(0, footRow + 1); row <= Math.min(rows - 1, footRow + OCCLUSION_ROWS); row++)
-        for (let column = first; column <= last; column++)
-            if (surface[row * columns + column] * MICROCELL_UNITS > groundZ + 1) cells.push({ column, row });
+    for (let row = Math.max(0, footRow + 1); row <= Math.min(rows - 1, footRow + OCCLUSION_ROWS); row++) {
+        for (let column = first; column <= last; column++) {
+            const index = row * columns + column;
+            const fine = frame.fine?.get(index);
+            if (!fine) {
+                if (surface[index] * MICROCELL_UNITS > groundZ + 1) cells.push({ column, row });
+                continue;
+            }
+            const microcells = [];
+            for (let index = 0; index < fine.heights.length; index++) {
+                if (fine.heights[index] * MICROCELL_UNITS > groundZ + 1) microcells.push(index);
+            }
+            if (microcells.length) cells.push({ column, row, microcells });
+        }
+    }
     return cells;
 }
 
-/** GPU path: remove the covered pixels from an actor's scratch tile so the lit terrain beneath shows through. */
+/**
+ * Actor-mask geometry must match the same top and exposed south-facing micro
+ * surfaces as paintFineCell(). Do not construct a coarse substitute for a
+ * fissured block: that hides the wizard behind rock which was destroyed.
+ */
+function forEachOccludingFace(frame, cell, visit) {
+    const { column, row, microcells } = cell;
+    if (!microcells) {
+        const height = frame.surface[row * frame.columns + column];
+        const top = blockTopRect(column, row, height);
+        visit(top);
+        const nextHeight = row + 1 < frame.rows
+            ? frame.surface[(row + 1) * frame.columns + column] : height;
+        const front = blockFrontRect(column, row, height, nextHeight);
+        if (front) visit(front);
+        return;
+    }
+    for (const index of microcells) {
+        const microX = index % MICRO_PER_COLUMN;
+        const microY = Math.floor(index / MICRO_PER_COLUMN);
+        const height = microHeight(frame, column, row, microX, microY);
+        const x = column * FACE_PIXELS + microX * MICRO_UNITS;
+        const y = row * FACE_PIXELS + microY * MICRO_UNITS;
+        visit({ x, y: y - height * MICROCELL_UNITS, width: MICRO_UNITS, height: MICRO_UNITS });
+        const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
+        const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
+        const south = southRow < frame.rows
+            ? microHeight(frame, column, southRow, microX, southY) : height;
+        if (height > south) {
+            visit({ x, y: y + MICRO_UNITS - height * MICROCELL_UNITS,
+                width: MICRO_UNITS, height: (height - south) * MICROCELL_UNITS });
+        }
+    }
+}
+
+/** GPU path: remove only the genuinely covering terrain faces from the actor's scratch tile. */
 export function eraseTerrainOcclusion(ctx, frame, cells) {
     if (cells.length === 0) return 0;
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = '#000';
-    for (const { column, row } of cells) {
-        const height = frame.surface[row * frame.columns + column];
-        const top = blockTopRect(column, row, height);
-        ctx.fillRect(top.x, top.y, top.width, top.height);
-        const front = blockFrontRect(column, row, height, row + 1 < frame.rows ? frame.surface[(row + 1) * frame.columns + column] : height);
-        if (front) ctx.fillRect(front.x, front.y, front.width, front.height);
-    }
+    for (const cell of cells)
+        forEachOccludingFace(frame, cell, face => ctx.fillRect(face.x, face.y, face.width, face.height));
     ctx.restore();
     return cells.length;
 }
 
-/** Canvas path: paint the covering terrain over the actor in painter's order. */
+/** Canvas path: clip damaged cells to their real micro faces before repainting the occluding rock. */
 export function repaintTerrainOcclusion(ctx, frame, band, cells, grain = true) {
-    for (const { column, row } of cells) paintTerrainCell(ctx, frame, band, column, row, grain);
+    for (const cell of cells) {
+        if (cell.microcells) {
+            ctx.save();
+            ctx.beginPath();
+            forEachOccludingFace(frame, cell,
+                face => ctx.rect(face.x, face.y, face.width, face.height));
+            ctx.clip();
+        }
+        paintTerrainCell(ctx, frame, band, cell.column, cell.row, grain);
+        if (cell.microcells) ctx.restore();
+    }
     return cells.length;
 }
 
