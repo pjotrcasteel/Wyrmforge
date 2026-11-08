@@ -5,7 +5,7 @@
 
 @if (!runActive)
 {
-    <ForgeView SkipTitle="@(runNumber > 0)" PlayerName="@playerName" CharacterSchool="@characterSchool" OnChooseSchool="ChooseCharacterSchoolAsync" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" MutationAmplifiers="mutationAmplifiers" OnAssignFireballAmplifier="AssignFireballAmplifierAsync" Vault="essenceVault" Codex="arcaneCodex" Bestiary="bestiary" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback" OnResetCharacter="ResetCharacterAsync"
+    <ForgeView StartInFirstWeb="@firstWebRequested" SkipTitle="@(runNumber > 0)" PlayerName="@playerName" CharacterSchool="@characterSchool" OnChooseSchool="ChooseCharacterSchoolAsync" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" MutationAmplifiers="mutationAmplifiers" OnAssignFireballAmplifier="AssignFireballAmplifierAsync" Vault="essenceVault" Codex="arcaneCodex" Bestiary="bestiary" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback" OnResetCharacter="ResetCharacterAsync"
         OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" OnStartHunt="StartSelectedHuntAsync" FireClearedTier="@ClearedHuntTier(RegionCatalog.CinderFrontierId)" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneSelectionAsync" Laboratory="laboratory" FireballCore="fireballCore" HuntMaterials="huntMaterials" CraftCinderNeedle="CraftCinderNeedleAsync" UpgradeFireball="UpgradeFireballCoreAsync" EquipFireball="EquipFireballCoreAsync" LaboratoryNotice="@laboratoryNotice" OnDismissLaboratoryNotice="DismissLaboratoryNotice" RunExperiment="RunLaboratoryExperimentAsync" StabilizeMutation="StabilizeLaboratoryMutationAsync" EquipMutation="EquipLaboratoryMutationAsync" Loadouts="loadouts" SaveLoadout="SaveLoadoutAsync" ApplyLoadout="ApplyLoadoutAsync" ClearLoadout="ClearLoadoutAsync" TrackMutation="TrackLaboratoryMutationAsync" StartInLaboratory="openLaboratoryOnReturn" LaboratoryFocus="laboratoryFocus" OnLeaderboard="OpenLeaderboard" OnQuests="OpenQuests" QuestRewards="quests.ReadyCount" RewardCaches="quests.Caches" Hunter="hunter" Region="CurrentRegion" World="world" Advancement="Advancement" RegionAccess="RegionAccess" OnRegionChanged="SelectRegionAsync" />
 }
 else
@@ -27,7 +27,7 @@ else
             <div class="unlock-padlock second" aria-hidden="true"><i class="px-icon px-lg px-book"></i></div>
             <h3>CODEX UNLOCKED</h3>
             <p>You have witnessed magic. Begin recording what you discover.</p>
-            <button @onclick="DismissUnlocks">OPEN THE WYRMFORGE</button>
+            <button @onclick="OpenFirstArcaneWeb">SPEND YOUR FIRST ARCANE POINT</button>
         </section>
     </div>
 }
