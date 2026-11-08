@@ -454,7 +454,7 @@ public sealed partial class RunSimulation
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
             [NightSkyLightingProjection.Capture(moonlitTerrain)],
-            [HunterVisibilityLightingProjection.Capture(player.Position)],
+            HunterVisibilityLightingProjection.CaptureForScene(player.Position, moonlitTerrain),
             SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
                 elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
                 CreateFieryAreaSnapshots()),
