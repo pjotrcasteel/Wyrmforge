@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createCreatureAttackTracker, collectCreatureAttackEvents } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/creature-attack-events.js';
 
-const enemy = (entityId, progress, kind = 0, attackKind = 'bash') => ({
+const enemy = (entityId, progress, kind = 0, attackKind = 'hollow-grasp') => ({
     entityId, kind, telegraph: { kind: attackKind, progress },
 });
 const frame = (enemies, paused = false) => ({ enemies, paused });
@@ -12,7 +12,7 @@ test('Hollowed windup emits once per telegraph, not every render frame', () => {
     const tracker = createCreatureAttackTracker();
     assert.deepEqual(collectCreatureAttackEvents(tracker, frame([])), []);
     assert.deepEqual(collectCreatureAttackEvents(tracker, frame([enemy(12, 0.1)])),
-        [{ type: 'hollow-attack-windup', entityId: 12, attackKind: 'bash' }]);
+        [{ type: 'hollow-attack-windup', entityId: 12, attackKind: 'hollow-grasp' }]);
     assert.deepEqual(collectCreatureAttackEvents(tracker, frame([enemy(12, 0.5)])), []);
     assert.deepEqual(collectCreatureAttackEvents(tracker, frame([enemy(12, 0.8)])), []);
     assert.deepEqual(collectCreatureAttackEvents(tracker, frame([])), []);
@@ -23,8 +23,8 @@ test('same-count replacement and multiple attackers preserve entity identity', (
     const tracker = createCreatureAttackTracker();
     collectCreatureAttackEvents(tracker, frame([enemy(1, 0.2)]));
     assert.deepEqual(collectCreatureAttackEvents(tracker, frame([enemy(2, 0.1), enemy(3, 0.1)])),
-        [{ type: 'hollow-attack-windup', entityId: 2, attackKind: 'bash' },
-            { type: 'hollow-attack-windup', entityId: 3, attackKind: 'bash' }]);
+        [{ type: 'hollow-attack-windup', entityId: 2, attackKind: 'hollow-grasp' },
+            { type: 'hollow-attack-windup', entityId: 3, attackKind: 'hollow-grasp' }]);
 });
 
 test('non-Hollowed, non-attack tells and invalid identity are silent', () => {
@@ -45,7 +45,15 @@ test('pause and end suppress playback without replay on resume', () => {
 
 test('telegraph progress reset signals a new attack from the same creature', () => {
     const tracker = createCreatureAttackTracker();
-    collectCreatureAttackEvents(tracker, frame([enemy(7, 0.9, 0, 'claw')]));
-    assert.deepEqual(collectCreatureAttackEvents(tracker, frame([enemy(7, 0.05, 0, 'claw')])),
-        [{ type: 'hollow-attack-windup', entityId: 7, attackKind: 'claw' }]);
+    collectCreatureAttackEvents(tracker, frame([enemy(7, 0.9, 0, 'hollow-grasp')]));
+    assert.deepEqual(collectCreatureAttackEvents(tracker, frame([enemy(7, 0.05, 0, 'hollow-grasp')])),
+        [{ type: 'hollow-attack-windup', entityId: 7, attackKind: 'hollow-grasp' }]);
+});
+
+test('Hollowed contact has no authoritative telegraph and cannot invent an attack cue', () => {
+    const tracker = createCreatureAttackTracker();
+    assert.deepEqual(collectCreatureAttackEvents(tracker, frame([
+        { entityId: 11, kind: 0, x: 10, y: 10, hitFlash: false },
+        enemy(12, 0.3, 0, 'bash'),
+    ])), []);
 });
