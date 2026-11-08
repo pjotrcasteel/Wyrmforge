@@ -431,6 +431,7 @@ function createState(canvas, dotNetReference) {
         displayBridgeMilliseconds: 0,
         animationFrame: 0,
         entryPaintedKey: null,
+        entryTerrainSceneKey: null,
         entryAssetsSettled: false,
         entryGate: null,
     };
@@ -528,10 +529,18 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
-            // Activate the veil as soon as this C# snapshot declares a real
-            // playable terrain. This happens before the next animation frame.
-            if (huntEntrySceneKey(snapshot))
-                state.entryGate?.update(snapshot, 'terrain');
+            // Terrain revisions restart at each new seeded site. Reusing the old
+            // revision (often zero) would incorrectly satisfy the new scene's
+            // readiness gate and briefly reveal last site's ground.
+            const nextTerrainSite = huntEntrySceneKey(snapshot);
+            if (nextTerrainSite && nextTerrainSite !== state.entryTerrainSceneKey) {
+                state.entryTerrainSceneKey = nextTerrainSite;
+                state.terrainFrame = null;
+                if (state.terrainCache) state.terrainCache.revision = null;
+                state.entryPaintedKey = null;
+            }
+            // Activate the veil before the next scene frame while C# is immutable.
+            if (nextTerrainSite) state.entryGate?.update(snapshot, 'terrain');
             requestTerrainFrame(state, snapshot);
             if (snapshot.environment?.greybox && snapshot.lighting)
                 requestSharedGpuWorld(state, 'mobile');
