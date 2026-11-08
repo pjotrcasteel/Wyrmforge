@@ -90,8 +90,8 @@ internal sealed class EnemyCollisionSolver
             // The hunter is an immovable circle for the Hollowed only. Resolve
             // this after enemy/enemy relaxation so crowd pressure cannot shove
             // an attacker straight through the player's body.
-            if (playerPosition is { } center && playerRadius > 0)
-                moved |= SeparateHollowsFromPlayer(enemies, center, playerRadius, environment, width, height);
+            if (playerPosition is { } hunterCenter && playerRadius > 0)
+                moved |= SeparateHollowsFromPlayer(enemies, hunterCenter, playerRadius, environment, width, height);
             if (!moved) break;
         }
     }
@@ -111,7 +111,7 @@ internal sealed class EnemyCollisionSolver
             if (distance >= minimum - Tolerance) continue;
 
             // Exact overlap needs a stable direction; it must not use gameplay RNG.
-            var normal = distance > Tolerance ? difference * (1 / distance) : (enemy.Id % 4 switch
+            var normal = distance > Tolerance ? difference * (1 / distance) : ((enemy.Id % 4) switch
             {
                 0 => new Vector2D(1, 0),
                 1 => new Vector2D(0, 1),
