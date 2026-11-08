@@ -58,4 +58,66 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
         CollectionAssert.AreEqual(new[] { 0, 0, 0 }, mismatched,
             "One-shot independent terrain viewport must not invent differences absent from the ground cache.");
     }
+    /// <summary>A real automated Hunt must preserve its grass/road pixel identity through successive C# terrain impacts.</summary>
+    [TestMethod]
+    public async Task LiveHunt_RepeatedImpactsMatchIndependentGroundRepaint()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1', '3');
+            localStorage.setItem('wyrmforge.characterSchool.v1', 'Pyromancer');
+            """);
+        await Page.GotoAsync(root + "/?god=1&bot=1&speed=8&layerLab=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new()
+        {
+            NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$")
+        }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // No synthetic terrain here: C# owns every impact, and the Layer Lab reads the current cache without rebuilding it.
+        await Page.WaitForFunctionAsync("""
+            async () => {
+                const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                const d = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                return d?.hunt1Terrain?.regionalRepaints >= 3 &&
+                    d.hunt1Terrain.snapshotRevision === d.hunt1Terrain.paintedRevision &&
+                    d.hunt1Terrain.dugBlocks > 0;
+            }
+            """, null, new() { Timeout = 90000 });
+
+        // Use the exact same JS task and terrain revision for before/after.
+        // Otherwise bot damage can advance hundreds of revisions between button clicks
+        // and wrongly implicate the cache when the reference painter is at fault.
+        var result = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+            async () => {
+                const { inspectTerrainCacheRebuild } = await import('/js/arena-performance.js');
+                return inspectTerrainCacheRebuild(document.querySelector('canvas.game-canvas'));
+            }
+            """);
+        var before = result.GetProperty("referenceBefore").GetProperty("mismatched").GetInt32();
+        var after = result.GetProperty("referenceAfter").GetProperty("mismatched").GetInt32();
+        var cacheParity = result.GetProperty("cacheParity").GetProperty("mismatched").GetInt32();
+        var revision = result.GetProperty("revision").GetInt32();
+        Assert.AreEqual(revision, result.GetProperty("cacheRevision").GetInt32(),
+            "Both captures must use a single authoritative terrain revision.");
+        Assert.IsTrue(result.GetProperty("fullRepaints").GetInt32() >
+            result.GetProperty("previousFullRepaints").GetInt32(), "A real forced cache rebuild must occur.");
+        Assert.AreEqual(0, cacheParity,
+            $"Real Hunt cache must be independent of its partial-repaint history at the exact same revision " +
+            $"(cache-vs-rebuilt={cacheParity}, independent-reference before={before}, after={after}, revision={revision}).");
+    }
+
 }
