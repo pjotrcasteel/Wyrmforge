@@ -390,7 +390,6 @@
 .menu-nexus .school-wheel-view .web-node.tier-keystone.locked { opacity:.85; }
 
 /* Keep the active Fire routes traceable at overview scale. */
-.menu-nexus .school-wheel-view .overview:has(.wheel-school-badge[data-school="Fire"][data-active="true"])
-    .web-edge[data-to^="constellation-Fire-"]:not(.active, .preview, .available) {
+.menu-nexus .school-wheel-view .overview .web-edge.fire-constellation {
     stroke: #bd8258b8;
 }

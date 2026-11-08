@@ -20,6 +20,10 @@
             }
         </div>
     }
+    @{
+        var mapPlan = FocusedPlan;
+        var mapPreview = mapPlan?.NodeIds.ToHashSet(StringComparer.Ordinal);
+    }
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             @* Keep progression visible without spending a full row above the map. The counter opens Hunter XP. *@
@@ -68,14 +72,14 @@
                         <svg class="web-connections" viewBox="@($"0 0 {ArcaneWheelLayout.Size} {ArcaneWheelLayout.Size}")" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
-                                <path class="@ConnectionClass(connection)" data-from="@connection.From" data-to="@connection.To"
+                                <path class="@ConnectionClass(connection, mapPreview, mapPlan?.AnchorId)" data-from="@connection.From" data-to="@connection.To"
                                       d="@ArcaneWheelLayout.Path(connection, ActiveSchool)" />
                             }
                         </svg>
 
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
-                            <button data-node-id="@node.Id" data-tier="@PassiveNodeTiers.For(node).ToString().ToLowerInvariant()" class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
+                            <button data-node-id="@node.Id" data-tier="@PassiveNodeTiers.For(node).ToString().ToLowerInvariant()" class="@NodeClass(node, mapPreview)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
                                 aria-label="@NodeAriaLabel(node)" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
                                 @if (node.Kind == PassiveNodeKind.Travel)
                                 {

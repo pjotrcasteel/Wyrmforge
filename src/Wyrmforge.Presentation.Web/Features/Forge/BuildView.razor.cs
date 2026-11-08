@@ -206,7 +206,7 @@ public partial class BuildView : IAsyncDisposable
     }
     private void CloseInspector() => inspectorOpen = false;
 
-    private string NodeClass(PassiveNodeDefinition node)
+    private string NodeClass(PassiveNodeDefinition node, IReadOnlySet<string>? preview)
     {
         var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}", $"tier-{PassiveNodeTiers.For(node).ToString().ToLowerInvariant()}" };
         if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
@@ -215,7 +215,7 @@ public partial class BuildView : IAsyncDisposable
         if (ArcaneSchoolCatalog.Owner(node) != ActiveSchool && node.Kind != PassiveNodeKind.Origin) classes.Add("study-locked");
         if (node.Requirement is not null) classes.Add("mutation-enhancer");
         if (IsSelected(node)) classes.Add("selected");
-        else if (IsPreviewNode(node.Id)) classes.Add("preview");
+        else if (preview?.Contains(node.Id) == true) classes.Add("preview");
         else if (Selection.CanSelect(node.Id)) classes.Add("available");
         else classes.Add("locked");
 
@@ -223,24 +223,18 @@ public partial class BuildView : IAsyncDisposable
         return string.Join(' ', classes);
     }
 
-    private string ConnectionClass(PassiveTreeConnection connection)
+    private string ConnectionClass(PassiveTreeConnection connection, IReadOnlySet<string>? preview, string? anchor)
     {
         var fromAllocated = IsAllocated(connection.From);
         var toAllocated = IsAllocated(connection.To);
         if (fromAllocated && toAllocated) return "web-edge active";
-        if (IsPreviewConnection(connection)) return "web-edge preview";
+        if (inspectorOpen && preview is { Count: > 0 }
+            && (preview.Contains(connection.From) || connection.From == anchor)
+            && (preview.Contains(connection.To) || connection.To == anchor)) return "web-edge preview";
         if ((fromAllocated && CanAllocate(connection.To)) || (toAllocated && CanAllocate(connection.From))) return "web-edge available";
-        return "web-edge";
-    }
-
-    private bool IsPreviewNode(string id) => FocusedPlan?.NodeIds.Contains(id) == true;
-
-    private bool IsPreviewConnection(PassiveTreeConnection connection)
-    {
-        var plan = FocusedPlan;
-        if (!inspectorOpen || plan is null || plan.NodeIds.Count == 0) return false;
-        var route = new HashSet<string>(plan.NodeIds, StringComparer.Ordinal) { plan.AnchorId };
-        return route.Contains(connection.From) && route.Contains(connection.To);
+        return ActiveSchool == PassiveSchool.Fire && connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal)
+            ? "web-edge fire-constellation"
+            : "web-edge";
     }
 
     private IReadOnlyList<ArcaneStatBadge> RouteMinorBonuses(PassiveTreeRoutePlan plan) =>
@@ -286,7 +280,7 @@ public partial class BuildView : IAsyncDisposable
         if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
         if (Selection.Selected.Contains(node.Id)) return "TRAVERSED";
         if (!Selection.CanLearn(node)) return ArcaneSchoolCatalog.Owner(node) == ActiveSchool ? "NEEDS MUTATION" : "OTHER SCHOOL";
-        if (IsPreviewNode(node.Id)) return "PLANNED";
+        if (preview?.Contains(node.Id) == true) return "PLANNED";
         if (Selection.CanSelect(node.Id)) return "REACHABLE";
         if (node.MasteryGroup is { } group && Selection.Selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group)) return "CHOICE LOCKED";
         return "UNCHARTED";
