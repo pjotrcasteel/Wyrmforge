@@ -93,6 +93,7 @@
     [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "mireStyle")] public string? MireStyleQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "ai0")] public bool? AgentFoundationQuery { get; set; }
+    private static string ArenaModulePath => $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}";
     private ElementReference canvas;
     private IJSObjectReference? module;
     private DotNetObjectReference<EnemyLab>? reference;
@@ -148,7 +149,7 @@
             // Browsers cache rejected module imports. An explicit retry uses a fresh URL;
             // successful initialization still disposes the previous canvas session.
             module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import",
-                retry ? $"./js/arena.js?retry={Guid.NewGuid():N}" : "./js/arena.js");
+                retry ? $"{ArenaModulePath}&retry={Guid.NewGuid():N}" : ArenaModulePath);
             reference ??= DotNetObjectReference.Create(this);
             await module.InvokeVoidAsync("initializeArena", canvas, reference);
             startupError = null;
