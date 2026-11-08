@@ -130,7 +130,7 @@ test('active hunts lock background scrolling while passive health display remain
     assert.match(css, /\.game-canvas\s*\{[^}]*touch-action:\s*none/);
     assert.match(css, /html:has\(\.game-screen\), body:has\(\.game-screen\)\s*\{[^}]*overflow:\s*hidden/);
     assert.match(markup, /role="progressbar" aria-label="Health"/);
-    assert.match(markup, /class="combat-hp-value">♥ HP 100\/100/);
+    assert.match(markup, /data-hud="health" class="orb-health-number">100\/100/);
     assert.doesNotMatch(markup, /Explain health and recovery|healthHelpOpen/);
 });
 
