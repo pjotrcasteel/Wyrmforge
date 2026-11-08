@@ -517,6 +517,31 @@ test('regional terrain repaint never invalidates the authored splat map', () => 
     assert.equal(cache.kindMaps.get(5), originalPixels, 'a hit may repaint the region, but must reuse its identical texture mask');
 });
 
+test('coarse material replacement drops only its own obsolete splat mask', () => {
+    const ctx = { ...recorder(), beginPath() {}, clip() {}, rect() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const columns = 4, rows = 4;
+    const base = mergeTerrainFrame(null, {
+        revision: 1, visualSeed: 23, columns, rows,
+        surface: new Array(16).fill(0), material: new Array(16).fill(TERRAIN_MATERIAL.Soil),
+        fine: [], road: []
+    });
+    cache.update(base, 0);
+    const obsolete = new Uint8Array([3, 4, 5]), untouched = new Uint8Array([6, 7]);
+    cache.kindMaps.set(5, obsolete);
+    cache.kindMaps.set(6, untouched);
+    const material = base.material.slice();
+    material[5] = TERRAIN_MATERIAL.Stone;
+    const changed = mergeTerrainFrame(base, {
+        revision: 2, visualSeed: 23, columns, rows,
+        surface: base.surface.slice(), material, fine: [], road: []
+    });
+    assert.deepEqual(changed.changed, [5]);
+    cache.update(changed, 0);
+    assert.equal(cache.kindMaps.has(5), false, 'the replaced coarse block cannot reuse its old grass mask');
+    assert.equal(cache.kindMaps.get(6), untouched, 'neighbouring authored grass must remain pixel-stable');
+});
+
 test('microcolumn height reads the overlay and falls back to the whole column', () => {
     const heights = new Array(64).fill(0); heights[3 * 8 + 5] = -6;
     const frame = { columns: 2, rows: 1, surface: [-2, 4], material: [0, 2], fine: new Map([[0, block(heights)]]) };
