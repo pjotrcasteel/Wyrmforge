@@ -1,3 +1,5 @@
+import { createCreatureAttackTracker, collectCreatureAttackEvents } from './creature-attack-events.js';
+
 // Pure simulation-to-audio mapping. No DOM, timers or sound nodes here: deterministic and testable.
 // EnemyKind values correspond to the canonical C# enum; restrict specialized audio to authored families.
 const creatureFamily = kind => kind === 0 || kind === 'Hollow' ? 'hollow'
@@ -12,11 +14,12 @@ const schoolFromSpell = spell => spell === 1 || spell === 4 ? 'fire'
 
 export function createSoundEventTracker() {
     return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set(),
-        activeImpacts: [], activeBurningGrounds: new Set(), activeProjectileIds: new Set() };
+        activeImpacts: [], activeBurningGrounds: new Set(), activeProjectileIds: new Set(), creatureAttacks: createCreatureAttackTracker() };
 }
 
 export function collectSoundEvents(tracker, snapshot, now) {
     const previous = tracker.previous;
+    const creatureAttacks = collectCreatureAttackEvents(tracker.creatureAttacks, snapshot);
     const enemies = snapshot?.enemies ?? [];
     const deaths = snapshot?.deathBursts ?? [];
     const activeHits = new Set(enemies.filter(enemy => enemy.hitFlash && Number.isInteger(enemy.entityId) && enemy.entityId > 0)
@@ -80,7 +83,7 @@ export function collectSoundEvents(tracker, snapshot, now) {
     tracker.previous = current;
     if (!previous || previous.paused || current.paused) return [];
 
-    const result = [];
+    const result = creatureAttacks.map(event => event.type);
     const emit = (name, interval) => {
         if (now - (tracker.lastPlayed.get(name) ?? -Infinity) < interval) return;
         tracker.lastPlayed.set(name, now);
