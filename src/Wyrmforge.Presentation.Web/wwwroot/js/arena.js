@@ -106,7 +106,10 @@ export function initializeArena(canvas, dotNetReference) {
         if (!snapshot?.environment?.terrain || !state.terrainFrame || !state.terrainCache?.canvas)
             throw new Error('Enter a Hunt and wait for the terrain to load before capturing.');
         const rect = state.canvas.getBoundingClientRect();
-        const camera = resolveArenaCamera(snapshot.world, snapshot.player, rect.width, rect.height);
+        const position = resolveArenaCamera(snapshot.world, snapshot.player, rect.width, rect.height);
+        // resolveArenaCamera carries WORLD extents for the scene renderer, not viewport size.
+        // Evidence must never allocate two full-world 2x canvases on an iPhone.
+        const camera = { x: position.x, y: position.y, width: rect.width, height: rect.height };
         return captureTerrainEvidence({
             sceneCanvas: state.canvas, terrainCache: state.terrainCache,
             frame: state.terrainFrame, camera, band: huntBand(state, snapshot), paintTerrainCell,
