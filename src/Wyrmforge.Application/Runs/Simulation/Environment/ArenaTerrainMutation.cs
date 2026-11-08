@@ -96,6 +96,7 @@ public static class ArenaTerrainMutation
             if (seen.Add(row * grid.Columns + column))
                 touched.Add((column, row, grid.Surface(column, row), grid.Material(column, row), grid.FineHeights(column, row), grid.FineWear(column, row)));
         }
+        var excavated = new HashSet<(int Column, int Row)>();
         foreach (var (gx, gy, depth) in hits)
         {
             var column = (int)Math.Floor(gx / (double)perColumn);
@@ -104,8 +105,18 @@ public static class ArenaTerrainMutation
             Touch(column, row);
             var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
                 ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
-            grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor);
+            if (grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor, deferRefresh: true) > 0)
+            {
+                excavated.Add((column, row));
+            }
         }
+        // Hit processing reads the fine heights directly. Refresh the coarse
+        // columns once before settling and exposing the terrain to navigation.
+        foreach (var (column, row) in excavated)
+        {
+            grid.RefreshExcavatedColumn(column, row);
+        }
+
         Settle(grid, hits, protectedCells, Touch);
 
         var changes = new List<ArenaTerrainChange>();
