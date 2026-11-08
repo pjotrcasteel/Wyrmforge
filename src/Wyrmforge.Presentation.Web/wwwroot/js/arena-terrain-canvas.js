@@ -1429,6 +1429,10 @@ export class TerrainCanvasCache {
         this.lastDirtyBlocks = frame.changed?.length ?? 0;
         this.lastPaintReason = kitSwitched ? 'forest-kit-loaded' : regional ? 'voxel-changes' : 'full-terrain-refresh';
         const elapsed = (globalThis.performance?.now() ?? 0) - started;
+        this.lastRepaintMs = elapsed;
+        this.lastRepaintCellVisits = regional
+            ? regions.reduce((visits, region) => visits + (region.c1 - region.c0 + 1) * frame.rows, 0)
+            : frame.columns * frame.rows;
         this.totalRepaintMs += elapsed;
         this.maxRepaintMs = Math.max(this.maxRepaintMs, elapsed);
         return true;
