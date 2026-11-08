@@ -26,7 +26,7 @@ import {
     ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
     setAuthoredRenderMode, emissionIntensity,
-} from './authored-characters.js';
+} from './authored-characters.js?v=20261108-voxel-actor-grounding-v1';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
