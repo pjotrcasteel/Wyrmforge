@@ -99,3 +99,14 @@ test('paused and frozen Hollowed cannot emit a late swipe',()=>{
   assert.deepEqual(events,[]);
  }
 });
+
+test('a crowd emits one swipe per attacker and no repeat on duplicate render snapshots',()=>{
+ const state=mod.createHollowState(),events=[];
+ const group=snapshot({enemies:[enemy({entityId:7}),enemy({entityId:8,x:22})],
+  player:{x:38,y:20,radius:9}});
+ for(let t=0;t<=.8;t+=.05){
+  mod.updateHollowSprites(state,group,t,false,e=>events.push(e));
+  mod.updateHollowSprites(state,group,t,false,e=>events.push(e));
+ }
+ assert.deepEqual(events.map(e=>e.entityId).sort(),[7,8]);
+});
