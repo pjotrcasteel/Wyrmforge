@@ -8,6 +8,12 @@ internal static class FireOuterNodes
     // current earned budget; taking every route is deliberately not required.
     internal static IReadOnlyList<PassiveNodeDefinition> All { get; } =
     [
+        Node("fire-enduring-inner-1", "Cinder Pulse", BuildStatId.BurnDamage, .02),
+        Node("fire-enduring-inner-2", "Hearth Ash", BuildStatId.MaxHealth, .02),
+        Node("fire-furnace-inner-1", "Heat Retention", BuildStatId.MutationDuration, .02),
+        Node("fire-furnace-inner-2", "Kiln Ward", BuildStatId.MaxHealth, .02),
+        Node("fire-shelter-inner-1", "Banked Heat", BuildStatId.MutationDuration, .02),
+        Node("fire-shelter-inner-2", "Guarding Coals", BuildStatId.BurnDamage, .02),
         Node("fire-pyre-crossroads", "Afterglow", BuildStatId.MutationDuration, .01),
         Node("fire-enduring-1", "Patient Flame", BuildStatId.MutationDuration, .02),
         Node("fire-enduring-2", "Lingering Heat", BuildStatId.MutationDuration, .02),
@@ -33,6 +39,10 @@ internal static class FireOuterNodes
             yield return new("fire-long-pyre", "fire-pyre-crossroads");
             foreach (var route in new[] { "enduring", "furnace", "shelter" })
             {
+                // Equal-cost paths to the medium node reward different investments.
+                yield return new($"fire-{route}-1", $"fire-{route}-inner-1");
+                yield return new($"fire-{route}-inner-1", $"fire-{route}-inner-2");
+                yield return new($"fire-{route}-inner-2", $"fire-{route}-4");
                 var previous = "fire-pyre-crossroads";
                 for (var step = 1; step <= 5; step++)
                 {

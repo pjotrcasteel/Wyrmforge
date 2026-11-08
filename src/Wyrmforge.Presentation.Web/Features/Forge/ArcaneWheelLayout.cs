@@ -26,6 +26,12 @@ internal static class ArcaneWheelLayout
     private static readonly IReadOnlyDictionary<string, (double Side, double Radius)> Landmarks =
         new Dictionary<string, (double, double)>
         {
+            ["fire-enduring-inner-1"] = (-635, 1850),
+            ["fire-enduring-inner-2"] = (-610, 1980),
+            ["fire-furnace-inner-1"] = (-220, 1835),
+            ["fire-furnace-inner-2"] = (-215, 1960),
+            ["fire-shelter-inner-1"] = (-45, 1860),
+            ["fire-shelter-inner-2"] = (-55, 1990),
             ["fire-pyre-crossroads"] = (-350, 1560),
             ["fire-enduring-1"] = (-660, 1720),
             ["fire-enduring-2"] = (-800, 1820),
