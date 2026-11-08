@@ -275,7 +275,7 @@ public partial class BuildView : IAsyncDisposable
         _ => "MAJOR · KEYSTONE",
     };
 
-    private string NodeState(PassiveNodeDefinition node)
+    private string NodeState(PassiveNodeDefinition node, IReadOnlySet<string>? preview)
     {
         if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
         if (Selection.Selected.Contains(node.Id)) return "TRAVERSED";
@@ -286,7 +286,7 @@ public partial class BuildView : IAsyncDisposable
         return "UNCHARTED";
     }
 
-    private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
+    private string NodeStateClass(PassiveNodeDefinition node, IReadOnlySet<string>? preview) => NodeState(node, preview).ToLowerInvariant().Replace(' ', '-');
     private static string SchoolLabel(PassiveNodeDefinition node) => ArcaneSchoolCatalog.Owner(node) is { } school ? ArcaneSchoolCatalog.Get(school).Name : "The mage’s learned knowledge";
 
     private async Task Reset()

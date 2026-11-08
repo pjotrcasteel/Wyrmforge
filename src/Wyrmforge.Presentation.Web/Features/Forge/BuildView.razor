@@ -113,7 +113,7 @@
             <button class="inspector-close" aria-label="Close node inspector" @onclick="CloseInspector">×</button>
             <div class="inspector-heading">
                 <span class="node-kind">@KindLabel(FocusedNode)</span>
-                <span class="node-state @NodeStateClass(FocusedNode)">@NodeState(FocusedNode)</span>
+                <span class="node-state @NodeStateClass(FocusedNode, mapPreview)">@NodeState(FocusedNode, mapPreview)</span>
             </div>
             <div class="inspector-title">
                 <span class="inspector-glyph">@NodeGlyph(FocusedNode)</span>
