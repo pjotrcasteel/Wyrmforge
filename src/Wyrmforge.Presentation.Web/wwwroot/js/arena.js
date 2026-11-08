@@ -13,7 +13,7 @@ import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawB
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-terrain-evidence-v1';
-import { captureTerrainEvidence, captureTerrainViewport } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
+import { captureTerrainEvidence, captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
@@ -168,18 +168,21 @@ export function inspectTerrainCacheRebuild(canvas) {
     const measure = () => captureTerrainViewport(cache, frame, camera, band, paintTerrainCell, FACE_PIXELS,
         TERRAIN_ART_SCALE).pixelComparison;
     const before = measure();
+    const cachedBefore = sampleCachedTerrainViewport(cache, camera, TERRAIN_ART_SCALE);
     const revision = frame.revision;
     const previousFullRepaints = cache.fullRepaints;
     cache.revision = null;
     cache.update(frame, band);
+    const cachedAfter = sampleCachedTerrainViewport(cache, camera, TERRAIN_ART_SCALE);
     const after = measure();
     return {
         revision,
         cacheRevision: cache.revision,
         previousFullRepaints,
         fullRepaints: cache.fullRepaints,
-        before,
-        after
+        cacheParity: compareTerrainPixels(cachedBefore.pixels, cachedAfter.pixels, cachedBefore.width),
+        referenceBefore: before,
+        referenceAfter: after
     };
 }
 
