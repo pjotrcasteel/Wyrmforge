@@ -238,6 +238,7 @@ public partial class ArenaView : IAsyncDisposable
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var previousRefugeReturns = current.RefugeReturns;
+        if (reducedMotion) current.SkipHuntEntrance();
         var input = new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         var snapshot = current.Tick(delta, input, width, height);
         var firstHuntHintAdvanced = false;
