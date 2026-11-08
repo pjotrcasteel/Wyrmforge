@@ -162,5 +162,9 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
         // The main painting remains visible. An optional foreground extraction
         // cannot break walking, navigation, town interactions or gameplay.
         console.warn("Refuge foreground PNG generation unavailable.", error);
+    } finally {
+        // This marker follows every real cutout assignment. The startup veil
+        // waits for it and then decodes the generated images before revealing.
+        if (scene.isConnected) scene.dataset.townForegroundReady = 'true';
     }
 }
