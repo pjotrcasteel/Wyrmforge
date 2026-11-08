@@ -351,7 +351,8 @@ export function botMovement(snapshot, memory, now, frame = null) {
     if (memory.exitProgressAt === null || distance < memory.exitBestDistance - 8) {
         memory.exitBestDistance = distance;
         memory.exitProgressAt = now;
-        memory.exitRecoveryUntil = 0;
+        // Finish an active recovery window even after the first good step: immediately
+        // snapping back to the old road can reverse that step and trap the hunter again.
     } else if (now - memory.exitProgressAt >= 2000 && now >= memory.exitRecoveryUntil) {
         memory.exitRecoveryUntil = now + 3000;
         memory.exitProgressAt = now;
