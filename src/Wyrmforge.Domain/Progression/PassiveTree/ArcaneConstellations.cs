@@ -9,7 +9,7 @@ internal static class ArcaneConstellations
     internal const string Prefix = "constellation-";
     private static readonly (PassiveSchool School, string Gate, string[] Themes, BuildStatId Specialty)[] Schools =
     [
-        (PassiveSchool.Fire, "fire-shelter-5", ["Ember", "Hearth", "Cinder", "Forge", "Pyre", "Ash"], BuildStatId.BurnDamage),
+        (PassiveSchool.Fire, "volcanic", ["Ember", "Hearth", "Cinder", "Forge", "Pyre", "Ash"], BuildStatId.BurnDamage),
         (PassiveSchool.Frost, "winter-shell", ["Rime", "Glacier", "Snow", "Permafrost", "Ice", "Winter"], BuildStatId.MaxHealth),
         (PassiveSchool.Storm, "lightning-form", ["Gale", "Thunder", "Rain", "Lightning", "Tempest", "Squall"], BuildStatId.ProjectileSpeed),
         (PassiveSchool.Arcane, "astral-barrage", ["Glyph", "Astral", "Mirror", "Rune", "Prism", "Aether"], BuildStatId.Damage),
@@ -52,7 +52,7 @@ internal static class ArcaneConstellations
     {
         foreach (var (school, gate, themes, _) in Schools)
         {
-            yield return new(gate, Id(school, 1, 0));
+            yield return new(gate, Id(school, school == PassiveSchool.Fire ? 2 : 1, 0));
             for (var ring = 0; ring < themes.Length; ring++)
             {
                 for (var step = 0; step < Offsets.Length; step++)
