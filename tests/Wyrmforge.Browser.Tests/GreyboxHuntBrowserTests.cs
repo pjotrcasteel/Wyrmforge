@@ -724,7 +724,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
         var result = await Page.EvaluateAsync<string>("""
             async () => {
-                const m = await import('/js/authored-characters.js');
+                const m = await import('/js/authored-characters.js?v=20261108-voxel-actor-grounding-v1');
                 for (const name of m.AUTHORED_SETS) m.preloadAuthoredCharacter(name);
                 const started = performance.now();
                 while (m.AUTHORED_SETS.some(name => !m.authoredCharacter(name)) && performance.now() - started < 30000) await new Promise(r => setTimeout(r, 100));
