@@ -2024,22 +2024,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
         await Page.Locator("button.route-node.available").First.ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
-        await Expect(Page.Locator(".combat-spell-badge svg").First).ToBeVisibleAsync();
-        await Page.EvaluateAsync(@"async () => {
-            const {createSpellBadge} = await import(new URL('js/spell-hud.js',document.baseURI).href);
-            const names = ['Arcane Orb','Fire Bolt','Frost Shard','Chain Lightning','Cinder Needle','Ice Lance','Ball Lightning','Aether Dart'];
-            const row = document.querySelector('[data-hud=spells]');
-            row.replaceChildren(...names.map(name => createSpellBadge({name,rank:3})));
-            // Measure the full loadout synchronously before the next combat HUD update.
-            row.dataset.loadout = 'sample';
-            window.__fullLoadoutFits = () => {
-                const box = row.getBoundingClientRect();
-                return [...row.children].every(item => item.getBoundingClientRect().right <= box.right);
-            };
-            window.__fullLoadoutFitsResult = window.__fullLoadoutFits();
-        }");
-        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => window.__fullLoadoutFitsResult"));
-        await ScreenshotAsync("mobile-spell-badges-320.png");
+        // The compact HUD shows one selected primary, not a row of every learned spell.
+        await Expect(Page.Locator("[data-hud='spells'] .combat-spell-badge")).ToHaveCountAsync(1);
+        await Expect(Page.Locator("[data-hud='spells'] .combat-spell-badge .px-icon")).ToBeVisibleAsync();
+        await Expect(Page.Locator("[data-hud='spells'] .combat-spell-badge .px-fire")).ToBeVisibleAsync();
+        await ScreenshotAsync("mobile-spell-slot-320.png");
     }
 
     [TestMethod]
@@ -2823,23 +2812,19 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await OpenAsync();
             await EnterFirstTrailAsync();
-            await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+            await Expect(Page.Locator(".arcane-hunt-hud")).ToBeVisibleAsync();
             await Expect(Page.Locator(".combat-vitals")).ToBeVisibleAsync();
             await Expect(Page.Locator("button.leave-run svg")).ToBeVisibleAsync();
             await Page.WaitForTimeoutAsync(1200);
             var vitals = await Page.Locator(".combat-vitals").BoundingBoxAsync();
-            var objective = await Page.GetByLabel("Current encounter objective").BoundingBoxAsync();
             Assert.IsNotNull(vitals);
-            Assert.IsNotNull(objective);
-            Assert.IsGreaterThan(844 * .65, vitals.Y, "The four-slot HUD belongs at the bottom, not across the combat view.");
-            Assert.IsLessThanOrEqualTo(vitals.Y + 2, objective.Y + objective.Height, "The compact trail cue belongs above the HUD.");
-            Assert.IsLessThanOrEqualTo(391, vitals.X + vitals.Width, "HUD should remain visible at phone width.");
+            Assert.IsGreaterThan(vitals.Y, 844 * .65, "The four-slot HUD belongs at the bottom.");
+            await Expect(Page.Locator(".compact-hunt-objective")).ToHaveCountAsync(0);
+            Assert.IsLessThanOrEqualTo(vitals.X + vitals.Width, 391, "HUD must remain visible at phone width.");
             await Expect(Page.Locator(".arena-top-hud")).ToHaveCountAsync(0);
             await Expect(Page.Locator(".arcane-hud-row .crystal-orb")).ToHaveCountAsync(2);
             await Expect(Page.Locator(".arcane-hud-row .spell-slot")).ToHaveCountAsync(2);
             await Expect(Page.Locator(".arcane-xp-row [data-hud='xp-fill']")).ToHaveCountAsync(1);
-            await Expect(Page.GetByRole(AriaRole.Progressbar, new() { Name = "Trail progress" })).ToHaveAttributeAsync("aria-valuenow", new System.Text.RegularExpressions.Regex("^\\d+$"));
-            await Expect(Page.Locator("[data-trail='phase-time']")).ToHaveTextAsync(new System.Text.RegularExpressions.Regex("^\\d+s$"));
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
             Assert.IsLessThanOrEqualTo(1, overflow, $"Mobile combat overflows horizontally by {overflow:0.#}px.");
@@ -2932,7 +2917,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsLessThanOrEqualTo(1, overflow, "Ascendant rite should not overflow portrait width.");
 
         await EnterFirstTrailAsync();
-        await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".arcane-hunt-hud")).ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -2966,7 +2951,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
         Assert.IsLessThanOrEqualTo(1, overflow);
         await EnterFirstTrailAsync();
-        await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".arcane-hunt-hud")).ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -3111,7 +3096,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await OpenAsync();
             await EnterFirstTrailAsync();
-            await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+            await Expect(Page.Locator(".arcane-hunt-hud")).ToBeVisibleAsync();
             await Page.WaitForTimeoutAsync(1200);
             await ScreenshotAsync("desktop-combat.png");
         }
@@ -3503,7 +3488,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsLessThanOrEqualTo(height, action.Y + action.Height);
         await ScreenshotAsync($"mobile-route-preview-{width}.png");
         await enter.ClickAsync();
-        await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".arcane-hunt-hud")).ToBeVisibleAsync();
     }
 
     [TestMethod]

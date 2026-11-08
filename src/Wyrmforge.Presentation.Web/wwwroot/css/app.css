@@ -330,3 +330,6 @@ li[class*="loot-rarity-"] b, li[class*="loot-rarity-"] strong { color: var(--loo
     .game-screen .hunt-entry-loading { transition: none; }
     .hunt-entry-loading__pulse i { animation: none; opacity: .75; }
 }
+
+/* A build stamp belongs in menus, never over the Hunt XP track on mobile. */
+body:has(.game-screen) [data-game-version] { display: none; }
