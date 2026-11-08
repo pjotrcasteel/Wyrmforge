@@ -254,7 +254,8 @@ function updateCombatHud(state, snapshot) {
         healthTrack.setAttribute('aria-valuetext', `${Math.ceil(hud.health)} of ${Math.ceil(hud.maxHealth)} health`);
     }
     dom.root.dataset.healthState = healthState;
-    if (dom.healthFill) dom.healthFill.style.height = `${healthFraction * 100}%`;
+    // Reveal a fixed-size pixel-glass texture instead of distorting an already-filled picture.
+    if (dom.healthFill) dom.healthFill.style.setProperty('--health-unfilled', `${(1 - healthFraction) * 100}%`);
     updateText(dom.health, `${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
 
     updateText(dom.level, `LV ${hud.level}`);
