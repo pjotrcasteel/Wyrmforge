@@ -52,9 +52,18 @@ public sealed class ProgressionV13Tests : BrowserTest
             await page.GetByRole(AriaRole.Button, new() { Name = "Close node inspector" }).ClickAsync();
             await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
         }
+        var constellation = page.Locator("[data-node-id='constellation-Fire-13-4']");
+        var beforeRotation = await constellation.EvaluateAsync<string>("node => node.style.left + ',' + node.style.top");
+        await constellation.ClickAsync();
+        await Expect(page.Locator(".node-inspector.open")).ToContainTextAsync("Lava Seal");
+        await Expect(page.Locator(".route-action.allocate")).ToBeEnabledAsync();
+        await Capture(page, $"web-{width}-fire-constellation");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Close node inspector" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Inspect Cryomancer sector", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Activate school", Exact = true }).ClickAsync();
         await Expect(page.Locator("[data-school='Frost']")).ToHaveAttributeAsync("data-active", "true");
+        Assert.AreNotEqual(beforeRotation, await constellation.EvaluateAsync<string>("node => node.style.left + ',' + node.style.top"));
         Assert.AreEqual("Cryomancer", await page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.characterSchool.v1')"));
         var saved = await page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.arcaneBuild.v1')");
         StringAssert.Contains(saved, "fire-2");
