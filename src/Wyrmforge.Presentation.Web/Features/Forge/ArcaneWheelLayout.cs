@@ -144,7 +144,21 @@ internal static class ArcaneWheelLayout
             }
             return Polyline(points);
         }
-        return Polyline([Position(PassiveTreeCatalog.Get(connection.From), active), Position(PassiveTreeCatalog.Get(connection.To), active)]);
+        var from = Position(PassiveTreeCatalog.Get(connection.From), active);
+        var to = Position(PassiveTreeCatalog.Get(connection.To), active);
+        var lastDash = connection.From.LastIndexOf('-');
+        if (connection.From.StartsWith("constellation-Fire-", StringComparison.Ordinal)
+            && lastDash > "constellation-Fire-".Length
+            && char.IsAsciiDigit(connection.From[lastDash - 1])
+            && connection.To.LastIndexOf('-') == lastDash
+            && connection.From.AsSpan(0, lastDash).SequenceEqual(connection.To.AsSpan(0, lastDash)))
+        {
+            var bend = 0.16;
+            var mid = new Point((from.X + to.X) / 2 - (to.Y - from.Y) * bend,
+                (from.Y + to.Y) / 2 + (to.X - from.X) * bend);
+            return Polyline([from, mid, to]);
+        }
+        return Polyline([from, to]);
     }
     private static string Polyline(IEnumerable<Point> points) => string.Join(" ", points.Select((point, index) =>
         string.Create(CultureInfo.InvariantCulture, $"{(index == 0 ? "M" : "L")} {point.X:0.##} {point.Y:0.##}")));
