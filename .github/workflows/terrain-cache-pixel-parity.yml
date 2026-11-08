@@ -28,7 +28,7 @@ jobs:
           python3 tools/development/verify_web_assets.py
 
       - name: Require preinstalled .NET 10 SDK
-        run: dotnet --list-sdks | grep -Eq '^10\\.0\\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
+        run: dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
 
       - name: Regenerate required source-backed art
         run: |
