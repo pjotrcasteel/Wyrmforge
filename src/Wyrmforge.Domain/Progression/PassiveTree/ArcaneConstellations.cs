@@ -35,8 +35,32 @@ internal static class ArcaneConstellations
         (565, 5160), (1110, 4890), (1600, 5110), (2070, 5030),
     ];
 
+    private static readonly (string Gate, string Destination, string Name, BuildStatId Stat, string Bonus, (int Side, int Radius)[] Steps)[] Approaches =
+    [
+        ("volcanic", "constellation-Fire-2-0", "Caldera Spine", BuildStatId.BurnDamage, "burning-ground damage",
+            [(699, 3059), (602, 3425)]),
+        ("fire-banked-embers", "constellation-Fire-8-0", "Banked Flame", BuildStatId.MutationDuration, "mutation duration",
+            [(1873, 2974)]),
+        ("fire-blast-shaping", "constellation-Fire-meridian-4", "Ashen Current", BuildStatId.MutationRadius, "mutation area",
+            [(-1878, 2834)]),
+    ];
+
+    private static string ApproachId(int route, int step) => FormattableString.Invariant($"constellation-Fire-approach-{route}-{step}");
+
     internal static IEnumerable<PassiveNodeDefinition> Nodes()
     {
+        for (var route = 0; route < Approaches.Length; route++)
+        {
+            var approach = Approaches[route];
+            for (var step = 0; step < approach.Steps.Length; step++)
+            {
+                var point = approach.Steps[step];
+                yield return new(ApproachId(route, step), $"{approach.Name} {step + 1}", $"+1% {approach.Bonus}.",
+                    PassiveNodeKind.Travel, PassiveSchool.Fire, 1, point.Side, point.Radius,
+                    PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(approach.Stat, .01)), Tier: PassiveNodeTier.Minor);
+            }
+        }
+
         int[] meridianSides = [350, 0, -500, -1250, -2000];
         for (var step = 0; step < meridianSides.Length; step++)
         {
@@ -89,11 +113,21 @@ internal static class ArcaneConstellations
 
     internal static IEnumerable<PassiveTreeConnection> Connections()
     {
-        foreach (var (school, gate, themes, _) in Schools)
+        for (var route = 0; route < Approaches.Length; route++)
         {
-            yield return new(gate, Id(school, 5, 0));
-            yield return new("fire-banked-embers", Id(school, 8, 0));
-            yield return new("fire-blast-shaping", TransitId(4));
+            var approach = Approaches[route];
+            var previous = approach.Gate;
+            for (var step = 0; step < approach.Steps.Length; step++)
+            {
+                var id = ApproachId(route, step);
+                yield return new(previous, id);
+                previous = id;
+            }
+            yield return new(previous, approach.Destination);
+        }
+
+        foreach (var (school, _, themes, _) in Schools)
+        {
             yield return new(Id(school, 5, 0), TransitId(0));
             for (var step = 1; step < 5; step++)
                 yield return new(TransitId(step - 1), TransitId(step));
@@ -101,13 +135,20 @@ internal static class ArcaneConstellations
             yield return new(TransitId(4), Id(school, 0, 0));
             for (var ring = 0; ring < themes.Length; ring++)
             {
+                // Some clusters open into a fork, with a direct inner path
+                // to one side and a small terminal investment on the other.
+                var fork = StableRingId(ring) >= 6 && ring % 3 != 0 && ring != 16;
                 for (var step = 0; step < NodesPerCluster; step++)
+                {
+                    if (fork && step == 7) continue;
                     yield return new(Id(school, ring, step), Id(school, ring, (step + 1) % NodesPerCluster));
+                }
+
                 if (ring % 9 < 8)
                     yield return new(Id(school, ring, 2), Id(school, ring + 1, 6));
                 if (ring + 9 < themes.Length)
                     yield return new(Id(school, ring, 4), Id(school, ring + 9, 0));
-                else
+                if (fork || ring + 9 >= themes.Length)
                     yield return new(Id(school, ring, 0), Id(school, ring, 4));
                 if (ring == 23)
                     yield return new(Id(school, ring, 0), Id(school, ring, 5));
