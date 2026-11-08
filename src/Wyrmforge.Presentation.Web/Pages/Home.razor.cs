@@ -108,6 +108,8 @@ public partial class Home
 
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
 
+    private bool homeRestored;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -142,6 +144,7 @@ public partial class Home
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
+        homeRestored = true;
         StateHasChanged();
     }
 
