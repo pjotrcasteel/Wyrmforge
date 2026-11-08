@@ -1234,6 +1234,7 @@ export class TerrainCanvasCache {
     constructor(createCanvas = (width, height) => Object.assign(document.createElement('canvas'), { width, height }), withNormals = false) {
         this.createCanvas = createCanvas;
         this.withNormals = withNormals;
+        this.allowRegional = true; // Layer Lab can disable dirty-rectangle repaints without changing gameplay.
         this.normalCanvas = null;
         this.canvas = null;
         this.revision = null;
@@ -1289,7 +1290,7 @@ export class TerrainCanvasCache {
         baseCtx.setTransform(ART, 0, 0, ART, 0, 0);
         if (this.withNormals) this.normalCanvas.getContext('2d').setTransform(ART, 0, 0, ART, 0, 0);
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
-        const regions = !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
+        const regions = this.allowRegional && !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
             ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
         const regional = regions.length > 0;
         // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
