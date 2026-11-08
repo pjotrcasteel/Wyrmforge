@@ -80,7 +80,42 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 });
                 regional.update(next, 0);
                 compareFull(next);
-                // The leftmost 1m column is outside both dirty regions. Every one of its
+
+                // Real events can also replace a coarse material. The previous
+                // splat mask is keyed only by cell index and cannot be reused
+                // when a new top material requires a different base mask.
+                // This failed before the fix: incremental ground retained the
+                // old grass/path mask while a fresh full paint drew stone.
+                const coarse = { ...terrain, revision: 4, material: [...terrain.material] };
+                coarse.material[8 * columns + 5] = TERRAIN_MATERIAL.Stone;
+                const withStone = mergeTerrainFrame(next, coarse);
+                if (!withStone.changed.includes(8 * columns + 5))
+                    throw new Error('A coarse replacement must invalidate its block');
+                regional.update(withStone, 0);
+                compareFull(withStone);
+
+                // Repeated, partly overlapping craters must never accumulate
+                // stale rectangles, even next to the original authored road.
+                let current = withStone;
+                const impacts = [
+                    { row: 7, column: 6, depth: -1 }, { row: 7, column: 7, depth: -2 },
+                    { row: 9, column: 6, depth: -3 }, { row: 10, column: 5, depth: -1 },
+                    { row: 5, column: 4, depth: -2 },
+                ];
+                for (const [i, impact] of impacts.entries()) {
+                    const more = Array(64).fill(0);
+                    for (let y = 2; y < 5; y++) for (let x = 2; x < 5; x++)
+                        more[y * 8 + x] = impact.depth;
+                    const incoming = { ...coarse, revision: 5 + i, fine: [
+                        { index: impact.row * columns + impact.column,
+                            heights: more, topsoil: 0, stoneTop: -8 }
+                    ] };
+                    current = mergeTerrainFrame(current, incoming);
+                    regional.update(current, 0);
+                    compareFull(current);
+                }
+
+                // The leftmost 1m column is outside all dirty regions. Every one of its
                 // pixels, including the normal map, must match the untouched initial terrain.
                 for (const channel of ['canvas', 'normalCanvas']) {
                     const canvas = regional[channel], actual = pixels(canvas), original = baseline[channel];
@@ -97,7 +132,7 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
             }
             """);
 
-        CollectionAssert.AreEqual(new[] { 0, 0, 0, 0, 0, 0 }, differences,
+        CollectionAssert.AreEqual(Enumerable.Repeat(0, 18).ToArray(), differences,
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
 }
