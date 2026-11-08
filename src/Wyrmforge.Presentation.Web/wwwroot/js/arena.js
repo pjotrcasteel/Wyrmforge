@@ -752,10 +752,12 @@ function draw(state, snapshot, width, height) {
                 drawMireHoundGround(ctx, enemy, state.reducedMotion.matches);
                 if (gpu) {
                     drawEnemy(ctx, enemy, null,
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null,
+                        Boolean(state.terrainFrame));
                 } else {
                     const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null,
+                        Boolean(state.terrainFrame));
                     drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
                 }
                 // Source-derived Gothic pixel swipe: actor-depth, eight facings, no synthetic hit.
@@ -1401,8 +1403,9 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     });
     ctx.restore();
 }
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null, authored = null) {
-    if (authored && drawAuthoredEnemy(ctx, enemy, authored)) return;
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null,
+    authored = null, terrainGrounded = false) {
+    if (authored && drawAuthoredEnemy(ctx, enemy, authored, terrainGrounded)) return;
     if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
@@ -1634,7 +1637,7 @@ function paintAuthoredEmissive(state, gpu, layer, snapshot, captureId, tileX, ti
     setAuthoredRenderMode('emissive');
     try {
         if (layer.kind === 'enemy') {
-            drawn = drawAuthoredEnemy(surface, layer.enemy, state.authored);
+            drawn = drawAuthoredEnemy(surface, layer.enemy, state.authored, Boolean(state.terrainFrame));
             set = state.authored.enemies.get(layer.enemy.entityId)?.name;
             if (layer.enemy.invulnerable) change = layer.enemy.telegraph?.progress ?? .5;
         } else if (layer.kind === 'dragon') {
