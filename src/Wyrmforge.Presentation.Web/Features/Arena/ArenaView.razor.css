@@ -475,31 +475,33 @@
 }
 
 
-/* Compact Nexus-inspired Hunt HUD: four functional circles and the EXP track, without the old top bar.
-   This uses the same crisp-edged ritual socket asset as the Arcane Nexus. All rings are presentation-only. */
+/* Compact Hunt HUD v2. Borrow the Nexus' restrained rune-socket framing, not its menu scale.
+   Only four functional circles plus a thin XP track. No extra encounter strip or filler. */
 .arcane-hunt-hud {
+    --orb-size: clamp(62px, 18.5vw, 80px);
+    --spell-size: clamp(48px, 14.7vw, 62px);
     position: fixed;
     z-index: 6;
-    bottom: max(5px, calc(env(safe-area-inset-bottom) + 3px));
     left: 50%;
+    bottom: max(8px, calc(env(safe-area-inset-bottom) + 6px));
     display: grid;
-    gap: 0;
-    align-content: end;
-    width: min(460px, calc(100vw - 14px));
+    justify-items: center;
+    gap: 3px;
+    width: min(340px, calc(100vw - 20px));
     min-width: 0;
     min-height: 0;
     padding: 0;
     transform: translateX(-50%);
-    color: #eadbc8;
+    color: #e8d8c5;
     font-variant-numeric: tabular-nums;
     pointer-events: none;
 }
 
-.arcane-hud-row {
+.arcane-hunt-hud .arcane-hud-row {
     display: flex;
-    justify-content: space-between;
     align-items: end;
-    gap: 4px;
+    justify-content: center;
+    gap: clamp(4px, 1.4vw, 8px);
     width: 100%;
 }
 
@@ -508,135 +510,136 @@
     position: relative;
     display: grid;
     place-items: center;
-    width: 100%;
-    height: auto;
+    flex: 0 0 var(--orb-size);
+    width: var(--orb-size);
     min-width: 0;
+    height: var(--orb-size);
     aspect-ratio: 1;
+    border: 0;
     border-radius: 50%;
     isolation: isolate;
-    box-shadow: 0 3px 0 #0b080d, 0 5px 10px #05030688;
+    box-shadow: 0 2px 0 #09070d, 0 3px 6px #0008;
+    background: #120e17;
 }
 
-.arcane-hunt-hud .crystal-orb {
-    flex: 0 0 clamp(60px, 20vw, 100px);
-    width: clamp(60px, 20vw, 100px);
-    overflow: visible;
-    border: 0;
-    background: radial-gradient(circle, #30202b 0 65%, #966e50 68%, #160f17 73%, #0a080d 78%);
+.arcane-hunt-hud .spell-slot {
+    --spell-accent: #ed924a;
+    --ready-angle: 360deg;
+    --shade-angle: 0deg;
+    flex-basis: var(--spell-size);
+    width: var(--spell-size);
+    height: var(--spell-size);
+    margin-bottom: 5px;
 }
 
+.arcane-hunt-hud .defensive-spell { --spell-accent: #96a6d9; }
+
+/* The same pixel-authored 96px rim used for Arcane Nexus sockets.
+   Its dark center stays BEHIND the active crystal/skill art. */
 .arcane-hunt-hud .crystal-orb::after,
 .arcane-hunt-hud .spell-slot::after {
     position: absolute;
     z-index: 0;
     inset: 0;
     border-radius: 50%;
-    background: url('art/arcane-nexus/socket-rim.svg') center/100% 100% no-repeat;
+    background: url('art/arcane-nexus/socket-rim.svg') center / 100% 100% no-repeat;
     image-rendering: pixelated;
     content: '';
     pointer-events: none;
 }
 
-.arcane-hunt-hud .crystal-orb-core {
+.arcane-hunt-hud .crystal-orb > .crystal-orb-core {
     position: absolute;
     z-index: 1;
-    inset: 12%;
-    overflow: hidden;
+    inset: 14%;
+    display: block;
     width: auto;
     height: auto;
-    border: 1px solid #2d1c26;
+    overflow: hidden;
+    border: 1px solid #4c2532;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 72%, #4a1023, #200d19 73%);
-    box-shadow: inset 0 0 0 2px #160e16, inset 0 8px 10px #03020599;
+    background: #1d0c17;
+    box-shadow: inset 0 0 0 2px #2b111a;
 }
 
-.arcane-hunt-hud .crystal-orb-fill {
+.arcane-hunt-hud .orb-health .crystal-orb-fill {
     position: absolute;
     right: 0;
     bottom: 0;
     left: 0;
     height: 100%;
-    background: radial-gradient(circle at 35% 75%, #fc553b, #b91a29 55%, #6c1023 100%);
-    box-shadow: inset 0 0 8px #ff8150aa;
+    background: linear-gradient(0deg, #630e23 0%, #ae1c2d 44%, #e9443e 82%, #ff8664 100%);
+    box-shadow: inset 0 0 8px #ff6a5080;
     transition: height .12s linear;
 }
 
+/* Preserve the actual RED health identity as the value drops.
+   The old green/amber progress-track rules must never recolor this orb. */
+.arcane-hunt-hud[data-health-state="wounded"] .orb-health .crystal-orb-fill {
+    background: linear-gradient(0deg, #530d20, #a4192b 49%, #e0443f 100%);
+}
+.arcane-hunt-hud[data-health-state="critical"] .orb-health .crystal-orb-fill {
+    background: linear-gradient(0deg, #300917, #831322 54%, #cf3736 100%);
+}
 .arcane-hunt-hud .crystal-orb-facets {
     position: absolute;
     inset: 0;
-    opacity: .86;
+    z-index: 2;
+    opacity: .8;
+    clip-path: polygon(28% 1%, 72% 1%, 99% 31%, 99% 70%, 72% 99%, 28% 99%, 1% 70%, 1% 31%);
     background:
-        linear-gradient(145deg, #ffffff3c 0 10%, transparent 10% 37%, #ffffff12 38% 47%, transparent 48%),
-        conic-gradient(from 24deg, #fff2b812 0deg 38deg, transparent 39deg 112deg, #0b031631 113deg 182deg,
-            transparent 183deg 255deg, #ffe5ff16 256deg 310deg, transparent 311deg);
-    clip-path: polygon(28% 2%, 72% 2%, 98% 34%, 97% 67%, 69% 98%, 28% 98%, 2% 68%, 2% 32%);
+        linear-gradient(145deg, #ffe6e63a 0 11%, transparent 11% 45%, #ffc7c713 46% 50%, transparent 51%),
+        conic-gradient(from 10deg, #fff2e41b 0 40deg, transparent 40deg 115deg,
+            #13071649 115deg 195deg, transparent 195deg 280deg, #fff2e31a 280deg 320deg, transparent 320deg);
     pointer-events: none;
 }
 
 .arcane-hunt-hud .orb-health-number {
     position: relative;
-    z-index: 6;
+    z-index: 4;
     align-self: center;
-    margin-top: 12%;
-    color: #fff0e5;
-    font: 700 clamp(.64rem, 2.7vw, .84rem)/1 Georgia, 'Times New Roman', serif;
-    text-shadow: 1px 2px #10050a, -1px -1px #170409, 0 0 5px #000;
+    margin-top: 10%;
+    color: #fff0e8;
+    font: 700 clamp(.61rem, 2.25vw, .77rem)/1 Georgia, 'Times New Roman', serif;
+    text-shadow: 1px 1px 0 #1d0712, 0 1px 4px #000;
     white-space: nowrap;
 }
 
-.arcane-hunt-hud .orb-health[data-health-state="wounded"] .crystal-orb-fill {
-    background: radial-gradient(circle at 35% 75%, #ffc05e, #bd5329 64%, #642224);
-}
-.arcane-hunt-hud .orb-health[data-health-state="critical"] .crystal-orb-fill {
-    background: radial-gradient(circle at 35% 75%, #ee423a, #7e1428 60%, #380b17);
-}
-.arcane-hunt-hud .orb-secondary .crystal-orb-core {
-    border-color: #291c41;
-    background:
-        linear-gradient(133deg, #b9a2e020 0 18%, transparent 18% 68%, #7a55c41a 69%),
-        radial-gradient(circle at 50% 75%, #2d1b4b, #171029 66%, #0d0a1a);
-}
-.arcane-hunt-hud .orb-secondary .crystal-orb-facets {
-    opacity: .54;
-}
+/* Empty means empty: no meter, pseudo-value, or pretending there is mana. */
 .arcane-hunt-hud .orb-secondary {
-    filter: saturate(.78);
+    filter: saturate(.62) brightness(.86);
 }
+.arcane-hunt-hud .orb-secondary > .crystal-orb-core {
+    border-color: #30243d;
+    background: radial-gradient(circle at 44% 75%, #30204b, #130d20 76%);
+    box-shadow: inset 0 0 0 2px #1a1228;
+}
+.arcane-hunt-hud .orb-secondary .crystal-orb-facets { opacity: .35; }
 
-.arcane-hunt-hud .spell-slot {
-    flex: 0 0 clamp(47px, 16vw, 78px);
-    width: clamp(47px, 16vw, 78px);
-    --spell-accent: #eb9558;
-    --ready-angle: 360deg;
-    --shade-angle: 0deg;
-    margin-bottom: 5%;
-    border: 1px solid #8b603e;
-    background: radial-gradient(circle at center, #372015, #110b15 61%, #704a32 70%, #0c0910 76%);
-}
-.arcane-hunt-hud .defensive-spell { --spell-accent: #83a5e8; }
 .arcane-hunt-hud .spell-slot-art {
     position: absolute;
     z-index: 1;
-    inset: 14%;
+    inset: 15%;
     display: grid;
     place-items: center;
     width: auto;
     height: auto;
     min-height: 0;
+    padding: 0;
+    gap: 0;
     overflow: hidden;
+    border: 0;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 58%, #592917, #150e18 75%);
+    background: #2e1718;
 }
-.arcane-hunt-hud .defensive-spell .spell-slot-art {
-    background: radial-gradient(circle at 50% 58%, #293452, #120e1c 75%);
-}
+.arcane-hunt-hud .defensive-spell .spell-slot-art { background: #1f1a2b; }
 
 .arcane-hunt-hud .spell-cooldown-shade {
     position: absolute;
-    z-index: 3;
-    inset: 14%;
+    z-index: 2;
+    inset: 15%;
     border-radius: 50%;
-    background: conic-gradient(from -90deg, #07050bbf 0deg var(--shade-angle),
+    background: conic-gradient(from -90deg, #07060cc9 0deg var(--shade-angle),
         transparent var(--shade-angle) 360deg);
     opacity: 0;
     pointer-events: none;
@@ -644,163 +647,123 @@
 .arcane-hunt-hud .spell-slot.is-recovering .spell-cooldown-shade { opacity: 1; }
 .arcane-hunt-hud .spell-ready-ring {
     position: absolute;
-    z-index: 4;
-    inset: 5%;
+    z-index: 3;
+    inset: 6%;
     border-radius: 50%;
     background: conic-gradient(from -90deg, var(--spell-accent) 0deg var(--ready-angle),
-        #362937 var(--ready-angle) 360deg);
-    -webkit-mask: radial-gradient(transparent 64%, #000 67% 74%, transparent 77%);
-    mask: radial-gradient(transparent 64%, #000 67% 74%, transparent 77%);
+        #302438 var(--ready-angle) 360deg);
+    -webkit-mask: radial-gradient(transparent 65%, #000 68% 73%, transparent 76%);
+    mask: radial-gradient(transparent 65%, #000 68% 73%, transparent 76%);
     pointer-events: none;
 }
-.arcane-hunt-hud .spell-slot.is-locked { --ready-angle: 0deg; filter: saturate(.5); }
-.arcane-hunt-hud .spell-slot.is-locked .spell-slot-art { opacity: .5; }
-.arcane-hunt-hud .spell-slot .spell-slot-art .defensive-placeholder {
-    width: 48%;
-    height: 48%;
-    color: #b5b2db;
+.arcane-hunt-hud .spell-slot.is-locked {
+    --ready-angle: 0deg;
+    filter: saturate(.42);
+}
+.arcane-hunt-hud .spell-slot.is-locked .spell-slot-art { opacity: .56; }
+.arcane-hunt-hud .defensive-placeholder {
+    width: 55%;
+    height: 55%;
+    color: #aab0da;
 }
 .arcane-hunt-hud .spell-cooldown-label {
     position: absolute;
-    z-index: 6;
-    bottom: 11%;
+    z-index: 5;
     left: 50%;
+    bottom: 9%;
     transform: translateX(-50%);
-    min-height: .6rem;
-    color: #fff4e8;
-    font: 750 clamp(.51rem, 2.2vw, .67rem)/1 system-ui, sans-serif;
-    text-shadow: 0 1px 3px #000, 0 0 5px #000;
+    min-height: .54rem;
+    color: #fff1e6;
+    font: 750 clamp(.48rem, 1.95vw, .62rem)/1 system-ui, sans-serif;
+    text-shadow: 0 1px 3px #000;
     white-space: nowrap;
 }
 .arcane-hunt-hud .spell-slot.is-locked .spell-cooldown-label {
-    bottom: 15%;
-    color: #ae9caf;
-    font-size: clamp(.43rem, 1.65vw, .52rem);
-    letter-spacing: .025em;
+    bottom: 12%;
+    color: #c0b4c5;
+    font-size: .47rem;
 }
 
-/* The DOM badges come from the same canonical spell descriptors used by the original HUD. */
+/* Existing authored 32px pixel sprites, not generic browser SVG iconography. */
 .arcane-hunt-hud ::deep .combat-spell-badge {
     display: grid;
     place-items: center;
-    gap: 0;
     padding: 0;
+    margin: 0;
+    gap: 0;
     border: 0;
     background: transparent;
     box-shadow: none;
 }
-.arcane-hunt-hud ::deep .combat-spell-badge svg {
-    width: clamp(23px, 8vw, 42px);
-    height: clamp(23px, 8vw, 42px);
-    filter: drop-shadow(0 0 3px #ff7e4b7a);
-}
-.arcane-hunt-hud .defensive-spell ::deep .combat-spell-badge svg {
-    filter: drop-shadow(0 0 4px #809cf38a);
+.arcane-hunt-hud ::deep .combat-spell-badge .px-icon {
+    display: block;
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    filter: none;
 }
 .arcane-hunt-hud ::deep .combat-spell-badge b { display: none; }
 
 .arcane-hunt-hud .arcane-xp-row {
     display: flex;
     align-items: center;
-    gap: 7px;
-    width: calc(100% - 16px);
-    min-height: 24px;
-    margin: -2px auto 0;
-    padding: 4px 9px;
-    border: 1px solid #a87a50;
-    border-radius: 2px;
-    background: linear-gradient(#2a1a2c, #0e0b15 46%, #1b111e);
-    box-shadow: inset 0 0 0 1px #09070c, 0 2px 0 #060508;
-    color: #ead5b9;
-    font: 700 clamp(.59rem, 2.05vw, .76rem)/1 Georgia, serif;
+    gap: 6px;
+    width: min(295px, calc(100% - 14px));
+    min-height: 17px;
+    padding: 2px 5px;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: #130d18b8;
+    box-shadow: inset 0 -1px #5d435e;
+    color: #e2d1e8;
+    font: 700 clamp(.55rem, 1.9vw, .65rem)/1 Georgia, serif;
     white-space: nowrap;
 }
-.arcane-hunt-hud .arcane-xp-row strong { flex: 0 0 auto; }
-.arcane-hunt-hud .arcane-xp-row span { flex: 0 0 auto; font-size: .92em; }
+.arcane-hunt-hud .arcane-xp-row strong,
+.arcane-hunt-hud .arcane-xp-row span {
+    flex: 0 0 auto;
+    font-size: inherit;
+}
 .arcane-hunt-hud .combat-xp-track {
     flex: 1 1 auto;
-    min-width: 10px;
-    height: 8px;
-    border: 1px solid #62466e;
-    border-radius: 1px;
-    background: #110d1b;
+    min-width: 16px;
+    height: 5px;
     overflow: hidden;
+    border: 1px solid #4a315e;
+    border-radius: 0;
+    background: #130d18;
 }
 .arcane-hunt-hud .combat-xp-track > div {
     width: 0;
     height: 100%;
+    border: 0;
     border-radius: 0;
-    background: linear-gradient(#d8a8ff, #945cc6);
-    box-shadow: 0 0 6px #ae6be3;
+    background: #a477d6;
+    box-shadow: none;
 }
 
-/* Only a small contextual objective above the action HUD; no score/HP/trail banner at the top. */
-.compact-hunt-objective,
-.arcane-top-hud .encounter-objective {
-    top: auto;
-}
-.compact-hunt-objective {
-    position: fixed;
-    z-index: 5;
-    right: auto;
-    bottom: max(140px, calc(env(safe-area-inset-bottom) + 134px));
-    left: 50%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 3px 7px;
-    width: max-content;
-    max-width: min(330px, calc(100vw - 38px));
-    min-height: 0;
-    padding: 5px 10px;
-    transform: translateX(-50%);
-    border: 1px solid #67513e;
-    border-radius: 4px;
-    background: rgba(16, 11, 19, .84);
-    backdrop-filter: none;
-    box-shadow: 0 2px 5px #0007;
-    pointer-events: none;
-}
-.compact-hunt-objective > span {
-    color: #ceaf84;
-    font-size: .56rem;
-    white-space: nowrap;
-}
-.compact-hunt-objective .encounter-phase {
-    padding: 1px 4px;
-    border-color: #4d374d;
-    border-radius: 2px;
-    font-size: .5rem;
-}
-.compact-hunt-objective .encounter-phase small { margin-left: 3px; }
-.compact-hunt-objective strong { font-size: .59rem; }
-.compact-hunt-objective .trail-progress {
-    flex-basis: 100%;
-    height: 2px;
-    background: #2a1b2b;
-}
-.compact-hunt-objective.evacuation { border-color: #a75d4d; }
-
-.run-state-dock {
-    bottom: max(142px, calc(env(safe-area-inset-bottom) + 138px));
-}
-/* Keep early movement guidance below brief encounter phase cues. */
+/* Reserve a little space above the action HUD for optional contextual hints. */
+.run-state-dock { bottom: max(113px, calc(env(safe-area-inset-bottom) + 105px)); }
 .first-hunt-hint { top: max(116px, calc(env(safe-area-inset-top) + 108px)); }
 .encounter-change { top: max(72px, calc(env(safe-area-inset-top) + 64px)); }
 .trail-exit-instruction { top: max(75px, calc(env(safe-area-inset-top) + 66px)); }
 
 @media (max-width: 360px) {
-    .arcane-hunt-hud { width: calc(100vw - 10px); }
-    .arcane-hunt-hud .arcane-xp-row { gap: 4px; padding: 3px 6px; min-height: 21px; }
-    .compact-hunt-objective { bottom: max(122px, calc(env(safe-area-inset-bottom) + 116px)); }
-    .run-state-dock { bottom: max(126px, calc(env(safe-area-inset-bottom) + 120px)); }
+    .arcane-hunt-hud {
+        --orb-size: 62px;
+        --spell-size: 48px;
+        width: calc(100vw - 16px);
+    }
+    .arcane-hunt-hud .arcane-xp-row { gap: 4px; }
 }
 @media (max-height: 520px) and (orientation: landscape) {
-    .arcane-hunt-hud { width: min(335px, calc(100vw - 24px)); }
-    .compact-hunt-objective { bottom: max(112px, calc(env(safe-area-inset-bottom) + 106px)); }
-    .run-state-dock { bottom: max(112px, calc(env(safe-area-inset-bottom) + 106px)); }
+    .arcane-hunt-hud {
+        --orb-size: 58px;
+        --spell-size: 46px;
+        width: min(320px, calc(100vw - 18px));
+    }
 }
 @media (prefers-reduced-motion: reduce) {
-    .arcane-hunt-hud .crystal-orb-fill { transition: none; }
+    .arcane-hunt-hud .orb-health .crystal-orb-fill { transition: none; }
 }
