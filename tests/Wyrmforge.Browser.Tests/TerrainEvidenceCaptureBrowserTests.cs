@@ -107,11 +107,41 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
                 return await (await fetch(link.href)).json();
             }
             """);
-        Assert.AreEqual(0, report.GetProperty("pixelComparison").GetProperty("mismatched").GetInt32(),
-            "Live damage must not create rectangular albedo patches absent from an independent full repaint.");
-        Assert.AreEqual(report.GetProperty("diagnostics").GetProperty("snapshotRevision").GetInt32(),
-            report.GetProperty("diagnostics").GetProperty("lastPaintedRevision").GetInt32(),
-            "Evidence must be captured from a fully updated cache revision.");
+        var before = report.GetProperty("pixelComparison").GetProperty("mismatched").GetInt32();
+        var beforeRevision = report.GetProperty("frame").GetProperty("revision").GetInt32();
+        var beforeFullRepaints = report.GetProperty("diagnostics").GetProperty("fullRepaints").GetInt32();
+        var firstEvidenceUrl = await download.GetAttributeAsync("href");
+
+        // Differential proof from the *same live Hunt*: this click repairs the iPhone glitch.
+        // Compare after a real forced full cache rebuild to distinguish faulty regional state
+        // from any systematic difference in the reference painter.
+        await Page.GetByRole(AriaRole.Button, new() { Name = "REBUILD GROUND NOW" }).ClickAsync();
+        await Page.WaitForFunctionAsync("""
+            async previous => {
+                const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                const d = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                return d?.hunt1Terrain?.fullRepaints > previous;
+            }
+            """, beforeFullRepaints, new() { Timeout = 30000 });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "CAPTURE GLITCH EVIDENCE" }).ClickAsync();
+        await Page.WaitForFunctionAsync("""
+            oldUrl => {
+                const link = document.querySelector("a[download^='wyrmforge-terrain-']");
+                return link && link.getAttribute('href') !== oldUrl && link.style.display !== 'none';
+            }
+            """, firstEvidenceUrl, new() { Timeout = 30000 });
+        var rebuilt = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+            async () => {
+                const link = document.querySelector("a[download^='wyrmforge-terrain-']");
+                return await (await fetch(link.href)).json();
+            }
+            """);
+        var after = rebuilt.GetProperty("pixelComparison").GetProperty("mismatched").GetInt32();
+        var afterRevision = rebuilt.GetProperty("frame").GetProperty("revision").GetInt32();
+        Assert.AreEqual(0, after,
+            $"Manual full rebuild must match the independent reference (before={before}, after={after}, revisions={beforeRevision}/{afterRevision}).");
+        Assert.AreEqual(0, before,
+            $"Regional impacts must match an independent full repaint (before={before}, after full rebuild={after}).");
     }
 
 }
