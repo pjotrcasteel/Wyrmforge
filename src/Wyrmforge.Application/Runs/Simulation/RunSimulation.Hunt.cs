@@ -10,6 +10,13 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private readonly HashSet<string> rewardedRouteNodeIds = new(StringComparer.Ordinal);
+    // Completed encounters stay spent after refuge rewind. Interrupted encounters retain the count of kills already
+    // credited so a fresh enemy beyond that point can still pay, but re-killing the same progression cannot farm XP.
+    private readonly HashSet<string> spentRefugeEncounterIds = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> highestCreditedKillByEncounter = new(StringComparer.Ordinal);
+    private readonly HashSet<(string NodeId, double X, double Y)> creditedEncounterExperienceCaches = [];
+    private string? rewardEncounterNodeId;
+    private int currentEncounterKillOrdinal;
     private RefugeMark? refuge;
 
     // Owner playtest 2026-10-25: Tier-I bosses need meaningful time alive, not higher damage.
@@ -24,6 +31,27 @@ public sealed partial class RunSimulation
     public int RefugeReturns { get; private set; }
     /// <summary>Unsecured Essences and salvage lost by the most recent return to the refuge.</summary>
     public int LastRefugeLoss { get; private set; }
+
+    private bool CanEarnEncounterRewards => rewardEncounterNodeId is null || !spentRefugeEncounterIds.Contains(rewardEncounterNodeId);
+
+    private bool CreditEncounterKill()
+    {
+        if (rewardEncounterNodeId is null) return true;
+        var ordinal = ++currentEncounterKillOrdinal;
+        if (!CanEarnEncounterRewards) return false;
+        var credited = highestCreditedKillByEncounter.GetValueOrDefault(rewardEncounterNodeId);
+        if (ordinal <= credited) return false;
+        highestCreditedKillByEncounter[rewardEncounterNodeId] = ordinal;
+        return true;
+    }
+
+    private bool CreditEncounterExperienceCache(double x, double y) => rewardEncounterNodeId is null ||
+        (CanEarnEncounterRewards && creditedEncounterExperienceCaches.Add((rewardEncounterNodeId, x, y)));
+
+    private void AwardEncounterScore(int amount)
+    {
+        if (CanEarnEncounterRewards) score += amount;
+    }
 
     internal void SelectHunt(HuntSelection? hunt)
     {
@@ -60,7 +88,11 @@ public sealed partial class RunSimulation
     /// </summary>
     private bool TryReturnToRefuge()
     {
-        if (refuge is not { } mark || !mapState.ReturnToRefuge(mark.NodeId)) return false;
+        if (refuge is not { } mark) return false;
+        // Only completed encounters become entirely spent. In-progress fights still credit NEW kill ordinals on retry.
+        var replayedNodeIds = mapState.CompletedNodes.Skip(mark.CompletedRouteNodes).Select(node => node.Id).ToArray();
+        if (!mapState.ReturnToRefuge(mark.NodeId)) return false;
+        spentRefugeEncounterIds.UnionWith(replayedNodeIds);
         LastRefugeLoss = materialCargoState.LosePendingAfter(mark.PendingMaterials) + essenceCargoState.LosePendingAfter(mark.PendingEssences);
         foreach (var essence in build.DragonEssences.Selected.Where(id => !mark.Essences.Contains(id))) build.DragonEssences.Remove(essence);
         pendingDragonEssenceChoices = [];
@@ -80,7 +112,11 @@ public sealed partial class RunSimulation
         trailExitPending = false;
         walkedExitNodeId = null;
         mapEncounterCleanupPending = false;
+        // Uncollected drops are not part of retained XP, and are never credited merely because the player fell.
+        experienceShards.Clear();
         ClearMapEncounterField();
+        rewardEncounterNodeId = null;
+        currentEncounterKillOrdinal = 0;
         RefreshDragonEssenceModifiers();
         player.Health = player.MaxHealth;
         playerPositionInitialized = false;

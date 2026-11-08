@@ -186,29 +186,34 @@ public sealed partial class RunSimulation
                 ResolveBellWardenDeath(warden);
                 break;
             case EnemyState defeatedEnemy:
-                RecordControlledKill(defeatedEnemy);
+                var creditKill = !defeatedEnemy.Revived && CreditEncounterKill();
+                if (creditKill) RecordControlledKill(defeatedEnemy);
                 RegisterEnemyDeath(defeatedEnemy);
                 RegisterSupportDeath(defeatedEnemy);
                 RegisterFrostDeath(defeatedEnemy);
-                kills++;
-                RecordEnemyKill(defeatedEnemy.Kind);
+                if (creditKill)
+                {
+                    kills++;
+                    RecordEnemyKill(defeatedEnemy.Kind);
+                }
                 QueueRelicDefeatBursts(defeatedEnemy);
                 var baseScore = 100 + (int)(elapsed * 2);
-                score += (int)(baseScore * depthState.ScoreMultiplier);
+                if (creditKill) AwardEncounterScore((int)(baseScore * depthState.ScoreMultiplier));
                 // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
                 if (defeatedEnemy.Revived) break;
                 // Normal Fire-region foes occasionally leave physical minor crafting loot.
                 // The enemy id is stable: this does not perturb the combat spawn/random stream.
-                if (mapState.EncounterActive && defeatedEnemy.Kind is EnemyKind.Ashling or EnemyKind.AshSlinger &&
+                if (creditKill && mapState.EncounterActive && defeatedEnemy.Kind is EnemyKind.Ashling or EnemyKind.AshSlinger &&
                     defeatedEnemy.Id % 3 == 0)
                     arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "EmberResidue");
                 // Elites carry Rare salvage only where the Hunt tier allows Rare drops (Fire Tier 2 and up).
-                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Rare))
+                if (creditKill && mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Rare))
                     arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "Emberglass");
                 // From Fire Tier 3 an elite also carries Epic Wyrmcinder; the watchtower shows which roads hide one.
-                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Epic))
+                if (creditKill && mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Epic))
                     arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position + new Vector2D(14, 6), arenaWidth, arenaHeight, "Wyrmcinder");
-                experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
+                var enemyExperience = ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost, creditKill);
+                if (creditKill) experienceShards.Drop(defeatedEnemy.Position, enemyExperience);
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
                 break;

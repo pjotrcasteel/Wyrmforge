@@ -227,11 +227,15 @@ public sealed partial class RunSimulation
     private void ResolveBellWardenDeath(EnemyState enemy)
     {
         RegisterEnemyDeath(enemy);
-        kills++;
-        RecordEnemyKill(enemy.Kind);
-        score += (int)((100 + (int)(elapsed * 2)) * 8 * depthState.ScoreMultiplier);
+        var creditKill = CreditEncounterKill();
+        if (creditKill)
+        {
+            kills++;
+            RecordEnemyKill(enemy.Kind);
+        }
+        if (creditKill) AwardEncounterScore((int)((100 + (int)(elapsed * 2)) * 8 * depthState.ScoreMultiplier));
         BellWardenDefeat = new BellWardenDefeat(BellWardenExperience);
-        experienceShards.Drop(enemy.Position, BellWardenExperience);
+        if (creditKill) experienceShards.Drop(enemy.Position, BellWardenExperience);
         BellWardenStage = BellWardenStage.Slain;
         foreach (var add in bellWardenAdds.Where(add => add.Health > 0))
         {

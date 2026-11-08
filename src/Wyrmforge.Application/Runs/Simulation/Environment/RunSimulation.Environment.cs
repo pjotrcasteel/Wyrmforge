@@ -26,7 +26,7 @@ public sealed partial class RunSimulation
                 break;
             case "experience":
                 // Ordinary earned experience: the temporary spell build and permanent Hunter track both receive it.
-                GainExperience(3);
+                if (CreditEncounterExperienceCache(collected.X, collected.Y)) GainExperience(3);
                 break;
         }
     }
