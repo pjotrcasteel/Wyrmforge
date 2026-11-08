@@ -13,7 +13,7 @@ import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawB
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-terrain-evidence-v1';
-import { captureTerrainEvidence } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
+import { captureTerrainEvidence, captureTerrainViewport } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
@@ -147,6 +147,40 @@ export function initializeArena(canvas, dotNetReference) {
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
     state.animationFrame = requestAnimationFrame(timestamp => frame(state, timestamp));
+}
+
+/**
+ * Opt-in Layer Lab differential. Both captures and the forced cache rebuild
+ * run in a single JS task, so an in-flight C# Frame cannot advance the terrain
+ * revision between the two images. Never used in normal gameplay.
+ */
+export function inspectTerrainCacheRebuild(canvas) {
+    const state = arenas.get(canvas);
+    if (!layerLabSnapshot().active || !state?.terrainCache?.canvas || !state.terrainFrame ||
+        !state.latestSnapshot) throw new Error('A loaded Layer Lab Hunt is required.');
+    const frame = state.terrainFrame;
+    const rect = canvas.getBoundingClientRect();
+    const cameraPosition = resolveArenaCamera(state.latestSnapshot.world, state.latestSnapshot.player,
+        rect.width, rect.height);
+    const camera = { x: cameraPosition.x, y: cameraPosition.y, width: rect.width, height: rect.height };
+    const band = huntBand(state, state.latestSnapshot);
+    const cache = state.terrainCache;
+    const measure = () => captureTerrainViewport(cache, frame, camera, band, paintTerrainCell, FACE_PIXELS,
+        TERRAIN_ART_SCALE).pixelComparison;
+    const before = measure();
+    const revision = frame.revision;
+    const previousFullRepaints = cache.fullRepaints;
+    cache.revision = null;
+    cache.update(frame, band);
+    const after = measure();
+    return {
+        revision,
+        cacheRevision: cache.revision,
+        previousFullRepaints,
+        fullRepaints: cache.fullRepaints,
+        before,
+        after
+    };
 }
 
 /** Browser-only design review: the whole Hunt 1.0 arena, painted terrain plus trees, bushes and boulders, as one unlit PNG at art density. Read-only. */
