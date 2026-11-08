@@ -18,7 +18,7 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
         var mismatched = await Page.EvaluateAsync<int[]>("""
             async () => {
                 const { TerrainCanvasCache, mergeTerrainFrame, paintTerrainCell, TERRAIN_MATERIAL } =
-                    await import('/js/arena-terrain-canvas.js?v=20261108-terrain-evidence-v1');
+                    await import('/js/arena-terrain-canvas.js?v=20261108-iphone-column-repaint-v2');
                 const { captureTerrainViewport } =
                     await import('/js/arena-terrain-evidence.js?v=20261108-terrain-evidence-v1');
                 const columns = 12, rows = 14;
