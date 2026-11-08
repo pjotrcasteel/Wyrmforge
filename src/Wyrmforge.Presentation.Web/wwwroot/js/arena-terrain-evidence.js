@@ -47,6 +47,7 @@ export function compareFullTerrainFrame(local, server) {
         }
     }
     for (const index of new Set([...serverFine.keys(), ...local.fine.keys()])) {
+        if (server.material[index] >= 4) continue; // Tall trees/boulders are clipped to a presentation-only ground mound.
         const a = local.fine.get(index), b = serverFine.get(index);
         if (!a || !b || a.stoneTop !== b.stoneTop || a.topsoil !== b.topsoil ||
             !numberArraysEqual(a.heights, b.heights) || !numberArraysEqual(a.wear, b.wear)) {
