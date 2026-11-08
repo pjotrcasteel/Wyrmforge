@@ -297,18 +297,22 @@ export class HuntGpuWorld {
         // `ground` ({ source, scale }) supplies the ground albedo painted at `scale` pixels per world unit (the 64 px/m terrain); the emissive and
         // normal maps then share that density and the drawing buffer follows it. Without it the ground is the visible canvas at 1x as before.
         const scale = ground?.scale ?? 1;
+        const groundView = ground?.view;
+        const groundWidth = groundView?.width ?? width, groundHeight = groundView?.height ?? height;
+        const groundX = groundView ? groundView.x - camera.x : 0;
+        const groundY = groundView ? groundView.y - camera.y : 0;
         this.engine.renderScale = scale;
         // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
         // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
-        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height, undefined, true, scale);
+        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, groundWidth, groundHeight, undefined, true, scale);
         // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
         // Static terrain normals share the same immutable camera-window revision as its albedo. Moving lights do not change either.
-        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, ground?.revision, false, scale);
+        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, groundWidth, groundHeight, ground?.revision, false, scale);
         const material = {
             ...(groundEmissive ? { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } : {}),
             ...(groundNormal ? { normal: GROUND_NORMAL_ID, normalScale: GROUND_NORMAL_SCALE } : {}),
         };
-        this.capture('hunt-ground', ground?.source ?? ctx.canvas, 0, 0, width, height, 0, false,
+        this.capture('hunt-ground', ground?.source ?? ctx.canvas, groundX, groundY, groundWidth, groundHeight, 0, false,
             { ...(Object.keys(material).length ? { material } : {}), ...(scale !== 1 ? { pixelScale: scale } : {}),
                 ...(ground?.revision !== undefined ? { revision: ground.revision } : {}) });
     }
