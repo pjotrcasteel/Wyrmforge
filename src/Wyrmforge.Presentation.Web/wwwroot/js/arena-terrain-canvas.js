@@ -419,11 +419,15 @@ export function terrainAtlas(band) {
                 const canvas = document.createElement('canvas');
                 canvas.width = tile.width; canvas.height = tile.height;
                 canvas.getContext('2d').putImageData(new ImageData(tile.data, tile.width, tile.height), 0, 0);
-                // Every texture carries its normal-map twin; walls lean toward the viewer.
+                // These atlas bytes never change. Compose each splat from the original pixels,
+                // not from a mutable scratch/mask canvas that Safari may consume later.
+                canvas.sourcePixels = tile.data;
                 const twin = document.createElement('canvas');
                 twin.width = tile.width; twin.height = tile.height;
                 const wall = kind.endsWith('Side');
-                twin.getContext('2d').putImageData(new ImageData(normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0), tile.width, tile.height), 0, 0);
+                const normalPixels = normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0);
+                twin.getContext('2d').putImageData(new ImageData(normalPixels, tile.width, tile.height), 0, 0);
+                twin.sourcePixels = normalPixels;
                 canvas.normalTwin = twin;
                 return canvas;
             });
@@ -457,17 +461,34 @@ function topTileKind(band, material, height, frame, column, row, capped = true) 
 const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop', 'slabTop', 'pathTop']);
 const KIND_INDEX = Object.freeze(Object.fromEntries(TOP_KINDS.map((kind, index) => [kind, index])));
 
-let scratchCanvas = null, maskCanvas = null, maskImage = null, scratchNormalCanvas = null;
+// A submitted splat image is owned by its tile and is never repainted for another block.
+// The LRU bounds mobile memory, including the normal twin; evicted images are discarded,
+// never recycled as mutable scratch sources for deferred Canvas2D draws.
+const SPLAT_TILE_LIMIT = 512;
+const splatTiles = new Map();
+const emissiveTiles = new Map();
 
-function scratchContexts() {
-    if (typeof document === 'undefined') return null;
-    if (!scratchCanvas) {
-        scratchCanvas = document.createElement('canvas');
-        maskCanvas = document.createElement('canvas');
-        scratchNormalCanvas = document.createElement('canvas');
-        scratchCanvas.width = scratchCanvas.height = maskCanvas.width = maskCanvas.height = scratchNormalCanvas.width = scratchNormalCanvas.height = TILE;
+function cachedTile(cache, map, atlas, column, row, build) {
+    const wrapColumn = ((column % MEGA) + MEGA) % MEGA;
+    const wrapRow = ((row % MEGA) + MEGA) % MEGA;
+    const cached = cache.get(map);
+    if (cached && cached.atlas === atlas && cached.wrapColumn === wrapColumn && cached.wrapRow === wrapRow) {
+        cache.delete(map);
+        cache.set(map, cached);
+        return cached;
     }
-    return { g: scratchCanvas.getContext('2d'), m: maskCanvas.getContext('2d') };
+    const fresh = { ...build(), atlas, wrapColumn, wrapRow };
+    cache.delete(map);
+    cache.set(map, fresh);
+    if (cache.size > SPLAT_TILE_LIMIT) cache.delete(cache.keys().next().value);
+    return fresh;
+}
+
+function ownedTile(pixels) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = TILE;
+    canvas.getContext('2d').putImageData(new ImageData(pixels, TILE, TILE), 0, 0);
+    return canvas;
 }
 
 // Tileable value-noise tables (NOISE_SIZE squared, lattice every 16 and 8 world units) sampled by art pixel, so splatting is a couple of
@@ -652,56 +673,73 @@ export function terrainBaseKindMap(frame, band, column, row) {
     return kind ? kindMap(frame, band, column, row, kind, baseSurface[index]) : null;
 }
 
-/** Paints a column's top face from its kind map: the most common ground whole, every other ground through its own pixel mask. */
-function drawSplat(ctx, atlas, map, column, row, x, y) {
-    const contexts = scratchContexts();
-    if (!contexts) return 0;
-    const { g, m } = contexts;
-    const [ox, oy] = [texX(column), texY(row)];
+/**
+ * Compose the exact authored coverage into fresh RGBA buffers, including the normal
+ * twin. Only the majority-material fill and >=12-pixel minority rule from drawSplat
+ * remain. No shared mutable mask, ImageData or Canvas2D scratch surface is involved.
+ * The source atlas buffers are immutable and already in global texture coordinates.
+ */
+export function composeTerrainSplatPixels(map, atlas, column, row) {
     const counts = new Int16Array(TOP_KINDS.length);
     for (const kind of map) counts[kind]++;
     let main = 0;
     for (let kind = 1; kind < counts.length; kind++) if (counts[kind] > counts[main]) main = kind;
-    ctx.drawImage(atlas[TOP_KINDS[main]][0], ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS);
-    let painted = 1;
-    for (let kind = 0; kind < counts.length; kind++) {
-        if (kind === main || counts[kind] < 12) continue; // a handful of stray pixels is not worth a mask pass
-        const mask = maskImage ??= m.createImageData(TILE, TILE);
-        for (let i = 0; i < map.length; i++) mask.data[i * 4 + 3] = map[i] === kind ? 255 : 0;
-        m.putImageData(mask, 0, 0);
-        g.globalCompositeOperation = 'source-over';
-        g.clearRect(0, 0, TILE, TILE);
-        g.drawImage(atlas[TOP_KINDS[kind]][0], ox, oy, TILE, TILE, 0, 0, TILE, TILE);
-        g.globalCompositeOperation = 'destination-in';
-        g.drawImage(maskCanvas, 0, 0);
-        g.globalCompositeOperation = 'source-over';
-        ctx.drawImage(scratchCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
-        if (ctx.normalContext) {
-            // The same mask cuts the normal twin, so relief changes exactly where the ground does.
-            const n = scratchNormalCanvas.getContext('2d');
-            n.globalCompositeOperation = 'source-over';
-            n.clearRect(0, 0, TILE, TILE);
-            n.drawImage(atlas[TOP_KINDS[kind]][0].normalTwin, ox, oy, TILE, TILE, 0, 0, TILE, TILE);
-            n.globalCompositeOperation = 'destination-in';
-            n.drawImage(maskCanvas, 0, 0);
-            n.globalCompositeOperation = 'source-over';
-            ctx.normalContext.drawImage(scratchNormalCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
+    const passes = 1 + counts.reduce((sum, count, kind) => sum + (kind !== main && count >= 12 ? 1 : 0), 0);
+    const sources = TOP_KINDS.map(kind => atlas[kind][0]);
+    const albedo = new Uint8ClampedArray(TILE * TILE * 4);
+    const normal = new Uint8ClampedArray(TILE * TILE * 4);
+    const ox = texX(column), oy = texY(row);
+    for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
+        const i = py * TILE + px, selected = map[i];
+        const kind = selected !== main && counts[selected] < 12 ? main : selected;
+        const source = sources[kind], src = ((oy + py) * source.width + ox + px) * 4, dst = i * 4;
+        const color = source.sourcePixels, relief = source.normalTwin.sourcePixels;
+        for (let c = 0; c < 4; c++) {
+            albedo[dst + c] = color[src + c];
+            normal[dst + c] = relief[src + c];
         }
-        painted++;
     }
-    return painted;
+    return { albedo, normal, passes };
+}
+
+/** Draw one stable, fully-owned material tile; the Canvas2D backend can defer its copy safely. */
+function drawSplat(ctx, atlas, map, column, row, x, y) {
+    if (typeof document === 'undefined') return 0;
+    const tile = cachedTile(splatTiles, map, atlas, column, row, () => {
+        const composed = composeTerrainSplatPixels(map, atlas, column, row);
+        const canvas = ownedTile(composed.albedo);
+        canvas.normalTwin = ownedTile(composed.normal);
+        return { canvas, passes: composed.passes };
+    });
+    ctx.drawImage(tile.canvas, x, y, FACE_PIXELS, FACE_PIXELS);
+    return tile.passes;
 }
 
 /**
- * Lava for the emissive ground map: exactly the pixels the splat paints as lava, so the glow follows the same irregular shoreline as the
- * albedo and never fills the square of a column. Coordinates are world units; `view` only culls.
+ * The emissive shore uses the same immutable lava coverage as the albedo. Give it
+ * an independently owned, immutable tile rather than reusing the albedo's mask.
  */
+function lavaEmissiveTile(map, atlas, column, row) {
+    return cachedTile(emissiveTiles, map, atlas, column, row, () => {
+        const pixels = new Uint8ClampedArray(TILE * TILE * 4);
+        const source = atlas.lavaTop[0], ox = texX(column), oy = texY(row);
+        let hasLava = false;
+        for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
+            const i = py * TILE + px;
+            if (map[i] !== KIND_INDEX.lavaTop) continue;
+            const src = ((oy + py) * source.width + ox + px) * 4;
+            for (let c = 0; c < 4; c++) pixels[i * 4 + c] = source.sourcePixels[src + c];
+            hasLava = true;
+        }
+        return { canvas: hasLava ? ownedTile(pixels) : null };
+    }).canvas;
+}
+
+/** Lava glow is clipped to the authored splat without mutating shared scratch resources. */
 export function paintLavaEmissive(ctx, frame, band, view) {
-    // The splat cannot contain lava without an authored lava block; skip texture atlas/mask work in ordinary forests.
     if (!frame?.material?.includes(TERRAIN_MATERIAL.Lava) && !frame?.baseMaterial?.includes(TERRAIN_MATERIAL.Lava)) return 0;
-    const atlas = frame?.material ? terrainAtlas(band) : null, contexts = atlas ? scratchContexts() : null;
-    if (!atlas || !contexts) return 0;
-    const { g, m } = contexts, lava = KIND_INDEX.lavaTop;
+    const atlas = frame?.material ? terrainAtlas(band) : null;
+    if (!atlas) return 0;
     let drawn = 0;
     for (let row = Math.max(0, Math.floor(view.y / FACE_PIXELS) - 2); row < frame.rows && row * FACE_PIXELS - 4 * FACE_PIXELS < view.y + view.height; row++)
         for (let column = Math.max(0, Math.floor(view.x / FACE_PIXELS) - 1); column < frame.columns && column * FACE_PIXELS < view.x + view.width; column++) {
@@ -712,19 +750,13 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             if (!own) continue;
             const map = kindMap(frame, band, column, row, own, height);
             const tile = atlas.lavaTop[0], [ox, oy] = [texX(column), texY(row)];
-            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; } continue; }
-            let any = false;
-            const mask = maskImage ??= m.createImageData(TILE, TILE);
-            for (let i = 0; i < map.length; i++) { const isLava = map[i] === lava; mask.data[i * 4 + 3] = isLava ? 255 : 0; any ||= isLava; }
-            if (!any) continue;
-            m.putImageData(mask, 0, 0);
-            g.globalCompositeOperation = 'source-over';
-            g.clearRect(0, 0, TILE, TILE);
-            g.drawImage(tile, ox, oy, TILE, TILE, 0, 0, TILE, TILE);
-            g.globalCompositeOperation = 'destination-in';
-            g.drawImage(maskCanvas, 0, 0);
-            g.globalCompositeOperation = 'source-over';
-            ctx.drawImage(scratchCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
+            if (!map) {
+                if (own === 'lavaTop') { ctx.drawImage(tile, ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; }
+                continue;
+            }
+            const emissive = lavaEmissiveTile(map, atlas, column, row);
+            if (!emissive) continue;
+            ctx.drawImage(emissive, x, y, FACE_PIXELS, FACE_PIXELS);
             drawn++;
         }
     return drawn;
@@ -1284,6 +1316,10 @@ export class TerrainCanvasCache {
         const kitSwitched = Boolean(this.canvas) && this.kitReady !== kitReady;
         const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height ||
             this.band !== band || this.revision === null || this.visualSeed !== visualSeed || kitSwitched;
+        if (full) {
+            splatTiles.clear();
+            emissiveTiles.clear();
+        }
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
         if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
