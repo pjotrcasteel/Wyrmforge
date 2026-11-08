@@ -2026,8 +2026,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
         // The compact HUD shows one selected primary, not a row of every learned spell.
         await Expect(Page.Locator("[data-hud='spells'] .combat-spell-badge")).ToHaveCountAsync(1);
-        await Expect(Page.Locator("[data-hud='spells'] .combat-spell-badge .px-icon")).ToBeVisibleAsync();
-        await Expect(Page.Locator("[data-hud='spells'] .combat-spell-badge .px-fire")).ToBeVisibleAsync();
+        var fireballArt = Page.Locator("[data-hud='spells'] .combat-spell-badge img.hunt-hud-pixel-icon");
+        await Expect(fireballArt).ToBeVisibleAsync();
+        await Expect(fireballArt).ToHaveAttributeAsync("src", new System.Text.RegularExpressions.Regex("art/hunt-hud/spell-fireball\\.svg$"));
+        await Expect(Page.Locator(".orb-secondary [data-hud]")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".arcane-hunt-hud")).ToBeVisibleAsync();
         await ScreenshotAsync("mobile-spell-slot-320.png");
     }
 
