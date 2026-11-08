@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
     composeTerrainSplatPixels,
+    drawWall, wallTextureSourceY,
     BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
@@ -23,6 +24,56 @@ function recorder() {
 function frame(columns, rows, surface, material = null, revision = 1) {
     return { revision, columns, rows, surface, material: material ?? surface.map(() => TERRAIN_MATERIAL.Soil) };
 }
+
+test('rock, earth and lava wall textures stay world-aligned across adjacent unequal cliff heights', () => {
+    const art = TILE / 32, period = MEGA * TILE;
+    const atlas = Object.fromEntries(['stoneSide', 'stoneGrassSide', 'stoneLipSide', 'dirtSide', 'grassSide', 'lavaSide']
+        .map(name => [name, [{ name }]]));
+    const draw = (material, kind, height, column) => {
+        const slices = [];
+        const ctx = {
+            fillStyle: '',
+            fillRect() {},
+            drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
+                slices.push({ name: image.name, sx, sy, sw, sh, dx, dy, dw, dh });
+            },
+        };
+        drawWall(ctx, atlas, 0, material, [{ from: height, to: 0, kind }], column * 32, 32, 0, 128, column);
+        for (const slice of slices) {
+            assert.ok(slice.sy >= 0 && slice.sy + slice.sh <= period, 'every texture read fits inside the atlas');
+            assert.equal(slice.sy % art, 0, 'sample starts at a native art-pixel boundary');
+            assert.equal(slice.sh % art, 0, 'sample stays at an integral number of art pixels');
+        }
+        return slices;
+    };
+    const at = (slices, kind, worldY) => {
+        const slice = slices.find(part => part.name === kind && part.dy <= worldY && part.dy + part.dh > worldY);
+        assert.ok(slice, `no ${kind} covering world Y=${worldY}`);
+        return slice.sy + (worldY - slice.dy) * art;
+    };
+    for (const [material, segment, body] of [
+        [TERRAIN_MATERIAL.Stone, 'stone', 'stoneSide'],
+        [TERRAIN_MATERIAL.Soil, 'own', 'dirtSide'],
+        [TERRAIN_MATERIAL.Lava, 'lava', 'lavaSide'],
+    ]) {
+        const high = draw(material, segment, 16, 0);
+        const low = draw(material, segment, 12, 1);
+        // Two adjacent cliffs share the same projected world pixels below both crests.
+        // The old painter sampled each body's y=0 at its OWN cliff lip, shifting strata by 16 world units.
+        for (const worldY of [113, 120, 127])
+            assert.equal(at(high, body, worldY), at(low, body, worldY),
+                `${body} changes source row across the unequal-height block boundary at world Y=${worldY}`);
+        if (material === TERRAIN_MATERIAL.Stone) {
+            assert.equal(high[0].name, 'stoneGrassSide', 'a high stone face preserves its local moss/grass crest');
+            assert.equal(low[0].name, 'stoneGrassSide', 'the neighboring stone face preserves its own crest');
+            assert.equal(high[0].sy, 0);
+            assert.equal(low[0].sy, 0);
+        }
+    }
+    assert.equal(wallTextureSourceY(-1), MEGA * 32 - 1, 'raised wall face wraps before the world origin');
+    assert.equal(wallTextureSourceY(-129), MEGA * 32 - 1, 'negative atlas periods repeat seamlessly');
+    assert.equal(wallTextureSourceY(35, 7, true), 7, 'local crest starts from its own wall lip');
+});
 
 test('influence bands follow the C# Fire profile bounds', () => {
     assert.equal(influenceBandIndex(0), 0);
