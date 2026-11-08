@@ -98,50 +98,26 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             }
             """, null, new() { Timeout = 90000 });
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "CAPTURE GLITCH EVIDENCE" }).ClickAsync();
-        var download = Page.Locator("a[download^='wyrmforge-terrain-']");
-        await Expect(download).ToBeVisibleAsync(new() { Timeout = 30000 });
-        var report = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+        // Use the exact same JS task and terrain revision for before/after.
+        // Otherwise bot damage can advance hundreds of revisions between button clicks
+        // and wrongly implicate the cache when the reference painter is at fault.
+        var result = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
             async () => {
-                const link = document.querySelector("a[download^='wyrmforge-terrain-']");
-                return await (await fetch(link.href)).json();
+                const { inspectTerrainCacheRebuild } = await import('/js/arena-performance.js');
+                return inspectTerrainCacheRebuild(document.querySelector('canvas.game-canvas'));
             }
             """);
-        var before = report.GetProperty("pixelComparison").GetProperty("mismatched").GetInt32();
-        var beforeRevision = report.GetProperty("frame").GetProperty("revision").GetInt32();
-        var beforeFullRepaints = report.GetProperty("diagnostics").GetProperty("fullRepaints").GetInt32();
-        var firstEvidenceUrl = await download.GetAttributeAsync("href");
-
-        // Differential proof from the *same live Hunt*: this click repairs the iPhone glitch.
-        // Compare after a real forced full cache rebuild to distinguish faulty regional state
-        // from any systematic difference in the reference painter.
-        await Page.GetByRole(AriaRole.Button, new() { Name = "REBUILD GROUND NOW" }).ClickAsync();
-        await Page.WaitForFunctionAsync("""
-            async previous => {
-                const { readArenaDiagnostics } = await import('/js/arena-performance.js');
-                const d = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-                return d?.hunt1Terrain?.fullRepaints > previous;
-            }
-            """, beforeFullRepaints, new() { Timeout = 30000 });
-        await Page.GetByRole(AriaRole.Button, new() { Name = "CAPTURE GLITCH EVIDENCE" }).ClickAsync();
-        await Page.WaitForFunctionAsync("""
-            oldUrl => {
-                const link = document.querySelector("a[download^='wyrmforge-terrain-']");
-                return link && link.getAttribute('href') !== oldUrl && link.style.display !== 'none';
-            }
-            """, firstEvidenceUrl, new() { Timeout = 30000 });
-        var rebuilt = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
-            async () => {
-                const link = document.querySelector("a[download^='wyrmforge-terrain-']");
-                return await (await fetch(link.href)).json();
-            }
-            """);
-        var after = rebuilt.GetProperty("pixelComparison").GetProperty("mismatched").GetInt32();
-        var afterRevision = rebuilt.GetProperty("frame").GetProperty("revision").GetInt32();
+        var before = result.GetProperty("before").GetProperty("mismatched").GetInt32();
+        var after = result.GetProperty("after").GetProperty("mismatched").GetInt32();
+        var revision = result.GetProperty("revision").GetInt32();
+        Assert.AreEqual(revision, result.GetProperty("cacheRevision").GetInt32(),
+            "Both captures must use a single authoritative terrain revision.");
+        Assert.IsTrue(result.GetProperty("fullRepaints").GetInt32() >
+            result.GetProperty("previousFullRepaints").GetInt32(), "A real forced cache rebuild must occur.");
         Assert.AreEqual(0, after,
-            $"Manual full rebuild must match the independent reference (before={before}, after={after}, revisions={beforeRevision}/{afterRevision}).");
+            $"Fresh full cache pixels must agree with the independent painter for the SAME frame (before={before}, after={after}, revision={revision}).");
         Assert.AreEqual(0, before,
-            $"Regional impacts must match an independent full repaint (before={before}, after full rebuild={after}).");
+            $"Damaged live-Hunt cache must match fresh ground pixels (before={before}, after={after}, revision={revision}).");
     }
 
 }
