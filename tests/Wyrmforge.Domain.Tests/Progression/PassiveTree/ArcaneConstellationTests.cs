@@ -31,4 +31,19 @@ public sealed class ArcaneConstellationTests
         Assert.IsTrue(selection.Remove(clockwise));
         Assert.AreEqual(spent - 1, selection.SpentPoints);
     }
+    [TestMethod]
+    public void EachFireConstellationNodeCanBeReachedWithinThePointBudget()
+    {
+        var selection = new PassiveTreeSelection();
+        selection.SetActiveSchool(PassiveSchool.Fire);
+        var nodes = PassiveTreeCatalog.All.Where(node => node.Id.StartsWith("constellation-Fire-", StringComparison.Ordinal)).ToArray();
+        Assert.AreEqual(221, nodes.Length);
+        foreach (var node in nodes)
+        {
+            var plan = PassiveTreePlanner.Plan(selection, node.Id);
+            Assert.IsNotNull(plan, node.Id);
+            Assert.IsTrue(plan.AdditionalCost <= selection.AvailablePoints,
+                $"{node.Id} costs {plan.AdditionalCost}, budget is {selection.AvailablePoints}.");
+        }
+    }
 }

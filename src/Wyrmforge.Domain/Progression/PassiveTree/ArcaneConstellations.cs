@@ -87,6 +87,10 @@ internal static class ArcaneConstellations
                     yield return new(Id(school, ring, 2), Id(school, ring + 1, 6));
                 if (ring + 9 < themes.Length)
                     yield return new(Id(school, ring, 4), Id(school, ring + 9, 0));
+                else
+                    yield return new(Id(school, ring, 0), Id(school, ring, 4));
+                if (ring == 23)
+                    yield return new(Id(school, ring, 0), Id(school, ring, 5));
             }
         }
     }
