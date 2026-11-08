@@ -26,6 +26,24 @@ export function compareTerrainPixels(actual, expected, width) {
 }
 
 /**
+ * Sample the real cached terrain viewport only. No independent painter, no new full-map canvas:
+ * the caller can compare two reads around a synchronous forced rebuild of the SAME revision.
+ */
+export function sampleCachedTerrainViewport(cache, camera, scale) {
+    if (!cache?.canvas) throw new Error('Terrain cache not ready');
+    const width = Math.max(1, Math.ceil(camera.width * scale));
+    const height = Math.max(1, Math.ceil(camera.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    context.imageSmoothingEnabled = false;
+    context.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
+    cache.draw(context, camera);
+    return { pixels: context.getImageData(0, 0, width, height).data, width, height };
+}
+
+/**
  * Compare the full C# data pulled after capture with the JS-merged terrain data.
  * Comparison is valid only at the SAME revision. Wood/boulder columns are intentionally
  * presented as low mounds and must not count as incorrect C# terrain.
