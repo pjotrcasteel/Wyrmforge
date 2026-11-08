@@ -146,6 +146,38 @@ test('terrain diagnostics report authoritative no-op revisions separately from r
     assert.equal(cache.repaints, 3);
 });
 
+test('disabling incremental repaint keeps subsequent crater redraws full until restored', () => {
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const source = { revision: 1, columns: 4, rows: 4, visualSeed: 920,
+        surface: Array(16).fill(0), material: Array(16).fill(0), fine: [] };
+    const base = mergeTerrainFrame(null, source);
+    cache.update(base, 0);
+    assert.equal(cache.allowRegional, true, 'ordinary gameplay retains low-cost partial repaints');
+    const heights = Array(64).fill(0);
+    heights[2 * 8 + 3] = -1;
+    const damage1 = mergeTerrainFrame(base, { ...source, revision: 2,
+        fine: [{ index: 5, heights, topsoil: 0, stoneTop: -8 }] });
+    cache.allowRegional = false;
+    assert.equal(cache.update(damage1, 0), true);
+    assert.equal(cache.fullRepaints, 2, 'the next crater must be a full terrain redraw');
+    assert.equal(cache.regionalRepaints, 0);
+    const heights2 = heights.slice();
+    heights2[2 * 8 + 4] = -2;
+    const damage2 = mergeTerrainFrame(damage1, { ...source, revision: 3,
+        fine: [{ index: 5, heights: heights2, topsoil: 0, stoneTop: -8 }] });
+    assert.equal(cache.update(damage2, 0), true);
+    assert.equal(cache.fullRepaints, 3, 'every additional crater stays on the full path');
+    assert.equal(cache.regionalRepaints, 0);
+    cache.allowRegional = true;
+    const heights3 = heights2.slice();
+    heights3[2 * 8 + 5] = -3;
+    const damage3 = mergeTerrainFrame(damage2, { ...source, revision: 4,
+        fine: [{ index: 5, heights: heights3, topsoil: 0, stoneTop: -8 }] });
+    assert.equal(cache.update(damage3, 0), true);
+    assert.equal(cache.regionalRepaints, 1, 'restoring incremental mode restores the original fast path');
+});
+
 test('GPU camera captures reuse terrain textures only while pixels and viewport are identical', () => {
     const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
     const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));

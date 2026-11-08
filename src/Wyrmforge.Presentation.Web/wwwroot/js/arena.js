@@ -9,10 +9,10 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261106-default-hunt1-gate-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js?v=20261108-terrain-isolation-v1';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js';
+import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from './arena-layer-lab.js?v=20261108-terrain-isolation-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
@@ -96,10 +96,11 @@ export function initializeArena(canvas, dotNetReference) {
         settings.addEventListener('change', state.onDamageNumberModeChanged);
     }
     arenas.set(canvas, state);
-    state.layerLab = mountLayerLab(() => {
-        // The debug switches change rasterized terrain without a server terrain revision.
-        // Force an exact full cache rebuild; regular gameplay never takes this path.
-        if (state.terrainCache) state.terrainCache.revision = null;
+    state.layerLab = mountLayerLab(rebuildTerrain => {
+        // Only baked source-pixel switches may rebuild the cached raster.
+        // GPU, emissive, overlay, and scenery switches MUST leave its pixels untouched,
+        // otherwise comparing Safari's corrupted GPU output against Canvas2D is impossible.
+        if (rebuildTerrain && state.terrainCache) state.terrainCache.revision = null;
     });
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
@@ -508,6 +509,7 @@ function draw(state, snapshot, width, height) {
         if (state.terrainFrame && snapshot.environment.terrain) {
             // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
             const terrainCache = state.terrainCache ??= new TerrainCanvasCache();
+            terrainCache.allowRegional = layerLabEnabled('incremental');
             if (gpu) terrainCache.enableNormals();
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.

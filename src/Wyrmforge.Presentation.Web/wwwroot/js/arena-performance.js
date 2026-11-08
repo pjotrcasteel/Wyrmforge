@@ -1,6 +1,6 @@
 import { createSpellBadge } from './spell-hud.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview } from './arena.js?v=20261107-layerlab-gpu-hotfix-v2';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview } from './arena.js?v=20261108-terrain-isolation-v1';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();

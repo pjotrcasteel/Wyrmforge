@@ -2,6 +2,7 @@
 // ?layerLab=1 shows independent render-layer switches. Never changes C# game or voxel data.
 export const LAYER_OPTIONS = Object.freeze([
     ['gpu', 'WebGL GPU composite', 'Turn off the GPU renderer and use the existing Canvas2D fallback'],
+    ['incremental', 'Incremental crater repaint', 'OFF: repaint the whole ground whenever terrain changes, including future craters (slower diagnostic workaround)'],
     ['excavation', 'Excavated microvoxels', 'Repaint original grass/road instead of post-impact terrain'],
     ['faces', 'Voxel side faces', 'Hide vertical dirt/stone cliff and crater faces'],
     ['decals', 'Baked ground decals', 'Hide authored litter, roots and ground decoration'],
@@ -17,6 +18,10 @@ export const LAYER_OPTIONS = Object.freeze([
 ]);
 
 const VALID = new Set(LAYER_OPTIONS.map(([key]) => key));
+const RASTER_SWITCHES = new Set(['incremental', 'excavation', 'faces', 'decals', 'bakedShadows']);
+
+/** GPU/overlay switches must NOT silently repair the terrain canvas: doing so hides the culprit. */
+export function layerLabRequiresTerrainRebuild(key) { return RASTER_SWITCHES.has(key); }
 const disabled = new Set();
 let view = 'lit';
 let generation = 0;
@@ -110,7 +115,7 @@ export function mountLayerLab(onChange) {
         select.appendChild(option);
     }
     select.value = view;
-    select.addEventListener('change', () => { setLayerLabView(select.value); onChange(); refreshTitle(); });
+    select.addEventListener('change', () => { setLayerLabView(select.value); onChange(false); refreshTitle(); });
     gpuLabel.appendChild(select);
     details.appendChild(gpuLabel);
 
@@ -123,7 +128,7 @@ export function mountLayerLab(onChange) {
         checkbox.style.cssText = 'min-width:20px;width:20px;height:20px;accent-color:#e3ac54;';
         checkbox.addEventListener('change', () => {
             setLayerLabEnabled(key, checkbox.checked);
-            onChange();
+            onChange(layerLabRequiresTerrainRebuild(key));
             refreshTitle();
         });
         const text = document.createElement('span');
@@ -139,20 +144,28 @@ export function mountLayerLab(onChange) {
         details.appendChild(row);
     }
 
+    const refresh = document.createElement('button');
+    refresh.type = 'button';
+    refresh.textContent = 'REBUILD GROUND NOW';
+    refresh.style.cssText = 'margin-top:10px;width:100%;padding:11px 6px;background:#284a50;color:#fff;border:1px solid #6faeb3;border-radius:5px;font-weight:700;';
+    refresh.addEventListener('click', () => onChange(true));
+    details.appendChild(refresh);
+
     const reset = document.createElement('button');
     reset.type = 'button'; reset.textContent = 'RESTORE ALL LAYERS';
     reset.style.cssText = 'margin-top:9px;width:100%;padding:11px 6px;background:#66543a;color:white;border:1px solid #ddbd88;border-radius:5px;font-weight:700;';
     reset.addEventListener('click', () => {
+        const rebuild = [...disabled].some(layerLabRequiresTerrainRebuild);
         resetLayerLab();
         for (const [key, checkbox] of boxes) checkbox.checked = layerLabEnabled(key);
         select.value = view;
-        onChange();
+        onChange(rebuild);
         refreshTitle();
     });
     details.appendChild(reset);
 
     const diagnostic = document.createElement('p');
-    diagnostic.textContent = 'Screenshot tip: collapse the panel after toggling. The header shows how many layers are hidden.';
+    diagnostic.textContent = 'GPU/overlay switches no longer repaint the terrain. Turn Incremental crater repaint OFF to test future impacts. REBUILD GROUND NOW resets only the rendered terrain.';
     diagnostic.style.cssText = 'font-size:11px;color:#d6c9b6;';
     details.appendChild(diagnostic);
 
