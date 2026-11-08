@@ -1296,12 +1296,17 @@ export class TerrainCanvasCache {
         const regions = this.allowRegional && !full && frame.visualDeltaComplete !== false && Array.isArray(frame.changed)
             ? terrainDirtyRegions(frame.columns, frame.rows, frame.changed) : [];
         const regional = regions.length > 0;
-        // Recompute splat maps from the same authoritative terrain frame as the
-        // painter. Reusing masks from a previous revision can paint incompatible
-        // dirt/grass patches into an otherwise up-to-date cache after excavation.
-        // A kit-only texture load does not change material identity or patch masks.
+        // Excavation preserves the original site's authored splat masks; otherwise
+        // undamaged grass and road pixels would shift after every Fireball. Only a
+        // *coarse* material/height replacement of a whole block changes which map
+        // that block itself needs. Do not invalidate surrounding original masks.
         const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
-        this.kindMaps = kitOnly ? this.kindMaps : new Map();
+        this.kindMaps = regional || kitOnly ? this.kindMaps : new Map();
+        if (regional) for (const index of frame.changed ?? []) {
+            if (frame.fine?.has(index)) continue;
+            if (frame.material[index] !== frame.baseMaterial?.[index] ||
+                frame.surface[index] !== frame.baseSurface?.[index]) this.kindMaps.delete(index);
+        }
         frame.kindMaps = this.kindMaps;
         if (regional) paintTerrainRegion(ctx, frame, band, regions, TERRAIN_PAD_UNITS);
         else {
