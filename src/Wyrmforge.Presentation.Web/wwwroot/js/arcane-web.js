@@ -199,6 +199,27 @@
         if (!state) return;
         state.x = state.y = state.size / 2;
         state.scale = overviewScale(viewport, state);
+        // Fit the occupied graph. The square world also reserves room for rotation
+        // and for future schools, so fitting that square wastes phone screen space.
+        const landmarks = viewport.querySelectorAll?.('.web-node, .wheel-school-badge') ?? [];
+        let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+        for (const landmark of landmarks) {
+            const x = parseFloat(landmark.style.left);
+            const y = parseFloat(landmark.style.top);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y);
+        }
+        if (Number.isFinite(left) && viewport.clientWidth > 32 && viewport.clientHeight > 80) {
+            state.scale = Math.min(
+                (viewport.clientWidth - 32) / (right - left + 360),
+                (viewport.clientHeight - 80) / (bottom - top + 360),
+                0.5);
+            state.x = (left + right) / 2;
+            state.y = (top + bottom) / 2;
+        }
         state.y -= 24 / state.scale;
         render(viewport, state);
     }
