@@ -223,7 +223,7 @@
     {
         // New characters see character creation first, then enter the same
         // fully prepared town as returning players.
-        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown");
+        await JavaScript.InvokeVoidAsync("wyrmforgeStartup.beginTown", true);
         await OnChooseSchool.InvokeAsync(school);
     }
     [Parameter] public EventCallback<string> OnPlayerNameChanged { get; set; }
