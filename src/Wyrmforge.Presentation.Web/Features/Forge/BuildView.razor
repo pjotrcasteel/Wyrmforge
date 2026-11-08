@@ -72,7 +72,8 @@
                         <svg class="web-connections" viewBox="@($"0 0 {ArcaneWheelLayout.Size} {ArcaneWheelLayout.Size}")" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
-                                <path class="@ConnectionClass(connection, mapPreview, mapPlan?.AnchorId)" data-from="@connection.From" data-to="@connection.To"
+                                var edgeClass = ConnectionClass(connection, mapPreview, mapPlan?.AnchorId);
+                                <path class="@edgeClass" style="@(edgeClass == "web-edge fire-constellation" ? "stroke: #bd8258b8" : null)" data-from="@connection.From" data-to="@connection.To"
                                       d="@ArcaneWheelLayout.Path(connection, ActiveSchool)" />
                             }
                         </svg>
