@@ -186,9 +186,9 @@ export function drawDestructionFx(ctx, fx, now, view, parts = 'all') {
  * A conservative no-emission fast path: the wet forest doesn't need a full-screen black GPU texture until something glows.
  * Keep lava, active craters, warm fissures and exposed bedrock. False positives are safe; false negatives are not.
  */
-export function hasGroundEmission(frame, fx, band, view, seconds) {
+export function hasGroundEmission(frame, fx, band, view, seconds, includeCracks = true) {
     if (!frame) return false;
-    if (veinRamp(band) && frame.cracks?.length) return true;
+    if (includeCracks && veinRamp(band) && frame.cracks?.length) return true;
     if (frame.material?.includes(TERRAIN_MATERIAL.Lava) || frame.baseMaterial?.includes(TERRAIN_MATERIAL.Lava)) return true;
     if (fx?.heat?.some(spot => heatStrength(seconds - spot.born, spot.life) > .01 &&
         spot.x >= view.x - spot.radius && spot.x <= view.x + view.width + spot.radius &&
@@ -208,9 +208,9 @@ export function hasGroundEmission(frame, fx, band, view, seconds) {
  * surface (bright in the dark, beneath every actor) instead of an additive layer drawn over creatures. Returns the canvas and the
  * vein seams drawn. `holder` keeps the reusable canvas between frames.
  */
-export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false, scale = 1) {
+export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false, scale = 1, includeCracks = true) {
     // No emissive sources: avoid clearing a screen-sized canvas and uploading an all-black GPU texture on every frame.
-    if (!hasGroundEmission(frame, fx, band, view, seconds)) return null;
+    if (!hasGroundEmission(frame, fx, band, view, seconds, includeCracks)) return null;
     // `scale` is canvas pixels per world unit, matching the ground albedo so lava glow follows the same fine shoreline.
     const width = Math.max(1, Math.ceil(view.width * scale)), height = Math.max(1, Math.ceil(view.height * scale));
     const canvas = holder.emissiveCanvas ??= document.createElement('canvas');
@@ -225,7 +225,7 @@ export function paintGroundEmissive(holder, frame, fx, band, view, seconds, redu
     if (scale !== 1) ctx.scale(scale, scale);
     ctx.translate(-view.x, -view.y);
     paintLavaEmissive(ctx, frame, band, view);
-    const seams = drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion);
+    const seams = includeCracks ? drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion) : 0;
     drawBedrockGlow(ctx, frame, view, seconds, reducedMotion);
     if (fx) drawDestructionFx(ctx, fx, seconds, view, 'heat');
     return { canvas, seams };

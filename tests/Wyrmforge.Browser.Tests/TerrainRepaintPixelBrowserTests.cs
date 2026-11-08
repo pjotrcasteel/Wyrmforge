@@ -150,7 +150,7 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
                 const { TILE, MEGA, generateTileSet, normalFromTile } = await import('/js/arena-terrain-tiles.js');
                 // Same module URL imported by the production terrain painter.
                 const { setLayerLabEnabled } =
-                    await import('/js/arena-layer-lab.js?v=20261108-terrain-evidence-v1');
+                    await import('/js/arena-layer-lab.js?v=20261108-crack-isolation-v1');
                 for (const key of ['decals', 'bakedShadows', 'faces']) setLayerLabEnabled(key, false);
 
                 const columns = 8, rows = 8, count = columns * rows;
