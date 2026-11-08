@@ -1,7 +1,7 @@
 import { createSpellBadge } from './spell-hud.js';
 import { clampHudFraction, cooldownPresentation, selectCombatSlots } from './combat-hud-state.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview, inspectTerrainCacheRebuild as inspectBaseTerrainCacheRebuild, beginHuntEntry as beginBaseHuntEntry, cancelHuntEntry as cancelBaseHuntEntry } from './arena.js?v=20261108-hunt-entry-early-v2';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics, renderArenaMapOverview as renderBaseMapOverview, inspectTerrainCacheRebuild as inspectBaseTerrainCacheRebuild, beginHuntEntry as beginBaseHuntEntry, cancelHuntEntry as cancelBaseHuntEntry } from './arena.js?v=20261108-lab-loading-optin-v3';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();
