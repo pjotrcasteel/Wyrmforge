@@ -35,6 +35,7 @@ import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePainted
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js?v=20261108-hollow-player-contact-v1';
 import { preloadHollowClawVfx, drawHollowClawVfx } from './hollow-claw-vfx.js?v=20261108-claw-follow-v3';
 import { preloadHollowHitVfx, drawHollowHitVfx } from './hollow-hit-vfx.js?v=20261108-hollow-hit-h2';
+import { preloadHollowGroundVfx, createHollowGroundState, updateHollowGroundVfx, drawHollowGroundVfx, hollowGroundDiagnostics } from './hollow-ground-vfx.js?v=20261108-hollow-h3';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -85,6 +86,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadHollowSprites();
     preloadHollowClawVfx();
     preloadHollowHitVfx();
+    preloadHollowGroundVfx();
     ashlingSprites.preload();
     for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
     preloadCrawlOut();
@@ -273,6 +275,8 @@ export function readArenaDiagnostics(canvas) {
         hollow: hollowDiagnostics(state.hollow),
         hollowClawFxEnabled: state.hollowClawFxEnabled,
         hollowHitFxEnabled: state.hollowHitFxEnabled,
+        hollowGroundFxEnabled: state.hollowGroundFxEnabled,
+        hollowGround: hollowGroundDiagnostics(state.hollowGround),
         ashling: ashlingSprites.diagnostics(state.ashling),
         authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -380,6 +384,8 @@ function createState(canvas, dotNetReference) {
         hollow: createHollowState(),
         hollowClawFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowClawFx')),
         hollowHitFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowHitFx')),
+        hollowGroundFxEnabled: !['0', 'false'].includes(new URLSearchParams(location.search).get('hollowGroundFx')),
+        hollowGround: createHollowGroundState(),
         ashling: ashlingSprites.createState(),
         // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
         authored: createAuthoredState(),
@@ -573,6 +579,7 @@ function draw(state, snapshot, width, height) {
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    updateHollowGroundVfx(state.hollowGround, snapshot, state.hollow, state.terrainFrame);
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
     // Every illumination cue uses the SAME authoritative lighting frame.
@@ -752,6 +759,10 @@ function draw(state, snapshot, width, height) {
                 if (!(authoredOn && drawAuthoredAshfangDeath(ctx, state.ashfang))) drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
                 const enemy = layer.enemy;
+                // H3 follows actual Hollowed displacement and the existing C# crawl progress.
+                // Paint the ground contact behind its authored body, within the normal depth/GPU layer.
+                if (state.hollowGroundFxEnabled) drawHollowGroundVfx(ctx, enemy, state.hollowGround,
+                    state.terrainFrame, huntBand(state, snapshot), state.reducedMotion.matches);
                 // One atlas, two C#-timed halves: ground dust behind the actor, bite contact above.
                 drawMireHoundGround(ctx, enemy, state.reducedMotion.matches);
                 if (gpu) {
