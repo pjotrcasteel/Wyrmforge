@@ -1,6 +1,7 @@
 using Microsoft.Playwright;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Application.Runs.Simulation;
 
 namespace Wyrmforge.Browser.Tests;
 
@@ -135,4 +136,172 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
         CollectionAssert.AreEqual(Enumerable.Repeat(0, 18).ToArray(), differences,
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
+    /// <summary>Reproduces the real iPhone viewport, dirty cells and world dimensions with a winding authored road.</summary>
+    [TestMethod]
+    public async Task DamagedTerrain_IPhoneCaptureViewportRemainsIdenticalAfterRepeatedRegionalImpacts()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+        var differences = await Page.EvaluateAsync<int[]>("""
+            async () => {
+                const { TerrainCanvasCache, mergeTerrainFrame, TERRAIN_MATERIAL } =
+                    await import('/js/arena-terrain-canvas.js');
+                const columns = 32, rows = 60, count = columns * rows;
+                const surface = Array.from({ length: count }, (_, i) => {
+                    const column = i % columns, row = Math.floor(i / columns);
+                    // Shaped forest heights (including cliffs): a deliberately harder
+                    // case than the old uniform, flat 12x14 road-only test.
+                    if (column < 6 && row > 36 && row < 56) return 8;
+                    if (column > 26 && row > 24 && row < 54) return -4;
+                    return 0;
+                });
+                const material = Array.from({ length: count }, (_, i) =>
+                    ((i % columns) * 7 + Math.floor(i / columns) * 3) % 19 < 3 ?
+                        TERRAIN_MATERIAL.Ash : TERRAIN_MATERIAL.Soil);
+                const road = [];
+                for (let row = 0; row < rows; row++)
+                    road.push(Math.round((16 + Math.sin(row * .17) * 3.4) * 16), row * 16);
+                const base = { revision: 1, columns, rows, visualSeed: -1885611032,
+                    surface, material, fine: [], road, cracks: [] };
+                let current = mergeTerrainFrame(null, base);
+                const regional = new TerrainCanvasCache();
+                regional.enableNormals();
+                regional.update(current, 0);
+                const viewport = { x: 327, y: 1264, width: 402, height: 656 };
+                const copy = (cache, normal) => {
+                    const out = document.createElement('canvas');
+                    out.width = viewport.width * 2;
+                    out.height = viewport.height * 2;
+                    const ctx = out.getContext('2d', { willReadFrequently: true });
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.setTransform(2, 0, 0, 2, -viewport.x * 2, -viewport.y * 2);
+                    if (normal) cache.drawNormals(ctx, viewport);
+                    else cache.draw(ctx, viewport);
+                    return ctx.getImageData(0, 0, out.width, out.height).data;
+                };
+                const mismatches = [];
+                const compare = () => {
+                    const full = new TerrainCanvasCache();
+                    full.enableNormals();
+                    full.update({ ...current, kindMaps: undefined }, 0);
+                    for (const normal of [false, true]) {
+                        const a = copy(regional, normal), b = copy(full, normal);
+                        let mismatch = 0;
+                        for (let index = 0; index < a.length; index += 4)
+                            if (a[index] !== b[index] || a[index + 1] !== b[index + 1] ||
+                                a[index + 2] !== b[index + 2] || a[index + 3] !== b[index + 3]) mismatch++;
+                        mismatches.push(mismatch);
+                    }
+                };
+                const impacts = [
+                    // Same two dirty indices captured on Safari at C# revision 1325.
+                    [1680, [26, 27, 28, 33, 34, 35, 36, 37, 41, 42, 43, 44, 45, 49, 50, 51, 52, 53, 57, 58, 59, 60, 61]],
+                    [1712, [2, 3, 4]],
+                    [49 * columns + 15, [12, 13, 20, 21]],
+                    [43 * columns + 19, [27, 28, 35, 36]],
+                    [53 * columns + 16, [2, 3, 4, 10, 11, 12]],
+                ];
+                for (const [i, [index, dug]] of impacts.entries()) {
+                    const heights = Array(64).fill(0);
+                    for (const micro of dug) heights[micro] = -1;
+                    current = mergeTerrainFrame(current, { ...base, revision: i + 2,
+                        fine: [{ index, heights, topsoil: 0, stoneTop: -8 }] });
+                    regional.update(current, 0);
+                    compare();
+                }
+                return mismatches;
+            }
+            """);
+
+        CollectionAssert.AreEqual(Enumerable.Repeat(0, 10).ToArray(), differences,
+            "Safari-sized viewport albedo and normals must agree with fresh ground across repeated road impacts.");
+    }
+
+    /// <summary>Replays the actual captured Safari site's C# terrain generator and damaged road cells.</summary>
+    [TestMethod]
+    public async Task DamagedTerrain_CapturedIPhoneSiteSeedKeepsExactAlbedoAndNormals()
+    {
+        const int siteSeed = -1885611032;
+        var site = ArenaTerrainGenerator.Generate(siteSeed, 0, 32, 60, (16, 52), (16, 6));
+        var source = site.Grid.ToFrame(-1);
+        var initial = new
+        {
+            revision = 1,
+            columns = source.Columns,
+            rows = source.Rows,
+            visualSeed = source.VisualSeed,
+            surface = source.Surface,
+            material = source.Material,
+            fine = source.Fine.Select(block => new
+            {
+                index = block.Index, heights = block.Heights, topsoil = block.Topsoil,
+                stoneTop = block.StoneTop, wear = block.Wear
+            }).ToArray(),
+            road = source.Road,
+            cracks = source.Cracks,
+        };
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+        var mismatches = await Page.EvaluateAsync<int[]>("""
+            async input => {
+                const { TerrainCanvasCache, mergeTerrainFrame } = await import('/js/arena-terrain-canvas.js');
+                let current = mergeTerrainFrame(null, input);
+                const initialFineCount = current.fine.size;
+                const incremental = new TerrainCanvasCache();
+                incremental.enableNormals();
+                incremental.update(current, 0);
+                const camera = { x: 327, y: 1264, width: 402, height: 656 };
+                const sample = (cache, normal) => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = camera.width * 2;
+                    canvas.height = camera.height * 2;
+                    const context = canvas.getContext('2d', { willReadFrequently: true });
+                    context.imageSmoothingEnabled = false;
+                    context.setTransform(2, 0, 0, 2, -camera.x * 2, -camera.y * 2);
+                    if (normal) cache.drawNormals(context, camera);
+                    else cache.draw(context, camera);
+                    return context.getImageData(0, 0, canvas.width, canvas.height).data;
+                };
+                const check = () => {
+                    const fresh = new TerrainCanvasCache();
+                    fresh.enableNormals();
+                    fresh.update({ ...current, kindMaps: undefined }, 0);
+                    return [false, true].map(normal => {
+                        const actual = sample(incremental, normal), expected = sample(fresh, normal);
+                        let count = 0;
+                        for (let i = 0; i < actual.length; i += 4)
+                            if (actual[i] !== expected[i] || actual[i + 1] !== expected[i + 1] ||
+                                actual[i + 2] !== expected[i + 2] || actual[i + 3] !== expected[i + 3]) count++;
+                        return count;
+                    });
+                };
+                const results = [initialFineCount];
+                // Physical evidence: the final C# update altered precisely these two
+                // adjacent road cells (indices 1680/1712). Recreate a few prior
+                // impacts in the same corridor to exercise cumulative cache damage.
+                const impacts = [
+                    [50 * 32 + 17, [18, 19, 26, 27]],
+                    [47 * 32 + 16, [28, 29, 36, 37]],
+                    [52 * 32 + 16, [26, 27, 28, 33, 34, 35, 36, 37, 41, 42, 43, 44, 45, 49, 50, 51, 52, 53, 57, 58, 59, 60, 61]],
+                    [53 * 32 + 16, [2, 3, 4]]
+                ];
+                for (const [offset, [index, excavated]] of impacts.entries()) {
+                    const previous = current.fine.get(index);
+                    const heights = previous?.heights?.slice() ?? Array(64).fill(current.surface[index]);
+                    for (const micro of excavated) heights[micro] = -1;
+                    const fine = { index, heights, topsoil: previous?.topsoil ?? input.material[index],
+                        stoneTop: previous?.stoneTop ?? -8, wear: previous?.wear ?? null };
+                    current = mergeTerrainFrame(current, { ...input, revision: offset + 2, fine: [fine] });
+                    incremental.update(current, 0);
+                    results.push(...check());
+                }
+                return results;
+            }
+            """, initial);
+        Assert.IsTrue(mismatches[0] > 0, "The captured site must use real authored fine terrain, not a flat synthetic test.");
+        CollectionAssert.AreEqual(new int[8], mismatches.Skip(1).ToArray(),
+            $"Actual generator seed {siteSeed} must keep cached albedo and normals identical after four road impacts.");
+    }
+
 }
