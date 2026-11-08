@@ -10,6 +10,7 @@ export const LAYER_OPTIONS = Object.freeze([
     ['albedo', 'Ground albedo texture', 'Show neutral ground instead of textured terrain'],
     ['normals', 'GPU ground normal map', 'Disable normal-map contribution to lighting'],
     ['emissive', 'GPU ground glow', 'Disable cracks/heat/bedrock emissive map and fallback glow'],
+    ['crackVeins', 'Heat-crack veins', 'Hide only the C#-generated angular crack lines and their halo, preserving lava, crater heat and bedrock glow'],
     ['damageFx', 'Post-impact particles/heat', 'Disable post-impact cosmetic damage FX only'],
     ['groundFx', 'Pre-composite ground overlays', 'Hide telegraphs, dust and other Canvas ground overlays'],
     ['postGpuFx', 'Post-GPU ground overlays', 'Hide effects drawn after the lit GPU composite'],
@@ -99,7 +100,7 @@ export function mountLayerLab(onChange, onCapture = null) {
     top.addEventListener('click', () => { expanded = !expanded; refreshTitle(); });
 
     const hint = document.createElement('p');
-    hint.textContent = 'Hide ONE layer, let combat happen, and compare the brown squares. This does not alter damage or physics.';
+    hint.textContent = 'Hide one layer at a time. For angular ground marks, turn off Heat-crack veins first. No changes to damage or physics.';
     hint.style.cssText = 'margin:2px 0 8px;color:#d6c9b6;font-size:12px;';
     details.appendChild(hint);
 
