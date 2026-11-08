@@ -55,7 +55,7 @@ function startupFixture({ town = false } = {}) {
         },
     };
     const context = {
-        document, window: {}, console, URL,
+        document, window: { setTimeout: () => 1, clearTimeout: () => {} }, console, URL,
         requestAnimationFrame: callback => queueMicrotask(callback),
         MutationObserver: class {
             constructor(callback) { this.callback = callback; this.active = true; observers.push(this); }
