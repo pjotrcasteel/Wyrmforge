@@ -153,7 +153,7 @@
 
     // Region/Wyrm choice is independent of a character's Divine magical affinity.
     // Every reserved lineage uses its owner's approved canonical pixel-art sigil.
-    // Only Fire and Frost can currently enter Hunts.
+    // Only Fire can currently enter Hunts.
     private static readonly IReadOnlyList<LineageChoice> Lineages =
     [
         new("fire", "Fire", RegionCatalog.CinderFrontierId),
@@ -164,7 +164,9 @@
         new("summoner", "Summoner", null),
     ];
 
+    // Fire is the only playable Hunt lineage until the other lineages are released.
     private bool IsAvailable(LineageChoice lineage) =>
+        lineage.Region == RegionCatalog.CinderFrontierId &&
         lineage.Region is { } id && RegionCatalog.Find(id) is { } region && (Access is null || region.IsOpen(Access));
 
     private void ChooseLineage(LineageChoice lineage)
