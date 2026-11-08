@@ -210,6 +210,21 @@ test('staggered ambush craters do not transitively merge their repaint clips acr
     assert.ok(regions.every(region => region.r1 - region.r0 <= 5), 'overdraw overlap cannot grow a whole-map region');
 });
 
+test('vertically staggered ambush impacts repaint each affected column only once', () => {
+    const clears = [];
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {},
+        clearRect(...args) { clears.push(args); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const base = frame(32, 60, new Array(32 * 60).fill(0));
+    cache.update(base, 0);
+    clears.length = 0;
+    const changed = [4, 12, 20, 28, 36, 44].map(row => row * 32 + 10);
+    cache.update({ ...base, revision: 2, changed }, 0);
+    assert.equal(cache.regionalRepaints, 1, 'the update must remain incremental');
+    assert.equal(clears.length, 1, 'overlapping column strips are coalesced across all rows');
+    assert.deepEqual(clears[0], [9 * 32, 0, 6 * 32, 60 * 32 + TERRAIN_PAD_UNITS * 2]);
+});
+
 test('more than 40 impacted blocks never force an unconditional full terrain repaint', () => {
     const clips = [], clears = [];
     const ctx = { ...recorder(), beginPath() {}, clip() {}, rect(...rect) { clips.push(rect); },
@@ -223,7 +238,8 @@ test('more than 40 impacted blocks never force an unconditional full terrain rep
     cache.update({ ...base, revision: 2, changed }, 0);
     assert.equal(clips.length, 1, 'adjacent impacts share one clip');
     assert.equal(clears.length, 1, 'the surrounding terrain should not be cleared');
-    assert.ok(clears[0][3] < 60 * 32, 'the dirty clip is shorter than the map');
+    assert.equal(clears[0][3], 60 * 32 + TERRAIN_PAD_UNITS * 2,
+        'affected columns are repainted across their entire projected height');
     clips.length = 0;
     clears.length = 0;
     cache.update({ ...base, revision: 3, changed: [0, 32 * 60 - 1] }, 0);
