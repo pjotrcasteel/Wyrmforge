@@ -64,3 +64,14 @@ test('shaped columns are shaded per microcolumn at their own height', () => {
     assert.ok(shaded && level(shaded, 3, 8) > 0, 'ground below a ledge is shaded');
     assert.equal(level(shaded, 3, 0), 0, 'the ledge top itself is lit');
 });
+
+test('shadow reuse distinguishes whole and fine surfaces and expires with the terrain frame', () => {
+    const frame = flat();
+    frame.surface[4 * columns + 5] = 16;
+    const fineHeights = new Array(64).fill(16);
+    const whole = cellShadow(frame, 5, 5, 0);
+    assert.ok(total(whole) > 0);
+    assert.equal(cellShadow(frame, 5, 5, fineHeights), null);
+    assert.strictEqual(cellShadow(frame, 5, 5, 0), whole);
+    assert.equal(cellShadow(flat(), 5, 5, 0), null);
+});
