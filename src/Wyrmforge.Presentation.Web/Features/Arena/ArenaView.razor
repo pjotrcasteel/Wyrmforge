@@ -51,6 +51,10 @@
             <button type="button" @onclick="ContinueAfterTrail">CONTINUE</button>
         </div>
     }
+    @if (FirstHuntHint is { } firstHuntHint)
+    {
+        <div class="first-hunt-hint" role="status" aria-live="polite" data-tutorial="first-hunt">@firstHuntHint</div>
+    }
     @if (runMoment is { } moment)
     {
         <RunMomentOverlay Moment="moment" />
@@ -173,7 +177,7 @@
     }
     else if (!trailTransition && CurrentChoices.Count > 0)
     {
-        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync"
+        <LevelUpOverlay Level="CurrentLevel + 1" FirstHuntFirstUpgrade="@(FirstHunt && !firstHuntUpgradeChosen)" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync"
                         Fateweave="simulation?.Fateweave" OnReroll="RerollAsync" />
     }
     else if (PendingMapChoice && !trailTransition)
