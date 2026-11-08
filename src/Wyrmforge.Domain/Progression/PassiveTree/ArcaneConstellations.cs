@@ -73,6 +73,7 @@ internal static class ArcaneConstellations
         {
             yield return new(gate, Id(school, 5, 0));
             yield return new("fire-banked-embers", Id(school, 8, 0));
+            yield return new("fire-blast-shaping", TransitId(4));
             yield return new(Id(school, 5, 0), TransitId(0));
             for (var step = 1; step < 5; step++)
                 yield return new(TransitId(step - 1), TransitId(step));
