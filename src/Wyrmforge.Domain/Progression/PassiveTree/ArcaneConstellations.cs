@@ -26,7 +26,7 @@ internal static class ArcaneConstellations
         for (var step = 0; step < Offsets.Length; step++)
         {
             var (side, radius) = Offsets[step];
-            var stat = ((step + ring) % 6) switch
+            var stat = (StableRingId(ring) < 6 ? step % 3 : (step + ring) % 6) switch
             {
                 0 => BuildStatId.MaxHealth,
                 1 => specialty,
@@ -50,7 +50,7 @@ internal static class ArcaneConstellations
             var shape = ring % 4;
             side = side * (8 + shape) / 10;
             radius = radius * (11 - shape) / 10;
-            yield return new(Id(school, ring, step), $"{themes[ring]} {Names[step]}",
+            yield return new(Id(school, ring, step), $"{themes[StableRingId(ring)]} {Names[step]}",
                 $"+{percent}% {label}.", notable ? PassiveNodeKind.Notable : PassiveNodeKind.Travel,
                 school, major ? 3 : notable ? 2 : 1, (ring % 9 - 4) * 500 + side, 3900 + ring / 9 * 540 + radius + (ring % 9 % 2) * 75,
                 PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(stat, percent / 100d)),
@@ -62,7 +62,7 @@ internal static class ArcaneConstellations
     {
         foreach (var (school, gate, themes, _) in Schools)
         {
-            yield return new(gate, Id(school, school == PassiveSchool.Fire ? 2 : 1, 0));
+            yield return new(gate, Id(school, 5, 0));
             for (var ring = 0; ring < themes.Length; ring++)
             {
                 for (var step = 0; step < Offsets.Length; step++)
@@ -76,5 +76,8 @@ internal static class ArcaneConstellations
     }
 
     private static string Id(PassiveSchool school, int ring, int step) =>
-        FormattableString.Invariant($"{Prefix}{school}-{ring}-{step}");
+        FormattableString.Invariant($"{Prefix}{school}-{StableRingId(ring)}-{step}");
+
+    // Retain the existing Fire entry ID when placing it on the east side.
+    private static int StableRingId(int ring) => ring switch { 2 => 5, 5 => 2, _ => ring };
 }
