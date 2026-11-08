@@ -71,6 +71,7 @@
     }
 
     async function reveal() {
+        if (splash.classList.contains('ignition-failed')) return;
         document.body.classList.remove('igniting');
         // The complete town is allowed to composite behind the opaque veil before
         // the veil fades. Decoded images alone are not a painted iPhone Safari frame.
@@ -119,8 +120,13 @@
         if (!scene) return;
         townWaitStarted = true;
         const current = generation;
+        // A broken asset cannot hold the screen indefinitely: offer manual retry,
+        // but never reveal partially painted town content on a timer.
+        const timeout = window.setTimeout(() => {
+            if (current === generation && townEntry) fail(new Error('Refuge artwork timed out.'));
+        }, 30000);
         townReady(scene).then(async () => {
-            if (current !== generation) return;
+            if (current !== generation || splash.classList.contains('ignition-failed')) return;
             await reveal();
             if (current === generation) {
                 townEntry = false;
@@ -128,7 +134,7 @@
             }
         }).catch(error => {
             if (current === generation) fail(error);
-        });
+        }).finally(() => window.clearTimeout(timeout));
     }
 
     window.wyrmforgeStartup = { revealInitial, beginTown, townRendered };
