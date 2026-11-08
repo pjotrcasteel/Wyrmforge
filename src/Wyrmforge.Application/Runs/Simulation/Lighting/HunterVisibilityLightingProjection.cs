@@ -19,7 +19,7 @@ public static class HunterVisibilityLightingProjection
     public static IReadOnlyList<LightingEmitter> CaptureForScene(Vector2D position, bool hasMoonlitTerrain) =>
         hasMoonlitTerrain ? [] : [Capture(position)];
 
-     /// <summary>Create the same stable source ID at the current C# player position each snapshot.</summary>
+    /// <summary>Create the same stable source ID at the current C# player position each snapshot.</summary>
     public static LightingEmitter Capture(Vector2D position) =>
         new(
             Id: SourceId,
