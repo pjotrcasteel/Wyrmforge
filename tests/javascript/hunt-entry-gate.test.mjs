@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createHuntEntryGate, huntEntryReadiness, huntEntrySceneKey }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-entry-gate.js';
 
@@ -109,4 +110,16 @@ test('a single scene locks input until complete, retains unlocked state through 
     gate.dispose();
     assert.equal(panel.removed, true);
     assert.equal(gate.isBlocking(), false);
+});
+
+test('while the gate is held, JS requests a side-effect-free C# snapshot, never a combat Tick(0)', () => {
+    const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    const codebehind = readFileSync(new URL(
+        '../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.cs', import.meta.url), 'utf8');
+    assert.match(arena, /entryBlocked\s*\?\s*state\.dotNetReference\.invokeMethodAsync\('PreviewFrame'\)/,
+        'loading must bypass the combat simulation completely');
+    assert.match(codebehind, /public RunRenderSnapshot PreviewFrame\(\)\s*=>\s*simulation\?\.CreateSnapshot\(\)/,
+        'the C# preview only reads the live scene');
+    assert.doesNotMatch(codebehind.match(/public RunRenderSnapshot PreviewFrame\(\)[\s\S]*?\[JSInvokable\]/)?.[0] ?? '',
+        /\.Tick\(/, 'C# startup preview never advances enemy attacks, spawns or damage');
 });
