@@ -221,13 +221,41 @@ test('more than 40 impacted blocks never force an unconditional full terrain rep
     cache.update({ ...base, revision: 2, changed }, 0);
     assert.equal(clips.length, 1, 'adjacent impacts share one clip');
     assert.equal(clears.length, 1, 'the surrounding terrain should not be cleared');
-    assert.ok(clears[0][3] < 60 * 32, 'the dirty clip is shorter than the map');
+    assert.equal(clears[0][1], 0, 'the dirty strip starts above all projected terrain');
+    assert.equal(clears[0][3], 60 * 32 + TERRAIN_PAD_UNITS * 2,
+        'the affected columns are repainted through the entire padded terrain height');
     clips.length = 0;
     clears.length = 0;
     cache.update({ ...base, revision: 3, changed: [0, 32 * 60 - 1] }, 0);
     assert.equal(clips.length, 2, 'distant changes require two independent clips');
     assert.equal(clears.length, 2);
     assert.ok(clears.every(rect => rect[2] < 32 * 32), 'neither local clip spans the map width');
+});
+
+test('iPhone crater clips coalesce vertical damage into complete local column strips', () => {
+    const clips = [], clears = [];
+    const ctx = { ...recorder(), beginPath() {}, clip() {},
+        rect(...area) { clips.push(area); }, clearRect(...area) { clears.push(area); } };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const initial = frame(32, 60, Array(32 * 60).fill(0));
+    cache.update(initial, 0);
+    clips.length = 0;
+    clears.length = 0;
+    // Actual iPhone evidence revision 1325: two changed fine blocks at c16, rows 52 and 53.
+    const changed = [1680, 1712];
+    cache.update({ ...initial, revision: 2, changed }, 0);
+    assert.equal(cache.regionalRepaints, 1);
+    assert.deepEqual(clips, [[15 * 32, 0, 6 * 32, 60 * 32 + 2 * TERRAIN_PAD_UNITS]],
+        'one contiguous full-height strip must replace the previous bounded dirty rectangle');
+    assert.deepEqual(clears, clips, 'the painter clears exactly the pixels it will repopulate');
+
+    clips.length = 0;
+    clears.length = 0;
+    const staggered = [4, 12, 20, 28, 36, 44].map(row => row * 32 + 10);
+    cache.update({ ...initial, revision: 3, changed: staggered }, 0);
+    assert.equal(clips.length, 1, 'multiple distant hits in the same columns must not redraw the strip six times');
+    assert.equal(clips[0][2], 6 * 32);
+    assert.equal(clears[0][3], 60 * 32 + 2 * TERRAIN_PAD_UNITS);
 });
 
 test('identical retransmitted fine voxels never repaint unchanged grass, road, albedo or normals', () => {
