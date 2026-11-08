@@ -50,11 +50,33 @@ export function shadowField(frame) {
     return frame.shadowField = { width, height, heights, cellMax, cellMin };
 }
 
+const shadowsByFrame = new WeakMap();
+
 /**
  * The shadow level (0 none, 1 to 3 deeper) of the 16 x 16 half-microcell samples of one column's top face, row-major, or null when nothing
  * shades it. `own` is the ground height of the column, or its 64 microcolumn heights (a dug or shaped column).
  */
 export function cellShadow(frame, column, row, own) {
+    let cache = shadowsByFrame.get(frame);
+    if (!cache) {
+        cache = new Map();
+        shadowsByFrame.set(frame, cache);
+    }
+    const index = row * frame.columns + column;
+    const cached = cache.get(index);
+    const whole = typeof own === 'number';
+    const entry = whole ? cached?.whole : cached?.fine;
+    if (entry?.own === own) return entry.levels;
+
+    const levels = calculateCellShadow(frame, column, row, own);
+    const cell = cached ?? {};
+    if (whole) cell.whole = { own, levels };
+    else cell.fine = { own, levels };
+    cache.set(index, cell);
+    return levels;
+}
+
+function calculateCellShadow(frame, column, row, own) {
     const field = shadowField(frame), { columns, rows } = frame;
     const whole = typeof own === 'number';
     let ownMin = whole ? own : 32767;
