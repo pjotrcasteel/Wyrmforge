@@ -169,17 +169,38 @@ export function inspectTerrainCacheRebuild(canvas) {
         TERRAIN_ART_SCALE).pixelComparison;
     const before = measure();
     const cachedBefore = sampleCachedTerrainViewport(cache, camera, TERRAIN_ART_SCALE);
+    // Keep the old authored masks alive across the forced rebuild for diagnosis.
+    // A changed map means stale input/invalidations, not a Canvas2D compositing issue.
+    const oldMaps = new Map(cache.kindMaps ?? []);
     const revision = frame.revision;
     const previousFullRepaints = cache.fullRepaints;
     cache.revision = null;
     cache.update(frame, band);
+    const mapDifferences = [];
+    let changedMaskPixels = 0;
+    for (const [index, beforeMap] of oldMaps) {
+        const afterMap = cache.kindMaps.get(index);
+        if (beforeMap === afterMap) continue;
+        let differing = 0;
+        if (beforeMap?.length === afterMap?.length) {
+            if (beforeMap) for (let i = 0; i < beforeMap.length; i++) if (beforeMap[i] !== afterMap[i]) differing++;
+        } else if (beforeMap || afterMap) differing = Math.max(beforeMap?.length ?? 0, afterMap?.length ?? 0);
+        if (!differing) continue;
+        changedMaskPixels += differing;
+        if (mapDifferences.length < 20) mapDifferences.push({ index, differing,
+            beforePresent: Boolean(beforeMap), afterPresent: Boolean(afterMap) });
+    }
     const cachedAfter = sampleCachedTerrainViewport(cache, camera, TERRAIN_ART_SCALE);
     const after = measure();
     return {
         revision,
         cacheRevision: cache.revision,
+        visualSeed: frame.visualSeed,
+        influenceBand: band,
+        changedBlocks: frame.changed?.slice(0, 60) ?? [],
         previousFullRepaints,
         fullRepaints: cache.fullRepaints,
+        mapParity: { checked: oldMaps.size, differingBlocks: mapDifferences, differingPixels: changedMaskPixels },
         cacheParity: compareTerrainPixels(cachedBefore.pixels, cachedAfter.pixels, cachedBefore.width),
         referenceBefore: before,
         referenceAfter: after
