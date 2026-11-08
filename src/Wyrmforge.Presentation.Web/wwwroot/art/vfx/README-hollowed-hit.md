@@ -4,12 +4,12 @@ Source: user-supplied `FX (2)(1).zip`, PVFX Foundry strict grid
 `effects/impacts/blood-splat/strict/grid/sprite-sheet.png`.
 License: PVFX Foundry **CC0 1.0 Universal**. Credit: PVFX Foundry / Pixel VFX Studio.
 Source SHA-256: `0de76e0a0aaece15f5c2ea7547542c34007d482b7eea846594377bc318b993f4`.
-Runtime SHA-256: `695bceb3f8dbc0de1a6940c79b98a7b94abd4db86a7aeaa0751c0fff1f0500b0`.
+Runtime SHA-256: `9a58b3feaf8e3f2cb087f0588f138372f02fbfda9276d529c02a42ebcf38c805`.
 
 The first eight authored frames are downsampled nearest-neighbor from 128×120 to
 64×60 and recolored strictly to the existing Hollowed-claw six-color gothic
-palette. No effects or pixels were procedurally invented. The lossless indexed
-PNG is 2.7 KB; its hit strip is 512×60.
+palette. No effects or pixels were procedurally invented. The lossless 4-bit indexed
+PNG is 2.4 KB; its hit strip is 512×60.
 
 **Authoritative trigger:** `DamageNumberRenderSnapshot.TargetId` identifies the
 enemy that actually lost health; `IsDragon` excludes boss ID collisions.

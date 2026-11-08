@@ -28,7 +28,7 @@ test('recolored ZIP atlas is compact and preserves authored dimensions and palet
     assert.equal(png.readUInt32BE(16),HOLLOW_HIT.cellWidth*HOLLOW_HIT.frames);
     assert.equal(png.readUInt32BE(20),HOLLOW_HIT.cellHeight);
     assert.equal(createHash('sha256').update(png).digest('hex'),
-        '695bceb3f8dbc0de1a6940c79b98a7b94abd4db86a7aeaa0751c0fff1f0500b0');
+        '9a58b3feaf8e3f2cb087f0588f138372f02fbfda9276d529c02a42ebcf38c805');
     assert.ok(png.length<4096);
 });
 test('the torso-aligned impact is crisp, bounded, and cannot modify gameplay',async()=>{
