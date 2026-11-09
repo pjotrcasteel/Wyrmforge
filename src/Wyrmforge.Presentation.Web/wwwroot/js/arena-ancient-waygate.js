@@ -5,13 +5,15 @@ let sprite = null;
 if (typeof Image !== 'undefined') {
     sprite = new Image();
     sprite.decoding = 'async';
-    sprite.src = new URL('../art/ancient-waygate.svg', import.meta.url).href;
+    sprite.src = new URL('../art/ancient-waygate.svg?v=20261109-grey-stone-v2', import.meta.url).href;
 }
 export function drawAncientWaygate(ctx, exit, elapsedSeconds = 0, locked = false) {
     if (!exit) return;
     const t = Number.isFinite(elapsedSeconds) ? elapsedSeconds : 0;
     ctx.save();
     ctx.translate(Math.round(exit.x), Math.round(exit.y));
+    // Two-thirds scale around the footpoint; preserves the C# exit position.
+    ctx.scale(2 / 3, 2 / 3);
     ctx.fillStyle = 'rgba(2,5,5,.55)';
     ctx.beginPath();
     ctx.ellipse(0, 31, 64, 15, 0, 0, TAU);
