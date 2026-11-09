@@ -251,14 +251,6 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
     const cast = snapshot.castMotion;
     const casting = cast && Number.isFinite(cast.progress) && cast.progress >= 0 && cast.progress < 1 && action(manifest, 'cast');
     const aiming = Number.isFinite(player.aimAngle) && (player.manualAim || player.aimTargetId != null || player.aimPropId != null);
-    // Movement owns the body's facing while walking. Aim may turn the body only
-    // when stationary; otherwise the Wizard visibly walks sideways/backwards
-    // because the aimed direction overrides the actual travel direction.
-    if (moving && wizard.heading) wizard.direction = wizard.heading;
-    else if (casting && Number.isFinite(cast.angle)) wizard.direction = pickDirectionFromAngle(cast.angle, wizard.direction);
-    else if (aiming) wizard.direction = pickDirectionFromAngle(player.aimAngle, wizard.direction);
-    else if (wizard.heading) wizard.direction = wizard.heading;
-
     const walk = durationsOf(manifest, 'walk'), start = durationsOf(manifest, 'walk_start'), stop = durationsOf(manifest, 'walk_stop');
     if (!paused) {
         if (moving && !reducedMotion) {
@@ -274,6 +266,13 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
         if (wizard.mode === 'walk') wizard.phase = (wizard.phase + (wizard.lastTick == null ? 0 : (clock - wizard.lastTick) * 1000 / clipDuration(walk))) % 1;
         wizard.lastTick = clock;
     } else wizard.lastTick = null;
+
+    // Keep the travel heading through the last planted step before idle aim takes over.
+    if (moving && wizard.heading) wizard.direction = wizard.heading;
+    else if (casting && Number.isFinite(cast.angle)) wizard.direction = pickDirectionFromAngle(cast.angle, wizard.direction);
+    else if (wizard.mode === 'stop' && wizard.heading) wizard.direction = wizard.heading;
+    else if (aiming) wizard.direction = pickDirectionFromAngle(player.aimAngle, wizard.direction);
+    else if (wizard.heading) wizard.direction = wizard.heading;
 
     if (casting) {
         wizard.action = 'cast'; wizard.frame = wizardCastFrame(manifest, cast.progress);
