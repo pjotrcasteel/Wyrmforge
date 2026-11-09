@@ -13,7 +13,7 @@ p{color:#b9b5b0}#status{text-align:center}</style></head><body>
 <div class="controls"><label><input id="anchors" type="checkbox" checked> Show anchor markers</label> <button id="pause">Pause</button> <button id="previous">Previous frame</button> <button id="next">Next frame</button> <span id="frame-label"></span></div>
 <p id="status">Loading authored Wizard sprites…</p>
 <main><section><h2>Legacy mage</h2><canvas id="legacy" width="420" height="340"></canvas><p>Four-direction renderer / legacy art</p></section>
-<section><h2>Authored Wizard (current Hunt)</h2><canvas id="authored" width="420" height="340"></canvas><p>Eight-direction authored sprite set · White: feet · Orange: hand · Cyan: crystal</p></section></main>
+<section><h2>Authored Wizard (current Hunt)</h2><canvas id="authored" width="420" height="340"></canvas><p>Eight-direction authored sprite set · Green arrow: expected movement · White: feet · Orange: hand · Cyan: crystal</p></section></main>
 <script type="module">
 import {drawMage} from './js/arena-mage.js';
 import {preloadAuthoredCharacter,authoredCharacter,drawAuthoredWizard,createAuthoredState} from './js/authored-characters.js';
@@ -54,6 +54,20 @@ function paint(canvas,label,now){
    state.wizard.frame=frozenFrame%spec.framesPerDirection;
    document.getElementById('frame-label').textContent=`${direction} ${action} frame ${state.wizard.frame+1}/${spec.framesPerDirection}`;
    drawAuthoredWizard(ctx,player,state,false);
+   // Direction arrow is independent of the sprite artwork. It reveals
+   // incorrect row-to-direction mapping without changing gameplay.
+   const angles={E:0,SE:Math.PI/4,S:Math.PI/2,SW:3*Math.PI/4,
+    W:Math.PI,NW:-3*Math.PI/4,N:-Math.PI/2,NE:-Math.PI/4};
+   const heading=angles[direction];
+   if(Number.isFinite(heading)){
+    const ax=player.x+Math.cos(heading)*31,ay=player.y+Math.sin(heading)*31;
+    ctx.strokeStyle='#71e0ac';ctx.fillStyle='#71e0ac';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(player.x,player.y);ctx.lineTo(ax,ay);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ax,ay);
+    ctx.lineTo(ax-Math.cos(heading-.5)*5,ay-Math.sin(heading-.5)*5);
+    ctx.lineTo(ax-Math.cos(heading+.5)*5,ay-Math.sin(heading+.5)*5);
+    ctx.closePath();ctx.fill();
+   }
    if(document.getElementById('anchors').checked){
     const points=[
      {x:player.x,y:player.y+12,color:'#ffffff',label:'root'},
