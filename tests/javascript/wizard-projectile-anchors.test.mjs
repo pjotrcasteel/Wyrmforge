@@ -37,3 +37,12 @@ test('nearby unrelated projectile is never snapped to the Wizard hand', () => {
     assert.equal(wizardProjectileVisualPosition({ x: 105, y: 100, angle: Math.PI, spell: 1 }, player, wizard, cast), null);
     assert.equal(wizardProjectileVisualPosition({ x: 105, y: 100, angle: 0, spell: 1 }, player, wizard, null), null);
 });
+
+test('only an active cast pose with finite data can attach a projectile', () => {
+    const projectile = { x: 105, y: 100, angle: 0, spell: 1 };
+    assert.equal(wizardProjectileVisualPosition(projectile, player, { ...wizard, action: 'walk' }, cast), null);
+    assert.equal(wizardProjectileVisualPosition(projectile, player, wizard, { ...cast, progress: 1 }), null);
+    assert.equal(wizardProjectileVisualPosition(projectile, player, wizard, { ...cast, progress: NaN }), null);
+    assert.equal(wizardProjectileVisualPosition({ ...projectile, angle: NaN }, player, wizard, cast), null);
+    assert.equal(wizardProjectileVisualPosition({ ...projectile, x: Infinity }, player, wizard, cast), null);
+});
