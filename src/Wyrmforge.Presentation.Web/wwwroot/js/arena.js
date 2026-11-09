@@ -819,8 +819,8 @@ function draw(state, snapshot, width, height) {
     // Paint mobile glow at its upload density to avoid a full-resolution raster and downscale each frame.
     const emissiveScale = gpu?.quality === 'mobile' ? Math.max(1, artScale / 2) : artScale;
     const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
-        ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            groundCaptureView ?? view, performance.now() / 1000, state.reducedMotion.matches, emissiveScale, layerLabEnabled('crackVeins')) : null;
+        ? groundEmissiveView(state, groundCaptureView ?? view, visualSeconds, emissiveScale, huntBand(state, snapshot), gpu.quality)
+        : null;
     state.veinSeams = emissive?.seams ?? 0;
     const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, groundCaptureView ?? camera, groundCaptureView?.width ?? width, groundCaptureView?.height ?? height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
@@ -2091,6 +2091,24 @@ function drawAimRune(ctx, player) {
     ctx.moveTo(34, 0); ctx.lineTo(38, -3); ctx.lineTo(42, 0); ctx.lineTo(38, 3); ctx.closePath();
     ctx.stroke();
     ctx.restore();
+}
+
+/** Mobile glow animates at the same cadence as its texture uploads. */
+function groundEmissiveView(state, view, seconds, scale, band, quality) {
+    const frame = state.terrainFrame;
+    const reducedMotion = state.reducedMotion.matches;
+    const includeCracks = layerLabEnabled('crackVeins');
+    const key = quality === 'mobile'
+        ? `${Math.floor(seconds * 30)}:${view.x}:${view.y}:${view.width}:${view.height}:${scale}:${band}:${reducedMotion}:${includeCracks}`
+        : null;
+    if (key !== null && state.groundEmissiveKey === key && state.groundEmissiveFrame === frame)
+        return state.groundEmissiveResult;
+
+    const result = paintGroundEmissive(state, frame, state.destructionFx, band, view, seconds, reducedMotion, scale, includeCracks);
+    state.groundEmissiveKey = key;
+    state.groundEmissiveFrame = frame;
+    state.groundEmissiveResult = result;
+    return result;
 }
 
 /** An immutable terrain capture only changes when its painted revision, camera window or output resolution changes. */
