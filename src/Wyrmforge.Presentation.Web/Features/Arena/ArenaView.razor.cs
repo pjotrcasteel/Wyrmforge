@@ -148,6 +148,8 @@ public partial class ArenaView : IAsyncDisposable
             ? FindWorldSiteReviewSeed(seedKind)
             : RunSeed ?? testSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
+        simulation.FieldAmbushEnabled = new Uri(Navigation.Uri).IsLoopback &&
+            query.Any(value => string.Equals(value, "fieldAmbush=1", StringComparison.OrdinalIgnoreCase));
         if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();
         var terrainRequested = query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase));
