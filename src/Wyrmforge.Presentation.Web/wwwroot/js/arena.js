@@ -165,6 +165,8 @@ export function initializeArena(canvas, dotNetReference, { huntEntryLoading = fa
     });
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
+    state.showPerfOverlay = params.get('perf') === '1';
+    state.capturePerf = params.get('perfCapture') === '1';
     state.lighting01 = lighting01Requested(params);
     // Optional legacy review presets remain independent of the default greybox;
     // the normal grey receiver will be illuminated by this same shared engine.
@@ -1514,9 +1516,7 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     // A large performance readout obscured monsters in the iPhone combat viewport.
     // Keep diagnostics available to testers without making them part of the ordinary HUD.
     if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const showOverlay = params.get('perf') === '1';
-    const capture = params.get('perfCapture') === '1';
+    const { showPerfOverlay: showOverlay, capturePerf: capture } = state;
     if (!showOverlay && !capture) return;
     // Sampling the full report every frame adds avoidable work during the encounter.
     const now = performance.now();
@@ -1526,6 +1526,7 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     // Capture metrics without obscuring the game with the legacy performance HUD.
     window.__wyrmforgePerf = {
         ...report,
+        gpuLargestUploads: state.gpuWorld?.lastFrameTopUploads ?? null,
         simulationHz: state.displaySimulationHz,
         simulationAvgMs: state.displaySimulationMilliseconds,
         bridgeAvgMs: state.displayBridgeMilliseconds,
