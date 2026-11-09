@@ -29,7 +29,7 @@ public sealed class RunVarietyCatalogTests
     [TestMethod]
     public void RunUpgradeCatalog_VarietyPass_ExpandsChoicePool()
     {
-        Assert.AreEqual(12, RunUpgradeCatalog.All.Count);
+        Assert.AreEqual(14, RunUpgradeCatalog.All.Count);
         Assert.IsNotNull(RunUpgradeCatalog.Get(RunUpgradeId.Bulwark));
         Assert.IsNotNull(RunUpgradeCatalog.Get(RunUpgradeId.Velocity));
         Assert.IsNotNull(RunUpgradeCatalog.Get(RunUpgradeId.Emberbrand));

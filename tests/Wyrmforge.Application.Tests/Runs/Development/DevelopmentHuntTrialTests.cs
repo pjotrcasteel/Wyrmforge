@@ -6,6 +6,8 @@ using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Progression.PassiveTree;
 
 namespace Wyrmforge.Application.Tests.Runs.Development;
 
@@ -13,6 +15,51 @@ namespace Wyrmforge.Application.Tests.Runs.Development;
 public sealed class DevelopmentHuntTrialTests
 {
     private static readonly SelfPlayBuildDefinition Build = SelfPlayBuildCatalog.All.First();
+
+    [TestMethod]
+    public void FireEvolutionReview_UsesPermanentCoreAndTemporaryPowersWithoutLeakingToNextRun()
+    {
+        var factory = new RunSimulationFactory(new SeededRandomSource(1));
+        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, 1, SpellId.FireBolt, 1337, 390, 844)
+        { ReviewFireEvolution = true, BossReadySpell = false };
+        var review = factory.CreateDevelopmentHunt(Build.SelectedNodes, setup);
+        var normal = factory.Create(Build.SelectedNodes, seed: setup.Seed);
+        Assert.AreEqual(5, review.PreparedFireballLevel);
+        Assert.AreEqual(1, review.PreparedFireballMutations.Count);
+        Assert.AreEqual(1, review.CreateSnapshot().Hud.Spells.Single(spell => spell.Name == SpellCatalog.Get(SpellId.FireBolt).Name).Rank);
+        Assert.AreEqual(1, normal.PreparedFireballLevel);
+        Assert.AreEqual(0, normal.PreparedFireballMutations.Count);
+        Assert.AreEqual(0, normal.SynergyEffectsResolved);
+        Assert.AreEqual(0, review.CompletedMapNodes.Count);
+        Assert.ThrowsExactly<ArgumentException>(() => factory.CreateDevelopmentHunt(Build.SelectedNodes, setup with { BossReadySpell = true }));
+    }
+
+    [TestMethod]
+    [DataRow(368, 597, .05, FireballMutationId.CinderNeedle, true)]
+    [DataRow(368, 597, .0166666667, FireballMutationId.CinderNeedle, false)]
+    [DataRow(298, 420, .05, FireballMutationId.CinderNeedle, true)]
+    [DataRow(298, 420, .0166666667, FireballMutationId.CinderNeedle, true)]
+    public void FireEvolutionReview_RespectsLiveKillConditions(int width, int height, double delta, FireballMutationId mutation, bool expectedField)
+    {
+        var selection = new PassiveTreeSelection();
+        selection.SetActiveSchool(PassiveSchool.Fire);
+        selection.SelectPath(PassiveTreePlanner.Plan(selection, "fire-long-pyre")!.NodeIds);
+        var setup = new DevelopmentHuntSetup(DragonId.Ashfang, false, 2, SpellId.FireBolt, 1337, width, height, true)
+        { ReviewFireEvolution = true, BossReadySpell = false, Environment = true, ReviewMutation = mutation };
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(selection.Selected, setup);
+        var agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, 1337, Build.PreferredSchool);
+        var snapshot = run.CreateSnapshot();
+        var sawField = false;
+        for (var step = 0; step * delta < 120 && snapshot.Dragon is not null && !run.IsEnded; step++)
+        {
+            var observation = new RunAgentObservation(snapshot, [], [], [], [], [], run.Depth, 0, false);
+            snapshot = run.Tick(delta, agent.ChooseMovement(observation), width, height);
+            sawField |= snapshot.BurningGroundCount > 0;
+        }
+        // Different input timing can put the killing hit outside the burn window.
+        // Keep the negative encounter: the evolution must not turn every boss death into a guaranteed proc.
+        Assert.AreEqual(expectedField, sawField, $"time={snapshot.Hud.Seconds}, boss={snapshot.Dragon?.Health}, effects={run.SynergyEffectsResolved}");
+    }
 
     [DataRow(DragonId.Ashfang, true, "Crownfall")]
     [DataRow(DragonId.Stormcoil, true, "Skybreak Crossing")]

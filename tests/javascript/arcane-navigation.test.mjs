@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-function map(touchEvents = false) {
+function map(touchEvents = false, worldSize = 3200) {
     const listeners = new Map(), frames = new Map(), captures = new Set();
     let nextFrame = 0, disconnected = false;
     const canvas = { style: { setProperty(name, value) { this[name] = value; } } };
     const viewport = {
         clientWidth: 340, clientHeight: 500,
-        dataset: { worldSize: '3200', startX: '1600', startY: '1200' },
+        dataset: { worldSize: String(worldSize), startX: '1600', startY: '1200' },
         querySelector: () => canvas,
         classList: { toggle() {}, remove() {} },
         getBoundingClientRect: () => ({ left: 0, top: 0 }),
@@ -160,4 +160,46 @@ test('Safari pinch followed by one-finger panning stays continuous and never sel
     m.api.dispose(m.viewport);
     assert.equal(m.listeners.size, 0);
     assert.equal(m.windowListeners.size, 0);
+});
+
+for (const size of [4800, 12000]) {
+    test(`whole Web fits a phone as the authored graph grows to ${size}`, () => {
+        const m = map(false, size);
+        m.viewport.clientWidth = 320;
+        m.viewport.clientHeight = 305;
+        m.api.overview(m.viewport);
+        const { x, y, scale } = m.view();
+        assert.ok(size * scale <= 320);
+        assert.ok(x >= 0 && y >= 64);
+        assert.ok(y + size * scale <= m.viewport.clientHeight - 16);
+        m.api.zoom(m.viewport, -0.5);
+        assert.ok(size * m.view().scale <= 320);
+        m.api.reset(m.viewport);
+        assert.equal(m.view().scale, .95);
+    });
+}
+
+test('opening a long route reveals its explanation while retaining map context', () => {
+    const m = map();
+    let revealed = null;
+    const explanation = { scrollIntoView(options) { revealed = options.block; } };
+    m.api.revealInspector({ querySelector(selector) {
+        assert.equal(selector, '.inspector-effect');
+        return explanation;
+    }, scrollIntoView() { assert.fail('The entire long route must not displace the map'); } });
+    assert.equal(revealed, 'nearest');
+});
+
+test('overview fits occupied landmarks instead of the empty world', () => {
+    const m = map(false, 11600);
+    m.viewport.clientWidth = 390;
+    m.viewport.clientHeight = 600;
+    m.viewport.querySelectorAll = () => [{style:{left:'3800px',top:'700px'}}, {style:{left:'7800px',top:'7100px'}}];
+    m.api.overview(m.viewport);
+    const { x, y, scale } = m.view();
+    assert.ok(scale > 0.07);
+    assert.ok(x + 3800 * scale >= 16);
+    assert.ok(x + 7800 * scale <= 374);
+    assert.ok(y + 700 * scale >= 64);
+    assert.ok(y + 7100 * scale <= 584);
 });

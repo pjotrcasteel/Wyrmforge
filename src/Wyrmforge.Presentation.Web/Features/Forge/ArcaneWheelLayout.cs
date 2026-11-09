@@ -7,8 +7,9 @@ namespace Wyrmforge.Presentation.Web.Features.Forge;
 // ownership and connections remain domain data; these are presentation routes.
 internal static class ArcaneWheelLayout
 {
-    internal const double Size = 3200;
+    internal const double Size = 9800;
     internal const double Center = Size / 2;
+    internal const double SigilRadius = Size * 525 / 1200;
     internal readonly record struct Point(double X, double Y);
     private static readonly PassiveSchool[] Order =
         [PassiveSchool.Fire, PassiveSchool.Frost, PassiveSchool.Arcane, PassiveSchool.Storm, PassiveSchool.Death, PassiveSchool.Binding];
@@ -26,6 +27,33 @@ internal static class ArcaneWheelLayout
     private static readonly IReadOnlyDictionary<string, (double Side, double Radius)> Landmarks =
         new Dictionary<string, (double, double)>
         {
+            ["fire-enduring-inner-1"] = (-635, 1850),
+            ["fire-enduring-inner-2"] = (-610, 1980),
+            ["fire-furnace-inner-1"] = (-220, 1835),
+            ["fire-furnace-inner-2"] = (-215, 1960),
+            ["fire-shelter-inner-1"] = (-45, 1860),
+            ["fire-shelter-inner-2"] = (-55, 1990),
+            ["fire-pyre-crossroads"] = (-350, 1560),
+            ["fire-enduring-1"] = (-660, 1720),
+            ["fire-enduring-2"] = (-800, 1820),
+            ["fire-enduring-3"] = (-835, 1970),
+            ["fire-enduring-4"] = (-750, 2100),
+            ["fire-enduring-5"] = (-590, 2150),
+            ["fire-furnace-1"] = (-350, 1720),
+            ["fire-furnace-2"] = (-470, 1830),
+            ["fire-furnace-3"] = (-495, 1975),
+            ["fire-furnace-4"] = (-380, 2075),
+            ["fire-furnace-5"] = (-240, 2140),
+            ["fire-shelter-1"] = (-35, 1730),
+            ["fire-shelter-2"] = (110, 1825),
+            ["fire-shelter-3"] = (160, 1970),
+            ["fire-shelter-4"] = (70, 2105),
+            ["fire-shelter-5"] = (-75, 2185),
+            ["fire-cinder-thread"] = (-90, 700),
+            ["fire-ember-memory"] = (-130, 830),
+            ["fire-crucible"] = (-240, 960),
+            ["fire-ember-covenant"] = (-350, 1230),
+            ["fire-long-pyre"] = (-350, 1400),
             ["wildfire"] = (-140, 1020), ["detonation"] = (140, 1020),
             ["inferno"] = (-230, 1190), ["volcanic"] = (230, 1190),
             ["deep-freeze"] = (-140, 1020), ["ice-armor"] = (140, 1020),
@@ -60,7 +88,8 @@ internal static class ArcaneWheelLayout
             Center + Math.Sin(angle) * radius + Math.Cos(angle) * side);
     }
     internal static Point Anchor(PassiveSchool school, PassiveSchool active, double radius = 1320) => Local(school, active, 0, radius);
-    internal static Point RegionLabel(PassiveSchool school, PassiveSchool active, double side, double radius) => Local(school, active, side, radius);
+    internal static string DormantArtworkTransform(PassiveSchool active) =>
+        FormattableString.Invariant($"rotate({-60 * Array.IndexOf(Order, active)} {Center} {Center}) scale({Size / 1200})");
 
     internal static Point Position(PassiveNodeDefinition node, PassiveSchool active)
     {
@@ -73,6 +102,12 @@ internal static class ArcaneWheelLayout
             if (node.Id == $"{bridge.Prefix}-2") return BridgePoint(bridge, active, 2);
         }
         var owner = ArcaneSchoolCatalog.Owner(node) ?? PassiveSchool.Fire;
+        if (node.Id.StartsWith("constellation-Fire-", StringComparison.Ordinal))
+        {
+            // Fan the constellation lanes around the Wyrmheart. The same
+            // school angle rotates the entire sector when another school is active.
+            return Polar(Angle(owner, active) + node.X / 4500, (node.Y - 1100) * 1.03);
+        }
         if (Landmarks.TryGetValue(node.Id, out var landmark)) return Local(owner, active, landmark.Side, landmark.Radius);
         if (node.Id.EndsWith("-start", StringComparison.Ordinal)) return Local(owner, active, 0, 300);
         if (node.Id.EndsWith("-1", StringComparison.Ordinal)) return Local(owner, active, 0, 460);
@@ -116,8 +151,36 @@ internal static class ArcaneWheelLayout
             }
             return Polyline(points);
         }
-        return Polyline([Position(PassiveTreeCatalog.Get(connection.From), active), Position(PassiveTreeCatalog.Get(connection.To), active)]);
+        var from = Position(PassiveTreeCatalog.Get(connection.From), active);
+        var to = Position(PassiveTreeCatalog.Get(connection.To), active);
+        if (connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal))
+        {
+            var length = Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
+            // Keep the small facets angular. Curve the longer routes that
+            // connect them into branches, instead of outlining every loop.
+            if (length < 235 || connection.To == "constellation-Fire-approach-2-0") return Polyline([from, to]);
+            var bend = connection.From == "fire-blast-shaping" ? -1 : 1;
+            // Keep short links close to their endpoints and give the long
+            // Fire approaches a wider sweep. Rotation uses the same geometry.
+            return CurvedLink(from, to, bend * Math.Min(120, length * .08), length);
+        }
+        return Polyline([from, to]);
     }
+    private static string CurvedLink(Point from, Point to, double bend, double length)
+    {
+        if (length <= 0) return Polyline([from, to]);
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var points = new Point[9];
+        for (var step = 0; step < points.Length; step++)
+        {
+            var t = step / (points.Length - 1d);
+            var offset = Math.Sin(Math.PI * t) * bend / length;
+            points[step] = new(from.X + dx * t - dy * offset, from.Y + dy * t + dx * offset);
+        }
+        return Polyline(points);
+    }
+
     private static string Polyline(IEnumerable<Point> points) => string.Join(" ", points.Select((point, index) =>
         string.Create(CultureInfo.InvariantCulture, $"{(index == 0 ? "M" : "L")} {point.X:0.##} {point.Y:0.##}")));
 }

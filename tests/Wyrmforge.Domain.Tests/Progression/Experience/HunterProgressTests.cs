@@ -14,7 +14,7 @@ public sealed class HunterProgressTests
         Assert.AreEqual(2, hunter.Level);
         Assert.AreEqual(1, gain.AtlasPoints);
         Assert.AreEqual(7, hunter.ExperienceInLevel);
-        Assert.AreEqual(45, hunter.ExperienceToNext);
+        Assert.AreEqual(46, hunter.ExperienceToNext);
     }
 
     [TestMethod]
@@ -54,5 +54,16 @@ public sealed class HunterProgressTests
         Assert.AreEqual(1, hunter.Level, "Missing historic XP must not be fabricated from the old point budget.");
         Assert.AreEqual("Hunter 5: relic cache", hunter.NextRewardForBudget(24));
         Assert.AreEqual("Hunter 2: 1 Arcane point", hunter.NextRewardForBudget(1));
+    }
+    [TestMethod]
+    public void RestoreLegacyCurve_PreservesMilestonesAndFractionalProgress()
+    {
+        var hunter = new HunterProgress();
+        hunter.RestoreLegacyCurve(270); // Hunter 6, 20 XP into a 65 XP step.
+        Assert.AreEqual(6, hunter.Level);
+        Assert.AreEqual(6, hunter.AtlasBudget);
+        Assert.AreEqual(1, hunter.EarnedCaches);
+        Assert.AreEqual(20 * HunterProgress.RequiredForLevel(6) / 65, hunter.ExperienceInLevel);
+        Assert.AreEqual(0, hunter.AddExperience(0).AtlasPoints);
     }
 }

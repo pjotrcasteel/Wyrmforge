@@ -167,6 +167,7 @@ public sealed partial class RunSimulation
         if (target is DragonState { Definition.Id: DragonId.Ashfang } hurtAshfang && hurtAshfang.Health > 0) AshfangTakesDamage(hurtAshfang, Math.Min(healthBeforeHit, damage));
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
+        QueueSynergyKill(target, source);
 
         switch (target)
         {

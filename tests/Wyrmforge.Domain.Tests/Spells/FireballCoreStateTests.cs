@@ -104,7 +104,7 @@ public sealed class FireballCoreStateTests
     }
 
     [TestMethod]
-    public void LearnedMutation_CanEquipOnlyInUnlockedUniqueSlot()
+    public void LearnedMutation_FirstPermanentUpgradeUnlocksFirstSocket()
     {
         var core = new FireballCoreState();
         Assert.IsTrue(core.DiscoverSecured([DragonEssenceId.CinderHeart]));
@@ -126,6 +126,21 @@ public sealed class FireballCoreStateTests
         Assert.IsTrue(core.Upgrade(vault, materials));
         Assert.IsTrue(core.Equip(1, FireballMutationId.Detonation));
         Assert.AreEqual(FireballMutationId.Detonation, core.Slots[1]);
+    }
+
+    [TestMethod]
+    public void LegacyLevelOneSocket_IsPreservedDormantUntilUpgraded()
+    {
+        var core = new FireballCoreState();
+        core.Restore(new(1, [FireballMutationId.Detonation], [FireballMutationId.Detonation]));
+        var restored = new FireballCoreState();
+        restored.Restore(core.ToSave());
+        Assert.AreEqual(FireballMutationId.Detonation, restored.Slots[0]);
+        Assert.AreEqual(0, restored.Equipped.Count);
+        var vault = new DragonEssenceVault();
+        vault.Store(DragonEssenceId.CinderHeart);
+        Assert.IsTrue(restored.Upgrade(vault, new HuntMaterialSatchel()));
+        CollectionAssert.AreEqual(new[] { FireballMutationId.Detonation }, restored.Equipped.ToArray());
     }
 
     [TestMethod]

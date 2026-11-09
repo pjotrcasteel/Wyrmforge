@@ -7,11 +7,13 @@ public enum PassiveNodeTier
     Minor,
     Medium,
     Major,
+    Grand,
+    Keystone,
 }
 
 public static class PassiveNodeTiers
 {
-    public static PassiveNodeTier For(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin
+    public static PassiveNodeTier For(PassiveNodeDefinition node) => node.Tier ?? (node.Kind == PassiveNodeKind.Origin
         ? PassiveNodeTier.Major
         : node.Cost switch
         {
@@ -19,5 +21,5 @@ public static class PassiveNodeTiers
             2 => PassiveNodeTier.Medium,
             3 => PassiveNodeTier.Major,
             _ => throw new ArgumentOutOfRangeException(nameof(node)),
-        };
+        });
 }

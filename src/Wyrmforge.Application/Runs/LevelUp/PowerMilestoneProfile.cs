@@ -21,7 +21,7 @@ public static class PowerMilestoneProfile
             LevelChoiceKind.SchoolPower => choice.Id == $"power:{activeSchool}",
             LevelChoiceKind.Rune => choice.Id.StartsWith("rune:", StringComparison.Ordinal)
                 && Enum.TryParse<RunUpgradeId>(choice.Id.AsSpan("rune:".Length), out var rune)
-                && IsMajorRune(rune)
+                && (IsMajorRune(rune) || FireHuntBreakthroughs.CanOffer(build, rune, level))
                 && (Telemetry.ChoiceSchools.RuneSchool(rune) is not { } affinity || affinity == activeSchool),
             _ => false,
         };

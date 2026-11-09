@@ -14,6 +14,18 @@ public partial class BuildView : IAsyncDisposable
 {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
+    [Parameter] public EventCallback<DivineArchetype> OnSwitchSchool { get; set; }
+    private PassiveSchool? inspectedSchool;
+
+    private async Task SwitchInspectedSchoolAsync()
+    {
+        if (inspectedSchool is not { } school || !ArcaneSchoolCatalog.Get(school).Authored) return;
+        await OnSwitchSchool.InvokeAsync(ArcaneSchoolCatalog.Get(school).Archetype);
+        inspectedSchool = null;
+        inspectorOpen = false;
+        await ResetViewAsync();
+    }
+
     [Parameter] public bool FirstPointGuide { get; set; }
     [Parameter] public FireballCoreState? FireballCore { get; set; }
     [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
@@ -21,6 +33,18 @@ public partial class BuildView : IAsyncDisposable
 
 
     private PassiveSchool ActiveSchool => ArcaneSchoolCatalog.For(CharacterSchool);
+
+    private int SchoolInvestment(PassiveSchool school) => Selection.Selected.Select(PassiveTreeCatalog.Get)
+        .Where(node => ArcaneSchoolCatalog.Owner(node) == school).Sum(node => node.Cost);
+
+    private string AtmosphereStyle(PassiveSchool school)
+    {
+        var invested = SchoolInvestment(school);
+        var opacity = .12 + .28 * invested / (invested + 12d);
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 930);
+        return PointStyle(point) + FormattableString.Invariant($"opacity:{opacity:0.###};");
+    }
+
 
     protected override void OnParametersSet()
     {
@@ -183,7 +207,7 @@ public partial class BuildView : IAsyncDisposable
     }
     private void CloseInspector() => inspectorOpen = false;
 
-    private string NodeClass(PassiveNodeDefinition node)
+    private string NodeClass(PassiveNodeDefinition node, IReadOnlySet<string>? preview)
     {
         var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}", $"tier-{PassiveNodeTiers.For(node).ToString().ToLowerInvariant()}" };
         if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
@@ -192,7 +216,7 @@ public partial class BuildView : IAsyncDisposable
         if (ArcaneSchoolCatalog.Owner(node) != ActiveSchool && node.Kind != PassiveNodeKind.Origin) classes.Add("study-locked");
         if (node.Requirement is not null) classes.Add("mutation-enhancer");
         if (IsSelected(node)) classes.Add("selected");
-        else if (IsPreviewNode(node.Id)) classes.Add("preview");
+        else if (preview?.Contains(node.Id) == true) classes.Add("preview");
         else if (Selection.CanSelect(node.Id)) classes.Add("available");
         else classes.Add("locked");
 
@@ -200,24 +224,50 @@ public partial class BuildView : IAsyncDisposable
         return string.Join(' ', classes);
     }
 
-    private string ConnectionClass(PassiveTreeConnection connection)
+    private bool ShowNode(PassiveNodeDefinition node) =>
+        node.Kind == PassiveNodeKind.Origin ||
+        ArcaneSchoolCatalog.Owner(node) is PassiveSchool.Fire || ArcaneSchoolCatalog.Owner(node) == ActiveSchool || IsAllocated(node.Id);
+
+    private bool ShowConnection(PassiveTreeConnection connection) =>
+        ShowNode(PassiveTreeCatalog.Get(connection.From)) && ShowNode(PassiveTreeCatalog.Get(connection.To));
+
+    private static string DormantArtworkId(PassiveSchool school) => school switch
+    {
+        PassiveSchool.Death => "necromancer",
+        PassiveSchool.Binding => "summoner",
+        _ => school.ToString().ToLowerInvariant(),
+    };
+
+    private string ConnectionClass(PassiveTreeConnection connection, IReadOnlySet<string>? preview, string? anchor)
     {
         var fromAllocated = IsAllocated(connection.From);
         var toAllocated = IsAllocated(connection.To);
         if (fromAllocated && toAllocated) return "web-edge active";
-        if (IsPreviewConnection(connection)) return "web-edge preview";
+        if (inspectorOpen && preview is { Count: > 0 }
+            && (preview.Contains(connection.From) || connection.From == anchor)
+            && (preview.Contains(connection.To) || connection.To == anchor)) return "web-edge preview";
         if ((fromAllocated && CanAllocate(connection.To)) || (toAllocated && CanAllocate(connection.From))) return "web-edge available";
-        return "web-edge";
+        return ActiveSchool == PassiveSchool.Fire && connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal)
+            ? "web-edge fire-constellation"
+            : "web-edge";
     }
 
-    private bool IsPreviewNode(string id) => FocusedPlan?.NodeIds.Contains(id) == true;
-
-    private bool IsPreviewConnection(PassiveTreeConnection connection)
+    private static string? ConnectionStroke(PassiveTreeConnection connection, string edgeClass)
     {
-        var plan = FocusedPlan;
-        if (!inspectorOpen || plan is null || plan.NodeIds.Count == 0) return false;
-        var route = new HashSet<string>(plan.NodeIds, StringComparer.Ordinal) { plan.AnchorId };
-        return route.Contains(connection.From) && route.Contains(connection.To);
+        if (edgeClass == "web-edge fire-constellation") return "stroke: #bd8258b8";
+        if (edgeClass != "web-edge") return null;
+        var school = ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(connection.To));
+        if (school != ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(connection.From))) return null;
+        return school switch
+        {
+            PassiveSchool.Fire => "stroke: #a966465e",
+            PassiveSchool.Frost => "stroke: #7ca7c88c",
+            PassiveSchool.Storm => "stroke: #c1a3638c",
+            PassiveSchool.Arcane => "stroke: #a282c38c",
+            PassiveSchool.Death => "stroke: #7eac868c",
+            PassiveSchool.Binding => "stroke: #c1a98b8c",
+            _ => null,
+        };
     }
 
     private IReadOnlyList<ArcaneStatBadge> RouteMinorBonuses(PassiveTreeRoutePlan plan) =>
@@ -249,7 +299,7 @@ public partial class BuildView : IAsyncDisposable
         _ => ArcaneNodePresentation.SchoolIcon(node),
     };
 
-    private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
+    private static string KindLabel(PassiveNodeDefinition node) => node.Tier is { } tier ? tier.ToString().ToUpperInvariant() : node.Kind switch
     {
         PassiveNodeKind.Origin => "ORIGIN",
         PassiveNodeKind.Travel => "MINOR · PASSIVE BONUS",
@@ -258,23 +308,23 @@ public partial class BuildView : IAsyncDisposable
         _ => "MAJOR · KEYSTONE",
     };
 
-    private string NodeState(PassiveNodeDefinition node)
+    private string NodeState(PassiveNodeDefinition node, IReadOnlySet<string>? preview)
     {
         if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
         if (Selection.Selected.Contains(node.Id)) return "TRAVERSED";
         if (!Selection.CanLearn(node)) return ArcaneSchoolCatalog.Owner(node) == ActiveSchool ? "NEEDS MUTATION" : "OTHER SCHOOL";
-        if (IsPreviewNode(node.Id)) return "PLANNED";
+        if (preview?.Contains(node.Id) == true) return "PLANNED";
         if (Selection.CanSelect(node.Id)) return "REACHABLE";
         if (node.MasteryGroup is { } group && Selection.Selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group)) return "CHOICE LOCKED";
         return "UNCHARTED";
     }
 
-    private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
+    private string NodeStateClass(PassiveNodeDefinition node, IReadOnlySet<string>? preview) => NodeState(node, preview).ToLowerInvariant().Replace(' ', '-');
     private static string SchoolLabel(PassiveNodeDefinition node) => ArcaneSchoolCatalog.Owner(node) is { } school ? ArcaneSchoolCatalog.Get(school).Name : "The mage’s learned knowledge";
 
     private async Task Reset()
     {
-        if (!refundWarningAccepted && Selection.Selected.Any(id => ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) != ActiveSchool))
+        if (!refundWarningAccepted && Selection.Selected.Count > 0)
         {
             pendingReset = true;
             showRefundDialog = true;
@@ -292,7 +342,8 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task FocusSchoolAsync(PassiveSchool school)
     {
-        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 740);
+        inspectedSchool = school;
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, school == ActiveSchool || SchoolInvestment(school) > 0 ? 740 : ArcaneWheelLayout.SigilRadius * .63);
         inspectorOpen = false;
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);
     }

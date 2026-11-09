@@ -37,10 +37,28 @@ public sealed class HunterProgress
         return $"Hunter {next.Level}: {reward}";
     }
 
-    public static int RequiredForLevel(int level) => 40 + Math.Clamp(level - 1, 0, MaxLevel - 1) * 5;
-    public static long TotalForLevel(int level)
+    // The first milestone remains at 40 XP. Each subsequent step grows by 15%.
+    public static int RequiredForLevel(int level) =>
+        (int)Math.Round(40 * Math.Pow(1.15, Math.Clamp(level - 1, 0, MaxLevel - 1)));
+
+    public static long TotalForLevel(int level) =>
+        Enumerable.Range(1, Math.Clamp(level - 1, 0, MaxLevel - 1)).Sum(step => (long)RequiredForLevel(step));
+
+    public void RestoreLegacyCurve(long? experience)
     {
-        var completed = Math.Clamp(level - 1, 0, MaxLevel - 1);
+        var xp = Math.Clamp(experience ?? 0, 0, 1_000_000_000L);
+        var level = 1;
+        while (level < MaxLevel && xp >= LegacyTotalForLevel(level + 1)) level++;
+        var remainder = xp - LegacyTotalForLevel(level);
+        var migratedRemainder = level == MaxLevel
+            ? remainder
+            : remainder * RequiredForLevel(level) / (LegacyTotalForLevel(level + 1) - LegacyTotalForLevel(level));
+        Restore(TotalForLevel(level) + migratedRemainder);
+    }
+
+    private static long LegacyTotalForLevel(int level)
+    {
+        var completed = level - 1;
         return completed * 40L + completed * (completed - 1L) * 5 / 2;
     }
 

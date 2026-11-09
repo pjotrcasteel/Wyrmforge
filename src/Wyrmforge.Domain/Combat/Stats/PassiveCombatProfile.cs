@@ -27,10 +27,12 @@ public sealed record PassiveCombatProfile(
     bool EchoChamber,
     bool AstralBarrage)
 {
-    public static PassiveCombatProfile Create(IReadOnlySet<string> selected)
+    public static PassiveCombatProfile Create(IReadOnlySet<string> selected, PassiveSchool? activeSchool = null)
     {
         var modifiers = BuildModifierSet.Aggregate(selected.Select(PassiveTreeCatalog.Get)
-            .Where(node => node.Requirement is null).Select(node => node.Modifiers));
+            .Where(node => node.Requirement is null || !PassiveDormancy.IsActive(node, activeSchool))
+            .Select(node => PassiveDormancy.Resolve(node, activeSchool)));
+        selected = selected.Where(id => PassiveDormancy.IsActive(PassiveTreeCatalog.Get(id), activeSchool)).ToHashSet(StringComparer.Ordinal);
         return new PassiveCombatProfile(
             modifiers.Apply(BuildStatId.Damage, 1),
             modifiers.Apply(BuildStatId.CastInterval, 1),

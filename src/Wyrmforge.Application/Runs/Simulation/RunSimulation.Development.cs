@@ -33,6 +33,15 @@ public sealed partial class RunSimulation
         build.Spells.TryFocus(setup.Spell);
         var evolution = SpellEvolutionCatalog.All.First(choice => choice.Spell == setup.Spell && !choice.RequiresForgeUnlock && !choice.RequiresMasteryUnlock);
         if (setup.BossReadySpell) build.Evolutions.Select(evolution.Id, build.Spells);
+        if (setup.ReviewFireEvolution)
+        {
+            // The later evolution review includes the existing second Emberbrand rank.
+            // Its faster reapplication can survive Ashfang's flight/recovery windows.
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.Emberbrand);
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.Emberbrand);
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.CinderCascade);
+            build.RunUpgrades.Apply(Domain.Progression.RunUpgrades.RunUpgradeId.SolarWake);
+        }
         RefreshBuildModifiers(true);
         RefreshBuildHud();
 

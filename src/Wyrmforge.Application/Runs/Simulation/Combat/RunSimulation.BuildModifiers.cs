@@ -30,13 +30,16 @@ public sealed partial class RunSimulation
         player.Health = Math.Min(player.Health, player.MaxHealth);
     }
 
+    private IReadOnlySet<string> ActivePassiveNodes() => learnedPassiveNodeIds
+        .Where(id => PassiveDormancy.IsActive(PassiveTreeCatalog.Get(id), activePassiveSchool)).ToHashSet(StringComparer.Ordinal);
+
     private IEnumerable<BuildModifierProfile> ActiveWebMutationModifierProfiles()
     {
         foreach (var id in learnedPassiveNodeIds)
         {
             var node = PassiveTreeCatalog.Get(id);
-            if (node.Requirement is not null) continue;
-            var stats = node.Modifiers.Stats.Where(modifier => modifier.Stat is
+            if (node.Requirement is not null && PassiveDormancy.IsActive(node, activePassiveSchool)) continue;
+            var stats = PassiveDormancy.Resolve(node, activePassiveSchool).Stats.Where(modifier => modifier.Stat is
                 BuildStatId.MutationRadius or BuildStatId.MutationDuration or BuildStatId.BurnDamage).ToArray();
             if (stats.Length > 0) yield return new BuildModifierProfile(stats);
         }

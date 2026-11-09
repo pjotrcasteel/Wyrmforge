@@ -4,21 +4,19 @@ public sealed class PassiveTreeSelection
 {
     private readonly HashSet<string> selected = [];
     private int pointBudget;
-    private readonly Dictionary<PassiveSchool, int> reserved = [];
     private IReadOnlySet<Wyrmforge.Domain.Progression.Signature.FireballMutationId>? knownMutations;
 
     // Null is the legacy catalogue/import authoring context. The character editor
     // always binds its actual school before allowing player allocation or loadouts.
     public PassiveSchool? ActiveSchool { get; private set; }
-    public int ReservedPoints => reserved.Values.Sum();
-    public IReadOnlyDictionary<PassiveSchool, int> Reserved => new Dictionary<PassiveSchool, int>(reserved);
+    public int ReservedPoints => 0;
+    public IReadOnlyDictionary<PassiveSchool, int> Reserved => new Dictionary<PassiveSchool, int>();
     public int AvailablePoints => Math.Max(0, PointBudget - SpentPoints - ReservedPoints);
 
     public void SetActiveSchool(PassiveSchool school)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(Enum.IsDefined(school), false);
         ActiveSchool = school;
-        reserved.Remove(school);
     }
 
     public void SetKnownFireballMutations(IEnumerable<Wyrmforge.Domain.Progression.Signature.FireballMutationId> mutations) =>
@@ -30,14 +28,8 @@ public sealed class PassiveTreeSelection
 
     public void RestoreReserved(IReadOnlyDictionary<PassiveSchool, int>? saved)
     {
-        reserved.Clear();
-        foreach (var (school, value) in (saved ?? new Dictionary<PassiveSchool, int>()).OrderBy(pair => pair.Key))
-        {
-            if (!Enum.IsDefined(school)) continue;
-            var points = Math.Clamp(value, 0, Math.Max(0, PointBudget - SpentPoints - ReservedPoints));
-            if (points > 0) reserved[school] = points;
-        }
-        if (ActiveSchool is { } active) reserved.Remove(active);
+        // Legacy reservations represented already-refunded points within PointBudget.
+        // Releasing them needs no budget increment and is idempotent on every reload.
     }
 
     public PassiveTreeSelection(int pointBudget = PassiveTreeCatalog.TotalPoints)
@@ -95,7 +87,6 @@ public sealed class PassiveTreeSelection
     public bool Remove(string id)
     {
         if (!CanRemove(id)) return false;
-        ReserveInactive(PassiveTreeCatalog.Get(id));
         return selected.Remove(id);
     }
 
@@ -132,12 +123,11 @@ public sealed class PassiveTreeSelection
 
     public void Reset()
     {
-        foreach (var id in selected) ReserveInactive(PassiveTreeCatalog.Get(id));
         selected.Clear();
     }
 
     // Loadouts are edits, not save restoration. They cannot teach another school,
-    // erase its learned nodes, or route around the inactive-refund reservation.
+    // erase its learned nodes. Refunds share the existing earned-point balance.
     public void ReallocateNodes(IEnumerable<string> ids)
     {
         if (ActiveSchool is null) { RestoreNodes(ids); return; }
@@ -164,12 +154,6 @@ public sealed class PassiveTreeSelection
 
     private bool HasMasteryConflict(PassiveNodeDefinition node) => node.MasteryGroup is { } group &&
         selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group);
-
-    private void ReserveInactive(PassiveNodeDefinition node)
-    {
-        if (ActiveSchool is null || ArcaneSchoolCatalog.Owner(node) is not { } owner || owner == ActiveSchool) return;
-        reserved[owner] = reserved.GetValueOrDefault(owner) + node.Cost;
-    }
 
     private bool IsConnectedAnchor(string id) => id == PassiveTreeCatalog.OriginId || selected.Contains(id);
 }

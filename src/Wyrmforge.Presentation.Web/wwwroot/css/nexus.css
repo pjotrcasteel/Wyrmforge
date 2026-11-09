@@ -249,7 +249,7 @@
 .menu-nexus .school-wheel-view .web-pan-space { position:static; width:100%; height:100%; }
 .menu-nexus .school-wheel-view .arcane-web-canvas,
 .menu-nexus .school-wheel-view .web-connections,
-.menu-nexus .school-wheel-rings { width:3200px; height:3200px; }
+.menu-nexus .school-wheel-rings { width:var(--web-world-size,3200px); height:var(--web-world-size,3200px); }
 .menu-nexus .school-wheel-view .arcane-web-canvas { will-change:transform; }
 .menu-nexus .school-wheel-rings { position:absolute; inset:0; pointer-events:none; }
 .menu-nexus .school-wheel-rings circle { fill:none; stroke:#b4864e40; stroke-width:2; }
@@ -364,3 +364,39 @@
 }
 .menu-nexus .web-amplifier-socket select:disabled { opacity:.65; }
 .menu-nexus .web-amplifier-socket > small { color:#bda993; font:.76rem/1.45 Georgia,serif; }
+
+/* Nodes retain tap priority when overview school labels overlap a route. */
+.menu-nexus .school-wheel-view .overview .web-node { z-index:6; }
+
+/* World-anchored school atmosphere rotates with its sector. Static gradients avoid
+   particle work and retain path contrast; allocation grows luminosity asymptotically. */
+.menu-nexus .web-school-atmosphere {
+    position:absolute; width:1100px; height:1400px; transform:translate(-50%,-50%);
+    pointer-events:none; z-index:0; contain:paint;
+    background:radial-gradient(ellipse at 50% 45%,var(--school-haze) 0,transparent 65%),
+        repeating-radial-gradient(ellipse at 50% 80%,transparent 0 130px,var(--school-vein) 133px 136px,transparent 139px 210px);
+    mask-image:radial-gradient(ellipse,#000 15%,transparent 68%);
+}
+.menu-nexus .atmosphere-fire { --school-haze:#a83d16; --school-vein:#f38d46; }
+.menu-nexus .atmosphere-frost { --school-haze:#326780; --school-vein:#b6e8ee; }
+.menu-nexus .atmosphere-storm { --school-haze:#6c5a25; --school-vein:#eac878; }
+.menu-nexus .atmosphere-arcane { --school-haze:#60347d; --school-vein:#c99ce9; }
+.menu-nexus .atmosphere-death { --school-haze:#315d51; --school-vein:#82ac8a; }
+.menu-nexus .atmosphere-binding { --school-haze:#72573a; --school-vein:#c6a66a; }
+
+/* Keep distant commitments visible under the Nexus school-wheel overrides. */
+.menu-nexus .school-wheel-view .web-node.tier-major.locked,
+.menu-nexus .school-wheel-view .web-node.tier-grand.locked,
+.menu-nexus .school-wheel-view .web-node.tier-keystone.locked { opacity:.85; }
+
+/* Keep the active Fire routes traceable at overview scale. */
+.menu-nexus .school-wheel-view .overview .web-edge.fire-constellation {
+    stroke: #bd8258b8;
+}
+
+/* The active school sigil represents the central Wyrmheart in the wheel. */
+.menu-nexus .school-wheel-view .web-node.kind-origin { visibility:hidden; }
+
+.menu-nexus .school-wheel-view .wheel-school-badge { width:120px; min-height:120px; align-items:center; }
+.menu-nexus .school-wheel-view .wheel-school-badge.current .wheel-school-icon { width:105px; height:105px; }
+.menu-nexus .school-wheel-view .web-dormant-sectors { pointer-events:none; }

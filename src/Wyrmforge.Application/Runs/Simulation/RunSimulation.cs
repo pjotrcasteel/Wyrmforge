@@ -28,7 +28,8 @@ public sealed partial class RunSimulation
 {
     private readonly LevelChoiceService levelChoiceService;
     private readonly IRandomSource randomSource;
-    private readonly PassiveCombatProfile passiveProfile;
+    private PassiveCombatProfile passiveProfile;
+    private Wyrmforge.Domain.Progression.PassiveTree.PassiveSchool? activePassiveSchool;
     private WyrmrealmMapState mapState;
     private readonly List<WyrmrealmMapNode> completedRouteNodes = [];
     private readonly RunBuildState build = new();
@@ -107,6 +108,11 @@ public sealed partial class RunSimulation
         if (!availablePrimarySpells.Contains(id) || elapsed > 0 || mapState.EncounterActive || completedRouteNodes.Count > 0 || IsEnded)
             return false;
         if (!build.Spells.TryChoosePrimary(id)) return false;
+        activePassiveSchool = Wyrmforge.Domain.Progression.PassiveTree.ArcaneSchoolCatalog.For(DivineArchetypeCatalog.FromExistingSchool(SpellCatalog.Get(id).School).Id);
+        passiveProfile = PassiveCombatProfile.Create(learnedPassiveNodeIds, activePassiveSchool);
+        player.Barrier = passiveProfile.WinterShell;
+        InitializeResonance(ActivePassiveNodes());
+        RebuildFireballAmplification();
         ApplyPreparedLaboratoryMutation();
         RefreshBuildModifiers();
         RefreshBuildHud();
@@ -212,6 +218,7 @@ public sealed partial class RunSimulation
         UpdateLightning(delta);
         ResolveProjectileHits();
         ResolveRelicDefeatBursts();
+        ResolvePendingSynergies();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         CompleteMapEncounterCleanup();
         // All hostile attacks buffer their strongest hit until this exact resolution point.
@@ -428,6 +435,7 @@ public sealed partial class RunSimulation
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
             ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
         {
+            BurningGroundCount = burningGrounds.Count,
             DamageNumbers = CreateDamageNumberSnapshots(),
             HuntEntranceWalking = HuntEntranceActive,
             DragonDefeat = dragonDefeat,

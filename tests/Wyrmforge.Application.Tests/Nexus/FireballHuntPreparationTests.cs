@@ -11,6 +11,19 @@ namespace Wyrmforge.Application.Tests.Nexus;
 public sealed class FireballHuntPreparationTests
 {
     [TestMethod]
+    public void PreparedMutation_RejectsLevelOneAndExcessSocketInputs()
+    {
+        var factory = new RunSimulationFactory(new FirstRandomSource());
+        var novice = factory.Create(new HashSet<string>(), fireballLevel: 1, fireballMutations: [FireballMutationId.Detonation]);
+        Assert.AreEqual(0, novice.PreparedFireballMutations.Count);
+        var upgraded = factory.Create(new HashSet<string>(), fireballLevel: 2,
+            fireballMutations: [FireballMutationId.Detonation, FireballMutationId.ScorchedEarth]);
+        Assert.AreEqual(1, upgraded.PreparedFireballMutations.Count);
+        upgraded.PrepareFireballCoreLevel(1);
+        Assert.AreEqual(0, upgraded.PreparedFireballMutations.Count);
+    }
+
+    [TestMethod]
     public void Create_WithPreparedFireballMutation_PreservesOnlyPlayableUniqueEffects()
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 2401,

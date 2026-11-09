@@ -5,6 +5,25 @@
 @inject IJSRuntime JavaScript
 
 <section class="build-view school-wheel-view">
+    @if (inspectedSchool is { } sector && sector != ActiveSchool)
+    {
+        <div class="school-switch-panel" role="status">
+            <strong>@ArcaneSchoolCatalog.Get(sector).Name</strong>
+            @if (ArcaneSchoolCatalog.Get(sector).Authored)
+            {
+                <span>Keep every allocation. Other schools provide dormant bonuses.</span>
+                <button @onclick="SwitchInspectedSchoolAsync">Activate school</button>
+            }
+            else
+            {
+                <span>This school's signature and paths are not yet playable.</span>
+            }
+        </div>
+    }
+    @{
+        var mapPlan = FocusedPlan;
+        var mapPreview = mapPlan?.NodeIds.ToHashSet(StringComparer.Ordinal);
+    }
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             @if (FirstPointGuide && PointsLeft > 0)
@@ -21,17 +40,6 @@
                 <strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span>
             </button>
 
-            @if (Selection.ReservedPoints > 0)
-            {
-                <details class="reserved-points">
-                    <summary>@Selection.ReservedPoints reserved</summary>
-                    @foreach (var reservation in Selection.Reserved)
-                    {
-                        <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
-                    }
-                </details>
-            }
-
             @* Navigation stays accessible, but no longer steals vertical space or labels the active sector twice. *@
             <nav class="web-floating-controls" aria-label="Arcane Web navigation">
                 <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
@@ -44,38 +52,40 @@
                  data-start-x="@Coordinate(ArcaneWheelLayout.Center)" data-start-y="@Coordinate(ArcaneWheelLayout.Center - 400)"
                  role="region" aria-label="Arcane specialization map" tabindex="0" @ref="viewport">
                 <div class="web-pan-space">
-                    <div class="arcane-web-canvas">
-                        <svg class="school-wheel-rings" viewBox="0 0 3200 3200" aria-hidden="true">
-                            <circle cx="1600" cy="1600" r="1500" />
-                        </svg>
+                    <div class="arcane-web-canvas" style="--web-world-size:@(ArcaneWheelLayout.Size)px">
                         @foreach (var school in ArcaneSchoolCatalog.All)
                         {
-                            var point = ArcaneWheelLayout.Anchor(school.Id, ActiveSchool);
+                            var point = ArcaneWheelLayout.Anchor(school.Id, ActiveSchool, school.Id == ActiveSchool ? 0 : ArcaneWheelLayout.SigilRadius);
+                            <div class="web-school-atmosphere atmosphere-@school.Icon" aria-hidden="true"
+                                 data-atmosphere-school="@school.Id" data-invested-points="@SchoolInvestment(school.Id)"
+                                 style="@AtmosphereStyle(school.Id)"></div>
                             <button class="wheel-school-badge @(school.Id == ActiveSchool ? "current" : string.Empty) @(!school.Authored ? "future" : string.Empty)"
                                     style="@PointStyle(point)" data-school="@school.Id" data-active="@(school.Id == ActiveSchool ? "true" : "false")"
                                     aria-label="@($"Inspect {school.Name} sector")" @onclick="() => FocusSchoolAsync(school.Id)">
                                 <i class="wheel-school-icon school-icon-@school.Icon" aria-hidden="true"></i>
-                                <b>@school.Name</b><small>@(school.Id == ActiveSchool ? "Learning" : !school.Authored ? "Coming later" : "Known paths")</small>
                             </button>
                         }
 
-                        @* Region inscriptions reinforce long-term routes; they do not intercept node taps or drags. *@
-                        <span class="web-region-label region-conflagration" aria-hidden="true"
-                              style="@PointStyle(ArcaneWheelLayout.RegionLabel(PassiveSchool.Fire, ActiveSchool, -990, 570))">CONFLAGRATION</span>
-                        <span class="web-region-label region-immolation" aria-hidden="true"
-                              style="@PointStyle(ArcaneWheelLayout.RegionLabel(PassiveSchool.Fire, ActiveSchool, 1050, 980))">IMMOLATION</span>
-
-                        <svg class="web-connections" viewBox="0 0 3200 3200" aria-hidden="true">
+                        <svg class="web-connections" viewBox="@($"0 0 {ArcaneWheelLayout.Size} {ArcaneWheelLayout.Size}")" aria-hidden="true">
+                            <g transform="@ArcaneWheelLayout.DormantArtworkTransform(ActiveSchool)" class="web-dormant-sectors">
+                                @foreach (var school in ArcaneSchoolCatalog.All.Where(school => school.Id != PassiveSchool.Fire && school.Id != ActiveSchool))
+                                {
+                                    <use href="@($"art/arcane-wheel-dormant.svg#{DormantArtworkId(school.Id)}")" />
+                                }
+                            </g>
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
-                                <path class="@ConnectionClass(connection)" data-from="@connection.From" data-to="@connection.To"
+                                if (!ShowConnection(connection)) continue;
+                                var edgeClass = ConnectionClass(connection, mapPreview, mapPlan?.AnchorId);
+                                <path class="@edgeClass" style="@ConnectionStroke(connection, edgeClass)" data-from="@connection.From" data-to="@connection.To"
                                       d="@ArcaneWheelLayout.Path(connection, ActiveSchool)" />
                             }
                         </svg>
 
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
-                            <button data-node-id="@node.Id" data-tier="@PassiveNodeTiers.For(node).ToString().ToLowerInvariant()" class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
+                            if (!ShowNode(node)) continue;
+                            <button data-node-id="@node.Id" data-tier="@PassiveNodeTiers.For(node).ToString().ToLowerInvariant()" class="@NodeClass(node, mapPreview)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
                                 aria-label="@NodeAriaLabel(node)" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
                                 @if (node.Kind == PassiveNodeKind.Travel)
                                 {
@@ -109,7 +119,7 @@
             <button class="inspector-close" aria-label="Close node inspector" @onclick="CloseInspector">×</button>
             <div class="inspector-heading">
                 <span class="node-kind">@KindLabel(FocusedNode)</span>
-                <span class="node-state @NodeStateClass(FocusedNode)">@NodeState(FocusedNode)</span>
+                <span class="node-state @NodeStateClass(FocusedNode, mapPreview)">@NodeState(FocusedNode, mapPreview)</span>
             </div>
             <div class="inspector-title">
                 <span class="inspector-glyph">@NodeGlyph(FocusedNode)</span>
@@ -159,12 +169,13 @@
             @if (!Selection.CanLearn(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
                 <p class="school-learning-lock">@(ArcaneSchoolCatalog.Owner(FocusedNode) != ActiveSchool
-                    ? $"Switch to {SchoolLabel(FocusedNode)} to invest here. Learned bonuses still apply when relevant."
+                    ? $"Switch to {SchoolLabel(FocusedNode)} to invest here. Allocated nodes provide their smaller dormant bonus."
                     : "Discover this mutation before specializing it.")</p>
             }
 
             @if (FocusedNode.Kind != PassiveNodeKind.Origin)
             {
+                <p class="dormant-effect">@PassiveDormancy.Description(FocusedNode)</p>
                 <div class="inspector-cost"><strong>@FocusedNode.Cost</strong><span>node cost</span></div>
             }
 
@@ -175,7 +186,7 @@
 
             @if (IsSelected(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
-                <p class="nexus-active-note">✓ Learned · bonuses apply when relevant</p>
+                <p class="nexus-active-note">✓ Learned · @(ArcaneSchoolCatalog.Owner(FocusedNode) == ActiveSchool ? "active effect" : "dormant effect")</p>
                 <button class="route-action refund" disabled="@(!Selection.CanRemove(FocusedNode.Id))" @onclick="RefundFocused">Refund node</button>
             }
             else if (FocusedNode.Kind != PassiveNodeKind.Origin)
@@ -286,8 +297,9 @@
 @if (pendingRefundId is not null || pendingReset)
 {
     <dialog @ref="refundDialog" class="school-refund-dialog" aria-labelledby="school-refund-title" @onkeydown="RefundDialogKey">
-        <h2 id="school-refund-title">Refund inactive-school points?</h2>
-        <p>Removed bonuses stop applying immediately. These points stay reserved for their school until you switch back.</p>
+        <h2 id="school-refund-title">Refund Arcane points?</h2>
+        <p>@(pendingReset ? $"Refund {Selection.Selected.Count} nodes for {Selection.SpentPoints} points?" : $"Refund {FocusedNode.Name} for {FocusedNode.Cost} points?")</p>
+        <p>Removed bonuses stop applying immediately. Refunded points become available to spend in your active school.</p>
         <div><button @onclick="CancelRefund">Cancel</button><button class="confirm-refund" @onclick="ConfirmRefundAsync">Refund points</button></div>
     </dialog>
 }
