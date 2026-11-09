@@ -584,16 +584,23 @@ function requestTerrainFrame(state, snapshot) {
     if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
     state.terrainRequestBusy = true;
     const requestedSite = huntEntrySceneKey(snapshot);
+    const requestStarted = state.capturePerf ? performance.now() : null;
     state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
         .then(frame => {
             // A pending request from the previous site must never repaint the new one,
             // even if both happen to carry the same numeric terrain revision.
             if (!frame || requestedSite !== state.entryTerrainSceneKey) return;
             const previous = state.terrainFrame;
+            const responseReceived = requestStarted === null ? null : performance.now();
             state.terrainFrame = mergeTerrainFrame(previous, frame);
             // Revision -1 is the initial full load, not destruction.
             if (previous) observeTerrain(state.destructionFx ??= createDestructionFx(), previous, state.terrainFrame,
                 performance.now() / 1000, state.reducedMotion.matches);
+            if (responseReceived !== null) state.terrainUpdateTiming = {
+                revision: state.terrainFrame.revision,
+                requestMs: responseReceived - requestStarted,
+                mergeAndEffectsMs: performance.now() - responseReceived,
+            };
         })
         .catch(error => console.error('Wyrmforge terrain frame failed.', error))
         .finally(() => state.terrainRequestBusy = false);
@@ -934,7 +941,9 @@ function draw(state, snapshot, width, height) {
     if (gpu) {
         try {
             gpu.engine.setDebugView(layerLabView());
+            const renderStarted = state.capturePerf ? performance.now() : null;
             gpu.render(ctx, state.sharedLightingFrame);
+            if (renderStarted !== null) state.gpuRenderSubmitMs = performance.now() - renderStarted;
         } catch (error) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
@@ -1536,6 +1545,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     // Capture metrics without obscuring the game with the legacy performance HUD.
     window.__wyrmforgePerf = {
         ...report,
+        terrainUpdateTiming: snapshot?.environment?.terrain ? state.terrainUpdateTiming ?? null : null,
+        gpuRenderSubmitMs: state.gpuWorld ? state.gpuRenderSubmitMs ?? null : null,
         gpuLargestUploads: state.gpuWorld?.lastFrameTopUploads ?? null,
         simulationHz: state.displaySimulationHz,
         simulationAvgMs: state.displaySimulationMilliseconds,
