@@ -1053,7 +1053,8 @@ function draw(state, snapshot, width, height) {
     drawDamageNumbers(ctx, snapshot.damageNumbers, state.damageNumberMode, state.reducedMotion.matches, lightViewport);
 
     // Cast VFX stay in the spell pass; they do not alter collision or cast timing.
-    drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
+    drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches,
+        authoredOn && authoredCharacter('Wizard') ? state.authored.wizard : null, snapshot.player);
 
     ctx.restore();
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
