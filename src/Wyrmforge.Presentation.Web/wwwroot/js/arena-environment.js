@@ -1,3 +1,4 @@
+import { drawAncientWaygate } from './arena-ancient-waygate.js';
 import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261026-organic-ground-v2';
 import { drawWetForestDressing, drawWetForestCastShadows, drawWetForestFirelight } from './arena-wet-forest-dressing.js';
 import { wetForestTreeFrame, drawWetForestTreeAccents, drawWetForestTreeArt } from './arena-wet-forest-vegetation.js';
@@ -969,52 +970,7 @@ function drawOpenHealingCache(ctx) {
 }
 
 export function drawArenaExit(ctx, exit, elapsedSeconds = 0, locked = false) {
-    if (!exit) return;
-    const { x, y } = exit;
-    const pulse = Math.sin(elapsedSeconds * 3) * .08;
-    ctx.save();
-    if (locked) ctx.globalAlpha *= .62;
-    if (artReady() && drawArtFrame(ctx, 'environment', 'exit.waystone', Math.round(x), Math.round(y))) {
-        if (!locked) {
-            // Only cleared passages breathe; the waystone remains visible while sealed.
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = `rgba(161,106,208,${.16 + pulse})`;
-            ctx.beginPath();
-            ctx.ellipse(x, y - 8, 22 * (1 + pulse), 30, 0, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.restore();
-        return;
-    }
-    ctx.translate(x, y);
-    ctx.fillStyle = 'rgba(5,3,12,.82)';
-    ctx.strokeStyle = '#c7ac7f';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-36, 32);
-    ctx.lineTo(-36, -21);
-    ctx.quadraticCurveTo(-36, -50, 0, -57);
-    ctx.quadraticCurveTo(36, -50, 36, -21);
-    ctx.lineTo(36, 32);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = locked ? 'rgba(65,54,77,.32)' : 'rgba(161,106,208,.32)';
-    ctx.beginPath();
-    ctx.ellipse(0, 3, 25 * (1 + pulse), 34, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(221,183,255,.6)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-12, -8);
-    ctx.lineTo(0, -20);
-    ctx.lineTo(12, -8);
-    ctx.stroke();
-    ctx.fillStyle = '#f3d7ac';
-    ctx.font = 'bold 11px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText(locked ? 'SEALED' : 'NEXT TRAIL ↑', 0, 54);
-    ctx.restore();
+    drawAncientWaygate(ctx, exit, elapsedSeconds, locked);
 }
 
 function drawTerritoryBarrier(ctx, barrier, element, worldWidth, worldHeight, elapsed) {
