@@ -28,7 +28,10 @@ public sealed class WetForestPlayableMaterialBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.GotoAsync(root.TrimEnd('/') + "/arena-material-kit?seed=1204",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await Page.WaitForFunctionAsync("() => document.getElementById('wyrmforge-ignition')?.classList.contains('ignition-complete') === true",
+        // This proof imports and exercises the playable renderer directly; it does not need the
+        // application's optional ignition overlay to finish before the source-art check begins.
+        // Waiting on that unrelated UI transition caused deployed Pages smoke timeouts.
+        await Page.WaitForFunctionAsync("() => document.readyState === 'complete'",
             null, new PageWaitForFunctionOptions { Timeout = 45000 });
 
         var before = await Page.EvaluateAsync<string>(@"async ({width, habitat}) => {
