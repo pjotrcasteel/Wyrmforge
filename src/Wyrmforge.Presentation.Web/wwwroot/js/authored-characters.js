@@ -276,12 +276,7 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
     } else wizard.lastTick = null;
 
     if (casting) {
-        const frames = durationsOf(manifest, 'cast'), release = releaseFrame(manifest, 'cast');
-        const p = Math.max(0, Math.min(.999, cast.progress));
-        // Wind-up frames run to the release frame at the C# release point, follow-through frames fill the rest.
-        const frame = p < CAST_RELEASE_AT ? Math.floor(p / CAST_RELEASE_AT * release)
-            : release + Math.min(frames.length - release - 1, Math.floor((p - CAST_RELEASE_AT) / (1 - CAST_RELEASE_AT) * (frames.length - release)));
-        wizard.action = 'cast'; wizard.frame = frame;
+        wizard.action = 'cast'; wizard.frame = wizardCastFrame(manifest, cast.progress);
     } else if (wizard.mode === 'start') {
         wizard.action = 'walk_start'; wizard.frame = frameAtTime(start, (clock - wizard.modeStarted) * 1000).index;
     } else if (wizard.mode === 'walk') {
@@ -291,6 +286,24 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
     } else {
         wizard.action = 'idle'; wizard.frame = frameAtTime(durationsOf(manifest, 'idle'), clock * 1000, true).index;
     }
+}
+
+/**
+ * Map the simulation cast clock onto the authored clip's real frame durations.
+ * The simulation releases at CAST_RELEASE_AT; the authored release frame is
+ * preserved at that instant without compressing every wind-up frame equally.
+ */
+export function wizardCastFrame(manifest, progress) {
+    const frames = durationsOf(manifest, 'cast');
+    if (!frames.length) return 0;
+    const release = Math.max(0, Math.min(frames.length - 1, releaseFrame(manifest, 'cast')));
+    const beforeMs = clipDuration(frames.slice(0, release));
+    const afterMs = clipDuration(frames.slice(release));
+    const p = Math.max(0, Math.min(.999999, Number(progress) || 0));
+    const ms = p < CAST_RELEASE_AT
+        ? p / CAST_RELEASE_AT * beforeMs
+        : beforeMs + (p - CAST_RELEASE_AT) / (1 - CAST_RELEASE_AT) * afterMs;
+    return frameAtTime(frames, ms).index;
 }
 
 // ---------------------------------------------------------------- loading
