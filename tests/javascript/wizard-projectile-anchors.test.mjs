@@ -5,7 +5,7 @@ import { wizardProjectileVisualPosition } from '../../src/Wyrmforge.Presentation
 
 const player = { x: 100, y: 100 };
 const wizard = { direction: 'E', action: 'cast', frame: 3 };
-const cast = { spell: 1, angle: 0, progress: .2 };
+const cast = { spell: 1, angle: 0, progress: .2, x: 100, y: 100 };
 
 test('all eight Wizard directions have finite distinct hand and crystal anchors', () => {
     for (const direction of ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']) {
@@ -55,4 +55,14 @@ test('moving Wizard does not launch from a hand facing away from the shot', () =
         { ...wizard, direction: 'N' }, cast), null);
     assert.ok(wizardProjectileVisualPosition(projectile, player,
         { ...wizard, direction: 'NE' }, cast));
+});
+
+test('moving away from the cast origin cannot pull an in-flight projectile to the current hand', () => {
+    const projectile = { x: 110, y: 100, angle: 0, spell: 1 };
+    assert.equal(wizardProjectileVisualPosition(projectile, { x: 125, y: 100 },
+        wizard, cast), null);
+    assert.ok(wizardProjectileVisualPosition(projectile, { x: 103, y: 100 },
+        wizard, cast));
+    assert.equal(wizardProjectileVisualPosition(projectile, player, wizard,
+        { ...cast, x: NaN }), null);
 });
