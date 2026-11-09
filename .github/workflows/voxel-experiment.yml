@@ -1,0 +1,31 @@
+name: Voxel experiment focused checks
+on:
+  push:
+    branches: [experiment/voxel-foundation-v2]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel/**'
+      - 'tests/javascript/experimental-voxel/**'
+      - '.github/workflows/voxel-experiment.yml'
+  pull_request:
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel/**'
+      - 'tests/javascript/experimental-voxel/**'
+      - '.github/workflows/voxel-experiment.yml'
+permissions:
+  contents: read
+jobs:
+  focused-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test isolated voxel world
+        run: node --test tests/javascript/experimental-voxel/*.test.mjs
+      - name: Validate static experiment files
+        run: |
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel/index.html
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel/main.js
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel/world.js
