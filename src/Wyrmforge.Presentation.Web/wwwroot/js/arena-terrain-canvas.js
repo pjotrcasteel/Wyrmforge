@@ -1294,8 +1294,14 @@ export function terrainDirtyRegions(columns, rows, changed) {
                 i++;
                 continue;
             }
-            region = { c0: Math.min(region.c0, other.c0), c1: Math.max(region.c1, other.c1),
+            const merged = { c0: Math.min(region.c0, other.c0), c1: Math.max(region.c1, other.c1),
                 r0: Math.min(region.r0, other.r0), r1: Math.max(region.r1, other.r1) };
+            // Mass ambush impacts must not transitively coalesce into a near-full-map repaint.
+            if ((merged.c1 - merged.c0 + 1) * (merged.r1 - merged.r0 + 1) > 96) {
+                i++;
+                continue;
+            }
+            region = merged;
             regions.splice(i, 1);
             i = 0;
         }
