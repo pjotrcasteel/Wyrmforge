@@ -78,7 +78,7 @@
                                     <use href="@($"art/arcane-wheel-dormant.svg#{DormantArtworkId(school.Id)}")" />
                                 }
                             </g>
-                            @foreach (var connection in PassiveTreeCatalog.Connections)
+                            @foreach (var connection in PassiveTreeCatalog.Connections.DistinctBy(connection => CanonicalConnection(connection)))
                             {
                                 if (!ShowConnection(connection)) continue;
                                 var edgeClass = ConnectionClass(connection, mapPreview, mapPlan?.AnchorId);
