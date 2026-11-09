@@ -122,7 +122,11 @@ export function wizardProjectileVisualPosition(projectile, player, wizard, cast 
     const castAngle = Number(cast.angle);
     if (!Number.isFinite(angle) || !Number.isFinite(castAngle)
         || Math.cos(angle - castAngle) < .94) return null;
-    if (![projectile.x, projectile.y, player.x, player.y].every(Number.isFinite)) return null;
+    if (![projectile.x, projectile.y, player.x, player.y, cast.x, cast.y].every(Number.isFinite)) return null;
+    // The projectile was created at the C# cast origin, not the player's
+    // continuously updated position. When the player has moved away, attaching
+    // that projectile to the current hand would make it jump across the arena.
+    if (Math.hypot(player.x - cast.x, player.y - cast.y) > 6) return null;
     // During movement the body faces its travel direction. If the cast aims
     // behind that pose, the authored hand is on the wrong side of the sprite:
     // prefer the authoritative projectile over a visibly backward launch.
@@ -131,7 +135,7 @@ export function wizardProjectileVisualPosition(projectile, player, wizard, cast 
         W: Math.PI, NW: -3 * Math.PI / 4, N: -Math.PI / 2, NE: -Math.PI / 4,
     }[wizard.direction];
     if (Number.isFinite(facingAngle) && Math.cos(angle - facingAngle) < .38) return null;
-    const dx = projectile.x - player.x, dy = projectile.y - player.y;
+    const dx = projectile.x - cast.x, dy = projectile.y - cast.y;
     const forward = dx * Math.cos(angle) + dy * Math.sin(angle);
     const sideways = Math.abs(dx * Math.sin(angle) - dy * Math.cos(angle));
     // Never pull an old projectile back to the mage, or move a projectile
