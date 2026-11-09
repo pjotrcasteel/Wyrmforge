@@ -27,6 +27,11 @@
         </div>
     </div>
     <div id="app">Preparing Wyrmforge…</div>
+    <script type="module">
+        if (new URLSearchParams(location.search).get('perfCapture') === '1') {
+            import('./js/perf-capture.js?v=__WYRMFORGE_BUILD__');
+        }
+    </script>
     <script src="js/sound-design.js?v=__WYRMFORGE_BUILD__"></script>
     <script src="js/audio.js?v=__WYRMFORGE_BUILD__"></script>
     <script src="js/arcane-web.js?v=__WYRMFORGE_BUILD__"></script>
