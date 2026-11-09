@@ -4089,7 +4089,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".wheel-school-badge")).ToHaveCountAsync(6);
         var active = Page.Locator(".wheel-school-badge[data-active='true']");
         await Expect(active).ToHaveAttributeAsync("data-school", "Fire");
-        Assert.IsTrue(await active.EvaluateAsync<bool>("el => el.style.left === '1600px' && el.style.top === '280px'"));
+        // The current school's sigil now occupies the center of the expanded wheel.
+        // Its identity must remain stable while inspecting another school.
+        var center = await Page.Locator(".arcane-web-viewport").GetAttributeAsync("data-world-size");
+        Assert.IsNotNull(center);
+        var expectedCenter = (double.Parse(center, System.Globalization.CultureInfo.InvariantCulture) / 2)
+            .ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
+        Assert.IsTrue(await active.EvaluateAsync<bool, string>(
+            "(el, expected) => el.style.left === expected && el.style.top === expected", expectedCenter));
         await ScreenshotAsync($"arcane-wheel-start-{width}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
         await ScreenshotAsync($"arcane-wheel-overview-{width}.png");
