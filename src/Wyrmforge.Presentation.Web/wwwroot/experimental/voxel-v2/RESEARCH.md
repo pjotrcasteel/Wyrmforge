@@ -72,8 +72,29 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Do not overclaim:** the revision/epoch protocol is our proposed design response to documented races, not a design proven by the cited documentation. Mobile performance and safe concurrency remain unverified.
 - **Source independence warning:** multiple references are documents from the same Godot Voxel Tools project. Count distinct documents separately, but do not represent them as independent implementations.
 
+
+## Research batch 4 — deterministic replay, fixed-step overload, deployment cache (2026-11-09)
+
+32. [Microsoft Azure Architecture Center: Event Sourcing](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing) — append-only event history, event versioning, optimistic concurrency, periodic snapshots and replay.
+33. [Gaffer on Games: Fix Your Timestep!](https://gafferongames.com/post/fix_your_timestep/) — fixed-step accumulator, headroom, overload spiral, rendering decoupled from simulation.
+34. [Gaffer on Games: Deterministic Lockstep](https://www.gafferongames.com/post/deterministic_lockstep/) — input ordering, RNG seeding, floating-point cross-platform caveats.
+35. [Unity: Enhanced physics performance for smooth gameplay](https://unity.com/how-to/enhanced-physics-performance-smooth-gameplay) — fixed physics steps can multiply catch-up work after slow frames; platform-specific advice, general scheduling caution.
+36. [GitHub Docs: Dependency caching](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching) — cache visibility, branch scope, access modes and cache eviction.
+37. [GitHub Docs: Workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) — concurrency and workflow cache configuration.
+38. [GitHub Changelog: Read-only Actions cache for untrusted triggers](https://github.blog/changelog/2026-06-26-read-only-actions-cache-for-untrusted-triggers/) — trigger trust influences cache write permission.
+
+### Batch 4 implications
+
+- **Adopt:** immutable ordered accepted-edit log containing command ID, generator/schema/material version, integer voxel bounds, deterministic material/damage parameters, world epoch and resulting revision.
+- **Adopt:** periodic versioned snapshots; restore snapshot then replay later accepted commands; verify canonical voxel-state hash against direct execution.
+- **Adopt:** deduplicate IDs within an explicitly bounded session or persisted sequence window; replay applies accepted commands once and preserves order. Do not claim exactly-once delivery across arbitrary crashes without durable storage.
+- **Adopt:** fixed-step player/physics simulation with a maximum catch-up budget; separate rendering cadence and voxel command ordering. Floating-point simulation cannot be assumed bitwise deterministic across mobile architectures.
+- **Adopt:** workload reports distinguish frame time, simulation catch-up, commit latency, mesh latency, and GPU upload latency.
+- **Investigate before V2.0 acceptance:** GitHub Pages cache visibility and freshness are distinct from deployment safety. Even an exact-main cache can be stale relative to a newly published deployment, and another deployment may race after checking main SHA. Require post-deploy production route checks and a single-owner publication strategy or isolated preview host.
+- **Research methodology:** seven distinct references; two GitHub Docs pages are from the same publisher and two Gaffer articles from the same author. Distinct documents do not equal independent experimental validation.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **44 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **37 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
