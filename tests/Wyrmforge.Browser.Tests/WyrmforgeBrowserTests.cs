@@ -4095,7 +4095,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsNotNull(center);
         var expectedCenter = (double.Parse(center, System.Globalization.CultureInfo.InvariantCulture) / 2)
             .ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
-        Assert.IsTrue(await active.EvaluateAsync<bool, string>(
+        Assert.IsTrue(await active.EvaluateAsync<bool>(
             "(el, expected) => el.style.left === expected && el.style.top === expected", expectedCenter));
         await ScreenshotAsync($"arcane-wheel-start-{width}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
