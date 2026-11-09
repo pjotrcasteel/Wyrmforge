@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { wizardAnchor, wizardAnchorWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/wizard-anchors.js';
+import { wizardCastFrame, CAST_RELEASE_AT } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 import { wizardProjectileVisualPosition } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-spell-vfx.js';
 
 const player = { x: 100, y: 100 };
@@ -78,4 +79,17 @@ test('unverified frame bobbing cannot shift spell or crystal anchors', () => {
             }
         }
     }
+});
+
+test('Wizard cast uses authored durations and releases on the simulation release boundary', () => {
+    const manifest = {
+        actions: { cast: { durationsMs: [180, 140, 100, 120, 160, 160],
+            framesPerDirection: 6, directions: { S: { events: [
+                { name: 'spell_release', localFrame: 3, timeMs: 420 }
+            ] } } } }
+    };
+    assert.equal(wizardCastFrame(manifest, 0), 0);
+    assert.equal(wizardCastFrame(manifest, CAST_RELEASE_AT * .5), 1);
+    assert.equal(wizardCastFrame(manifest, CAST_RELEASE_AT), 3);
+    assert.equal(wizardCastFrame(manifest, .999), 5);
 });
