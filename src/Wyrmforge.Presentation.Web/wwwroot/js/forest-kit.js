@@ -8,6 +8,7 @@ import { TERRAIN_ART_SCALE } from './arena-projection.js';
 
 let kit = null;
 let requested = false;
+let pendingLoad = null;
 
 /** Installs a kit (`{ sprites, image }`) directly; used by tests and by anything that already holds the atlas. */
 export function useForestKit(value) { kit = value; requested = true; }
@@ -62,12 +63,18 @@ async function load() {
     return { sprites: scaleManifest(json.sprites, 2), image: enlarged };
 }
 
-/** The loaded kit, or null while it is still downloading. */
-export function forestKit() {
+/** Starts the shared load and settles even when the kit is unavailable. */
+export function preloadForestKit() {
     if (!kit && !requested && typeof Image !== 'undefined' && typeof fetch !== 'undefined') {
         requested = true;
-        load().then(loaded => { kit = loaded; }).catch(() => { });
+        pendingLoad = load().then(loaded => { kit = loaded; }).catch(() => { });
     }
+    return pendingLoad ?? Promise.resolve();
+}
+
+/** The loaded kit, or null while it is still downloading. */
+export function forestKit() {
+    if (!requested) void preloadForestKit();
     return kit;
 }
 
