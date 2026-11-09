@@ -10,7 +10,7 @@ p{color:#b9b5b0}#status{text-align:center}</style></head><body>
 <h1 style="text-align:center">Mage comparison — actual game renderers</h1>
 <p style="text-align:center">Both renderers use the current Wyrmforge source. Select a direction and animation to compare.</p>
 <div class="controls" id="directions"></div><div class="controls" id="actions"></div>
-<div class="controls"><label><input id="anchors" type="checkbox" checked> Show hand (orange), crystal (cyan) and sprite root (white)</label></div>
+<div class="controls"><label><input id="anchors" type="checkbox" checked> Show anchor markers</label> <button id="pause">Pause</button> <button id="previous">Previous frame</button> <button id="next">Next frame</button> <span id="frame-label"></span></div>
 <p id="status">Loading authored Wizard sprites…</p>
 <main><section><h2>Legacy mage</h2><canvas id="legacy" width="420" height="340"></canvas><p>Four-direction renderer / legacy art</p></section>
 <section><h2>Authored Wizard (current Hunt)</h2><canvas id="authored" width="420" height="340"></canvas><p>Eight-direction authored sprite set</p></section></main>
@@ -19,10 +19,22 @@ import {drawMage} from './js/arena-mage.js';
 import {preloadAuthoredCharacter,authoredCharacter,drawAuthoredWizard,createAuthoredState} from './js/authored-characters.js';
 import {loadArt} from './js/art-atlas.js';
 import {wizardAnchorWorld} from './js/wizard-anchors.js';
-let direction='S',action='walk',start=performance.now();
+let direction='S',action='walk',start=performance.now(),paused=false,frozenFrame=0;
 const dirs=['N','NE','E','SE','S','SW','W','NW'];
 function buttons(id,values,selected){const el=document.getElementById(id);for(const v of values){const b=document.createElement('button');b.textContent=v;b.onclick=()=>{selected(v);start=performance.now();};el.append(b);}}
-buttons('directions',dirs,v=>direction=v);buttons('actions',['idle','walk','cast'],v=>action=v);
+buttons('directions',dirs,v=>direction=v);buttons('actions',['idle','walk_start','walk','walk_stop','cast'],v=>action=v);
+document.getElementById('pause').onclick=()=>{
+ paused=!paused;
+ document.getElementById('pause').textContent=paused?'Play':'Pause';
+};
+for(const [id,step] of [['previous',-1],['next',1]]){
+ document.getElementById(id).onclick=()=>{
+  const spec=authoredCharacter('Wizard')?.manifest.actions[action];
+  if(!spec)return;
+  paused=true;document.getElementById('pause').textContent='Play';
+  frozenFrame=(frozenFrame+step+spec.framesPerDirection)%spec.framesPerDirection;
+ };
+}
 preloadAuthoredCharacter('Wizard');loadArt().catch(()=>{});
 const state=createAuthoredState();
 function paint(canvas,label,now){
@@ -38,7 +50,9 @@ function paint(canvas,label,now){
   const set=authoredCharacter('Wizard');if(set){
    const spec=set.manifest.actions[action]||set.manifest.actions.idle;
    state.wizard.direction=direction;state.wizard.action=spec===set.manifest.actions[action]?action:'idle';
-   state.wizard.frame=Math.floor(elapsed*1000/110)%spec.framesPerDirection;
+   if(!paused)frozenFrame=Math.floor(elapsed*1000/110)%spec.framesPerDirection;
+   state.wizard.frame=frozenFrame%spec.framesPerDirection;
+   document.getElementById('frame-label').textContent=`${direction} ${action} frame ${state.wizard.frame+1}/${spec.framesPerDirection}`;
    drawAuthoredWizard(ctx,player,state,false);
    if(document.getElementById('anchors').checked){
     const points=[
