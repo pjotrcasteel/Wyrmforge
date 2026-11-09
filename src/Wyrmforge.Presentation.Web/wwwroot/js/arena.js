@@ -816,9 +816,11 @@ function draw(state, snapshot, width, height) {
     // On the GPU path the ground glows (crack veins, hot craters, bedrock hint) ride the ground's emissive map and are lit surfaces
     // under every actor; the additive overlay versions below remain for the Canvas fallback.
     const view = { x: camera.x, y: camera.y, width, height };
+    // Paint mobile glow at its upload density to avoid a full-resolution raster and downscale each frame.
+    const emissiveScale = gpu?.quality === 'mobile' ? Math.max(1, artScale / 2) : artScale;
     const emissive = gpu && layerLabEnabled('emissive') && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            groundCaptureView ?? view, performance.now() / 1000, state.reducedMotion.matches, artScale, layerLabEnabled('crackVeins')) : null;
+            groundCaptureView ?? view, performance.now() / 1000, state.reducedMotion.matches, emissiveScale, layerLabEnabled('crackVeins')) : null;
     state.veinSeams = emissive?.seams ?? 0;
     const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, groundCaptureView ?? camera, groundCaptureView?.width ?? width, groundCaptureView?.height ?? height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
