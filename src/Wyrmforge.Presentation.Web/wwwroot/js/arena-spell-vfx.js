@@ -105,6 +105,31 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false, wizard = n
     ctx.restore();
 }
 
+/**
+ * Short launch bridge conceals the simulation-origin offset for the first
+ * few pixels of travel. It never moves the authoritative projectile.
+ */
+export function drawWizardProjectileLaunch(ctx, projectile, player, wizard, reducedMotion = false) {
+    if (!projectile || !player || !wizard) return;
+    const hand = wizardAnchorWorld(player, wizard, 'hand');
+    const distance = Math.hypot(projectile.x - hand.x, projectile.y - hand.y);
+    if (distance > 30 || distance < 2) return;
+    const angle = Number(projectile.angle) || 0;
+    const forward = (projectile.x - hand.x) * Math.cos(angle)
+        + (projectile.y - hand.y) * Math.sin(angle);
+    if (forward < -5) return;
+    ctx.save();
+    ctx.globalAlpha = reducedMotion ? .35 : Math.max(.12, .7 * (1 - distance / 36));
+    ctx.strokeStyle = '#ffba71';
+    ctx.lineWidth = reducedMotion ? 1 : 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(hand.x, hand.y);
+    ctx.lineTo(projectile.x, projectile.y);
+    ctx.stroke();
+    ctx.restore();
+}
+
 export function drawSpellProjectile(ctx, projectile, reducedMotion = false, visualSeconds = 0) {
     const family = spellFamily(projectile.spell, projectile.combination);
     const radius = Math.max(2, projectile.radius);
