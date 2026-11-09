@@ -1023,7 +1023,7 @@ function draw(state, snapshot, width, height) {
     // casts shadows; never suppress the projectile graphic after GPU shading.
     for (const projectile of snapshot.projectiles) {
         const visualPosition = authoredOn && authoredCharacter('Wizard')
-            ? wizardProjectileVisualPosition(projectile, snapshot.player, state.authored.wizard) : null;
+            ? wizardProjectileVisualPosition(projectile, snapshot.player, state.authored.wizard, snapshot.castMotion) : null;
         drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds, visualPosition);
     }
 
