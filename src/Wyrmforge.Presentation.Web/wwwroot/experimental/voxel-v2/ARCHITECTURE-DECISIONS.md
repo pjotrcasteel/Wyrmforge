@@ -3,6 +3,10 @@
 Date: 2026-11-09
 Evidence: [75-document research ledger](RESEARCH.md). Research/documentation gate complete; empirical performance and device acceptance **not** complete.
 
+## Owner override — V2-only, zero V1 reuse
+
+Voxel V2 is a **ground-up implementation**. No V1 code, assets, shaders, internal interfaces, algorithms, data schemas, physics, terrain constants or runtime dependencies may be copied, wrapped, imported or used as the technical baseline. New V2 engines connect only through new V2-native contracts. V1 remains untouched. The [ROADMAP.md](ROADMAP.md) clean-room mandate takes precedence over older integration wording in this research synthesis. Existing prototype code requires a dependency audit before V2.0 acceptance.
+
 ## Decisions for the isolated foundation
 
 | ID | Decision | Rationale / verification |
@@ -15,7 +19,7 @@ Evidence: [75-document research ledger](RESEARCH.md). Research/documentation gat
 | ADR-06 | Use committed voxel queries and 3D DDA for raycasts; compare swept AABB vs capsule approximations. | Overhangs and holes defeat universal height queries; no mesh-authoritative collision. |
 | ADR-07 | Save versioned snapshots plus ordered accepted edits; compare canonical state hashes. | Deterministic terrain state is distinct from cross-platform floating-point actor simulation. |
 | ADR-08 | Baseline WebGL2 with context-loss recovery, cancellation-safe pointer input and optional GPU timers. | Do not require WebGPU, shared memory, cross-origin isolation or native APIs. |
-| ADR-09 | Keep the lab independent of production; preserve pixel-first 2.5D and C# gameplay authority at integration. | Existing canonical engine constraints remain binding; experimental voxel pitch is not a game contract change. |
+| ADR-09 | Build an independent V2 engine with no V1 runtime, asset, schema or technical-constant dependencies. | V2's own coordinate, rendering and gameplay contracts are selected independently; any later migration is separate. |
 | ADR-10 | Use one Pages deployment owner or a truly separate preview host. | Two whole-site deployers and cached artifacts cannot prove latest-production preservation. |
 
 ## Benchmarks required before architecture promotion
