@@ -1,0 +1,84 @@
+name: Fast Voxel V2 experiment
+on:
+  push:
+    branches: [experiment/voxel-v2]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel-v2/**'
+      - '.github/workflows/voxel-v2-fast.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-experiment:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://pjotrcasteel.github.io/Wyrmforge/experimental/voxel-v2/
+    steps:
+      - name: Checkout experimental branch
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Restore complete published-site baseline
+        id: baseline
+        uses: actions/cache/restore@v4
+        with:
+          path: ./artifacts/web/wwwroot
+          key: wyrmforge-pages-base-${{ github.sha }}
+          restore-keys: |
+            wyrmforge-pages-base-
+
+      - name: Require a complete cached production site
+        run: |
+          test -n "${{ steps.baseline.outputs.cache-matched-key }}" || { echo "::error::No cached production Pages build. Run the full Pages workflow once to seed the cache."; exit 1; }
+          test -s artifacts/web/wwwroot/index.html
+          test -s artifacts/web/wwwroot/_framework/blazor.webassembly.js
+          test -s artifacts/web/wwwroot/404.html
+
+      - name: Overlay experimental engine only
+        run: |
+          source_dir=src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel-v2
+          target_dir=artifacts/web/wwwroot/experimental/voxel-v2
+          test -s "$source_dir/index.html"
+          mkdir -p "$target_dir"
+          # Delete stale experimental assets without touching the production site.
+          find "$target_dir" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+          cp -a "$source_dir/." "$target_dir/"
+          test -s "$target_dir/index.html"
+          test -s artifacts/web/wwwroot/_framework/blazor.webassembly.js
+          printf '%s\n' "${GITHUB_SHA}" > "$target_dir/build.txt"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload complete site with V2 overlay
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./artifacts/web/wwwroot
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify experimental route
+        run: |
+          url=https://pjotrcasteel.github.io/Wyrmforge/experimental/voxel-v2/build.txt
+          for attempt in $(seq 1 12); do
+            actual=$(curl --fail --silent --show-error --max-time 10 -H 'Cache-Control: no-cache' "$url?commit=${GITHUB_SHA}" || true)
+            if [ "$actual" = "$GITHUB_SHA" ]; then
+              echo "Experimental build live: $url"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Experimental Pages route did not serve expected commit"
+          exit 1
