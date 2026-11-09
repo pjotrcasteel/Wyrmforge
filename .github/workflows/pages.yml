@@ -91,6 +91,10 @@ jobs:
           sed -i "s#__WYRMFORGE_BUILD__#${GITHUB_SHA}#g" ./artifacts/web/wwwroot/index.html
           cp ./artifacts/web/wwwroot/index.html ./artifacts/web/wwwroot/404.html
           touch ./artifacts/web/wwwroot/.nojekyll
+          # Voxel experiment must be published as actual static files, not just a SPA fallback.
+          test -s ./artifacts/web/wwwroot/experimental/voxel/index.html || { echo "::error::Voxel experiment HTML missing from Pages artifact"; exit 1; }
+          test -s ./artifacts/web/wwwroot/experimental/voxel/main.js || { echo "::error::Voxel experiment JS missing from Pages artifact"; exit 1; }
+          test -s ./artifacts/web/wwwroot/experimental/voxel/world.js || { echo "::error::Voxel experiment world module missing from Pages artifact"; exit 1; }
           test -f ./artifacts/web/wwwroot/404.html
           test -f ./artifacts/web/wwwroot/_framework/blazor.webassembly.js
           grep -q '<base href="/Wyrmforge/" />' ./artifacts/web/wwwroot/index.html
