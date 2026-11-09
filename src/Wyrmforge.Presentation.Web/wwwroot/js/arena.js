@@ -1508,10 +1508,24 @@ function arenaPerfReport(state) {
 function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     // A large performance readout obscured monsters in the iPhone combat viewport.
     // Keep diagnostics available to testers without making them part of the ordinary HUD.
-    if (typeof window === 'undefined' || new URLSearchParams(window.location.search).get('perf') !== '1') return;
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const showOverlay = params.get('perf') === '1';
+    const capture = params.get('perfCapture') === '1';
+    if (!showOverlay && !capture) return;
+    // Sampling the full report every frame adds avoidable work during the encounter.
+    const now = performance.now();
+    if (capture && !showOverlay && now - (state.lastPerfCaptureMs ?? 0) < 250) return;
+    state.lastPerfCaptureMs = now;
     const report = arenaPerfReport(state);
-    // Testers can read the same numbers as JSON from the console on desktop or via remote inspection.
-    window.__wyrmforgePerf = report;
+    // Capture metrics without obscuring the game with the legacy performance HUD.
+    window.__wyrmforgePerf = {
+        ...report,
+        simulationHz: state.displaySimulationHz,
+        simulationAvgMs: state.displaySimulationMilliseconds,
+        bridgeAvgMs: state.displayBridgeMilliseconds,
+    };
+    if (!showOverlay) return;
     const lines = [`FPS ${state.displayFps}  •  SIM ${state.displaySimulationHz}/s  •  C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`,
         ...perfLines(report)];
     const panelWidth = Math.max(160, width - 24);
