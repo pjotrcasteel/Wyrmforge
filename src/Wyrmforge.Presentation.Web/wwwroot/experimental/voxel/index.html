@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wyrmforge | Voxel V2 Lab</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#111923;color:#f1f2f4}
+*{box-sizing:border-box}body{margin:0;overflow:hidden}
+header{position:absolute;z-index:2;top:0;left:0;right:0;padding:12px 16px;background:#101820df;display:flex;justify-content:space-between;gap:8px;align-items:center}
+header strong{font-size:14px}small{color:#abb9c7}canvas{display:block;width:100vw;height:100dvh;touch-action:none}
+aside{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:12px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+button{background:#29394b;color:white;border:1px solid #54657b;border-radius:9px;padding:11px 14px;font-weight:600}
+button:active{background:#4b6279}.legend{position:absolute;top:62px;left:12px;background:#101820d9;border-radius:9px;padding:8px;font-size:12px;line-height:1.8}
+.swatch{display:inline-block;width:11px;height:11px;margin-right:5px}
+</style>
+</head>
+<body>
+<header><strong>WYRMFORGE · VOXEL V2</strong><small id="stats">Initializing…</small></header>
+<div class="legend"><div><span class="swatch" style="background:#4b9c48"></span>Grass</div><div><span class="swatch" style="background:#875534"></span>Dirt</div><div><span class="swatch" style="background:#858992"></span>Stone</div><div><span class="swatch" style="background:#7942ad"></span>Bedrock</div></div>
+<canvas id="world" aria-label="Interactive voxel terrain"></canvas>
+<aside><button id="reset">Reset world</button><button id="explode">Explosion at center</button><button id="cutaway">Cross-section: off</button></aside>
+<script type="module" src="./main.js"></script>
+</body></html>
