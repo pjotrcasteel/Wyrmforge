@@ -46,3 +46,13 @@ test('only an active cast pose with finite data can attach a projectile', () => 
     assert.equal(wizardProjectileVisualPosition({ ...projectile, angle: NaN }, player, wizard, cast), null);
     assert.equal(wizardProjectileVisualPosition({ ...projectile, x: Infinity }, player, wizard, cast), null);
 });
+
+test('moving Wizard does not launch from a hand facing away from the shot', () => {
+    const projectile = { x: 105, y: 100, angle: 0, spell: 1 };
+    assert.equal(wizardProjectileVisualPosition(projectile, player,
+        { ...wizard, direction: 'W' }, cast), null);
+    assert.equal(wizardProjectileVisualPosition(projectile, player,
+        { ...wizard, direction: 'N' }, cast), null);
+    assert.ok(wizardProjectileVisualPosition(projectile, player,
+        { ...wizard, direction: 'NE' }, cast));
+});
