@@ -829,3 +829,19 @@ test('an eighteen-point ambush does not paint distant height extremes', () => {
     assert.ok(stats.lastRepaintCellVisits <= 600,
         `local projected bounds should visit at most 600 cells, visited ${stats.lastRepaintCellVisits}; main visited 960`);
 });
+
+test('mass ambush damage keeps dirty repaint regions bounded without dropping changed blocks', () => {
+    const columns = 32, rows = 60;
+    const changed = [];
+    for (let row = 8; row < 44; row += 3)
+        for (let column = 4; column < 28; column += 3) changed.push(row * columns + column);
+    const regions = terrainDirtyRegions(columns, rows, changed);
+    assert.ok(regions.length > 1, 'widely spread impacts must not coalesce into a single huge clip');
+    for (const region of regions)
+        assert.ok((region.c1 - region.c0 + 1) * (region.r1 - region.r0 + 1) <= 256);
+    for (const index of changed) {
+        const column = index % columns, row = Math.floor(index / columns);
+        assert.ok(regions.some(region => column >= region.c0 && column <= region.c1 && row >= region.r0 && row <= region.r1),
+            'each damaged cell must still be repainted');
+    }
+});
