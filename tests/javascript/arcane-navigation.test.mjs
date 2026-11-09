@@ -48,9 +48,9 @@ function map(touchEvents = false, worldSize = 3200) {
     return { api, viewport, emit, touch, view, listeners, windowListeners, disconnected: () => disconnected };
 }
 
-test('Web opens at fitted overview scale and stays pannable even when the full world fits', () => {
+test('Web opens at readable close focus and stays pannable; overview remains explicit', () => {
     const m = map();
-    assert.ok(m.view().scale > 0 && m.view().scale < 0.95);
+    assert.equal(m.view().scale, 0.95);
     m.api.overview(m.viewport);
     const before = m.view();
     m.emit('pointerdown', 100, 100);
