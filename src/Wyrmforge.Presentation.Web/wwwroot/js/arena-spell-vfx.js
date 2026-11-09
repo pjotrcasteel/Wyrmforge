@@ -31,7 +31,7 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false, wizard = n
     const handReach = 9;
     // A cast flare must not teleport to the current hand if the mage has
     // already moved away from the simulation's cast origin.
-    const anchored = wizard?.action === 'cast' && player
+    const anchored = (wizard?.casting ?? wizard?.action === 'cast') && player
         && [cast.x, cast.y, player.x, player.y].every(Number.isFinite)
         && Math.hypot(player.x - cast.x, player.y - cast.y) <= 6;
     const hand = anchored ? wizardAnchorWorld(player, wizard, 'hand') : null;
@@ -120,7 +120,7 @@ export function wizardProjectileVisualPosition(projectile, player, wizard, cast 
     if (!projectile || !player || !wizard || !cast) return null;
     // Do not attach unrelated projectiles that pass close to the player.
     // The simulation may have several spells in flight simultaneously.
-    if (cast.spell !== projectile.spell || wizard.action !== 'cast') return null;
+    if (cast.spell !== projectile.spell || !(wizard.casting ?? wizard.action === 'cast')) return null;
     const progress = Number(cast.progress);
     if (!Number.isFinite(progress) || progress < 0 || progress >= 1) return null;
     const angle = Number(projectile.angle);

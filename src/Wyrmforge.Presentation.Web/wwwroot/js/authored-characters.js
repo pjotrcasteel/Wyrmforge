@@ -274,7 +274,10 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
     else if (aiming) wizard.direction = pickDirectionFromAngle(player.aimAngle, wizard.direction);
     else if (wizard.heading) wizard.direction = wizard.heading;
 
-    if (casting) {
+    // A stationary full-body cast has no stepping frames. Keep the gait visible
+    // while traveling and let the cast effects play over the movement.
+    wizard.casting = Boolean(casting);
+    if (casting && (!moving || reducedMotion)) {
         wizard.action = 'cast'; wizard.frame = wizardCastFrame(manifest, cast.progress);
     } else if (wizard.mode === 'start') {
         wizard.action = 'walk_start'; wizard.frame = frameAtTime(start, (clock - wizard.modeStarted) * 1000).index;
@@ -571,7 +574,7 @@ export const WIZARD_FEET_OFFSET = 12;
 
 function drawWizardCrystal(ctx, player, wizard, emissive = false) {
     const { x, y } = wizardAnchorWorld(player, wizard, 'crystal', MAGE_VISUAL_SCALE);
-    const casting = wizard.action === 'cast';
+    const casting = wizard.casting ?? wizard.action === 'cast';
     const release = casting && wizard.frame >= 2 && wizard.frame <= 4;
     const radius = release ? 3 : casting ? 2 : 1;
     ctx.save();

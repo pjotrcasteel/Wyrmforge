@@ -197,6 +197,32 @@ test('the wizard keeps its diagonal travel heading through the stop clip before 
     }
 });
 
+test('autocast leaves the diagonal gait visible while the wizard travels', () => {
+    const manifest = manifests.get('Wizard');
+    const castMotion = { angle: Math.PI / 2, progress: .25 };
+    for (const [dx, direction] of [[-4, 'NW'], [4, 'NE']]) {
+        const state = createAuthoredState();
+        const player = { x: 400, y: 400 };
+        const tick = clock => updateAuthoredWizard(state, { player, castMotion }, manifest, clock);
+        tick(0);
+        assert.equal(state.wizard.action, 'cast');
+        player.x += dx;
+        player.y -= 4;
+        tick(.05);
+        assert.equal(state.wizard.action, 'walk_start');
+        assert.equal(state.wizard.direction, direction);
+        player.x += dx;
+        player.y -= 4;
+        tick(.4);
+        assert.equal(state.wizard.action, 'walk');
+        assert.equal(state.wizard.direction, direction);
+        assert.equal(state.wizard.casting, true);
+        tick(.6);
+        assert.equal(state.wizard.action, 'cast');
+        assert.equal(state.wizard.direction, 'S');
+    }
+});
+
 test('the Fire bosses change form with the C# phase, and a Frost variant keeps its old art', () => {
     const warden = telegraph => ({ kind: 9, entityId: 1, x: 0, y: 0, telegraph });
     assert.equal(resolveCharacter(warden(null), { bellWarden: { variant: 'fire', cracked: false } }), 'Bell-Warden-normal');
