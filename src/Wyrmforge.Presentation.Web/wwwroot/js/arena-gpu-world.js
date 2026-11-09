@@ -311,7 +311,13 @@ export class HuntGpuWorld {
             const emissiveScale = this.quality === 'mobile' ? Math.max(1, scale / 2) : scale;
             // Animated glow needs no more than 30 uploads/sec on mobile; other frames reuse
             // the previous GPU texture while actor motion, terrain and lighting continue normally.
-            const emissiveRevision = this.quality === 'mobile' ? Math.floor(performance.now() / (1000 / 30)) : undefined;
+            // The emissive source is repainted relative to the current terrain capture window.
+            // A time-only revision reuses pixels from the PREVIOUS window while the ground
+            // mesh already follows the new window, making lava/crater glow jump across the screen.
+            // Preserve 30 Hz throttling only while the capture origin remains unchanged.
+            const emissiveRevision = this.quality === 'mobile'
+                ? `${Math.floor(performance.now() / (1000 / 30))}:${groundView?.x ?? camera.x}:${groundView?.y ?? camera.y}`
+                : undefined;
             this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, groundWidth, groundHeight,
                 emissiveRevision, true, emissiveScale);
         }
