@@ -293,7 +293,7 @@ export class HuntGpuWorld {
                 s: [mesh.scale.x, mesh.scale.y, mesh.scale.z].map(round), visible: mesh.visible !== false };
         });
     }
-    begin(ctx, camera, width, height, groundEmissive = null, groundNormal = null, ground = null) {
+    begin(ctx, camera, width, height, groundEmissive = null, groundNormal = null, ground = null, groundEmissiveRevision = undefined) {
         this.camera = camera; this.width = width; this.height = height;
         this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
         // `ground` ({ source, scale }) supplies the ground albedo painted at `scale` pixels per world unit (the 64 px/m terrain); the emissive and
@@ -318,9 +318,9 @@ export class HuntGpuWorld {
             // A time-only revision reuses pixels from the PREVIOUS window while the ground
             // mesh already follows the new window, making lava/crater glow jump across the screen.
             // Preserve 30 Hz throttling only while the capture origin remains unchanged.
-            const emissiveRevision = this.quality === 'mobile'
+            const emissiveRevision = groundEmissiveRevision ?? (this.quality === 'mobile'
                 ? `${Math.floor(performance.now() / (1000 / 30))}:${groundView?.x ?? camera.x}:${groundView?.y ?? camera.y}`
-                : undefined;
+                : undefined);
             this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, groundWidth, groundHeight,
                 emissiveRevision, true, emissiveScale);
         }
