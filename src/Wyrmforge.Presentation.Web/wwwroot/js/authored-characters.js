@@ -9,6 +9,7 @@ export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 import { drawEmergeParticles } from './arena-field-ambush-vfx.js';
 import { drawFootprint, footDrop } from './authored-grounding.js';
 import { MAGE_VISUAL_SCALE } from './mage-visual-profile.js';
+import { wizardAnchorWorld } from './wizard-anchors.js';
 
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
 export const ENEMY_CHARACTERS = new Map([
@@ -556,16 +557,38 @@ export function drawAuthoredCorpses(ctx, state) {
 /** The mage's feet sit this far below the C# position, which is the middle of the body (the old art's convention, kept so shadows line up). */
 export const WIZARD_FEET_OFFSET = 12;
 
+function drawWizardCrystal(ctx, player, wizard, emissive = false) {
+    const { x, y } = wizardAnchorWorld(player, wizard, 'crystal', MAGE_VISUAL_SCALE);
+    const casting = wizard.action === 'cast';
+    const release = casting && wizard.frame >= 2 && wizard.frame <= 4;
+    const radius = release ? 3 : casting ? 2 : 1;
+    ctx.save();
+    ctx.globalCompositeOperation = emissive ? 'source-over' : 'lighter';
+    ctx.globalAlpha = emissive ? (release ? .95 : casting ? .72 : .24) : (release ? .8 : casting ? .5 : .17);
+    ctx.fillStyle = '#ffbd68';
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
 export function drawAuthoredWizard(ctx, player, state, hit = false) {
     const wizard = state.wizard, radius = Number(player.radius) || 12, feetY = player.y + WIZARD_FEET_OFFSET;
-    if (renderMode === 'emissive') return drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
-        player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
+    if (renderMode === 'emissive') {
+        const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
+            player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
+        // Crystal glow participates in the same emissive lighting composition
+        // as the authored sprite, rather than drawing a fake ground light.
+        drawWizardCrystal(ctx, player, wizard, true);
+        return drawn;
+    }
     // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
     ctx.save();
     if (hit) ctx.filter = 'sepia(1) saturate(3.2) hue-rotate(-35deg) brightness(1.05)';
     const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame,
         player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
     ctx.restore();
+    if (drawn && renderMode === 'overlay') drawWizardCrystal(ctx, player, wizard);
     // Warding Barrier: two pale seams at the shoulders, as the old mage showed it.
     if (player.barrier) {
         // Warding seams share the larger sprite's foot-anchored coordinate space.
