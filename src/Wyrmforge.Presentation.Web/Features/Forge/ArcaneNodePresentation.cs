@@ -64,15 +64,15 @@ internal static class ArcaneNodePresentation
 
     private static string Icon(BuildStatId stat) => stat switch
     {
-        BuildStatId.Damage => "✹",
+        BuildStatId.Damage => "⚔",
         BuildStatId.BurnDamage => "♨",
         BuildStatId.MutationDuration => "◴",
         BuildStatId.MutationRadius => "◉",
-        BuildStatId.CastInterval => "⟳",
+        BuildStatId.CastInterval => "⚡",
         BuildStatId.ProjectileSpeed => "➶",
         BuildStatId.MoveSpeed => "↟",
         BuildStatId.MaxHealth => "♥",
-        BuildStatId.DamageTaken => "◈",
+        BuildStatId.DamageTaken => "⬟",
         BuildStatId.ExtraProjectiles => "✦",
         BuildStatId.BonusChains => "⌁",
         _ => "•",
