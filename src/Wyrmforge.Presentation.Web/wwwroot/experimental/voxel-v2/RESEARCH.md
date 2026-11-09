@@ -137,8 +137,29 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Measure:** p95/p99 animation frame intervals plus Chrome long-frame diagnostics when available; use cross-browser rAF deltas as baseline, explicitly excluding hidden-tab intervals.
 - **Independence caution:** these are ten distinct source documents, not ten controlled comparative experiments; several are prototypes or implementations with different targets.
 
+
+## Research batch 7 — WebGL buffers, instrumentation and Pages ownership (2026-11-09)
+
+58. [MDN WebGL bufferData](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData) — allocate/replace GPU data store; usage hints and out-of-memory conditions.
+59. [MDN WebGL bufferSubData](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferSubData) — update existing buffer range; benchmark against replacement rather than assume superiority.
+60. [MDN WebGL deleteBuffer](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/deleteBuffer) — explicit lifetime management for replaced and discarded chunk meshes.
+61. [MDN WebGL2 bufferSubData](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferSubData) — WebGL2 typed-array offset/length semantics.
+62. [MDN WebGL2 bufferData](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bufferData) — WebGL2 allocation and usage hints.
+63. [MDN WebGL2 getBufferSubData](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getBufferSubData) — GPU readback exists; avoid synchronous per-frame diagnostics.
+64. [Chrome DevTools Rendering performance](https://developer.chrome.com/docs/devtools/rendering/performance) — frame rendering stats and GPU-memory tooling, desktop Chromium evidence only.
+65. [GitHub Pages custom workflow publishing](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) — site-wide artifact publishing and deployment-environment protection.
+66. [MDN WebGL deleteRenderbuffer](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/deleteRenderbuffer) — explicit framebuffer attachment cleanup.
+
+### Batch 7 implications
+
+- **Benchmark:** allocate/recreate chunk buffers versus pooled buffers with partial updates; compare CPU frame time, upload bytes, VRAM estimates and long-frame frequency. WebGL usage flags are hints, not measured performance guarantees.
+- **Adopt:** renderer-owned explicit disposal of replaced vertex/index buffers and render targets; restoration recreates GPU resources from committed voxel truth.
+- **Adopt:** never perform GPU readback in the frame-critical metrics path. Use available browser instrumentation for corroboration, not as cross-platform proof.
+- **Change proposed deployment design:** prefer a single Pages deployment owner or isolated experiment host. Two independent full-site deployers remain unsafe even when both workflows share concurrency and cache keys; a cache is not an atomic view of the current deployed site.
+- **Evidence limitation:** seven of nine references are MDN API documentation, not independent performance experiments.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **18 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **9 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
