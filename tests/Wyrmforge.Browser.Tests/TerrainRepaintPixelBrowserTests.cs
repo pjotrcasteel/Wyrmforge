@@ -136,6 +136,55 @@ public sealed class TerrainRepaintPixelBrowserTests : PageTest
             "Incremental crater repaint must match a full redraw, including all unchanged ground and normal-map pixels");
     }
 
+    /// <summary>All three simultaneous ambush fissure stages preserve albedo and normals beside tall terrain.</summary>
+    [TestMethod]
+    public async Task AmbushRing_ThreeStagesMatchFreshTerrainPixels()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+        var differences = await Page.EvaluateAsync<int[]>("""
+            async () => {
+                const { TerrainCanvasCache, mergeTerrainFrame } = await import('/js/arena-terrain-canvas.js');
+                const columns = 32, rows = 60, count = columns * rows;
+                const surface = Array(count).fill(0);
+                surface[0] = 96;
+                surface[31] = -32;
+                const source = { revision: 1, columns, rows, visualSeed: 119, surface,
+                    material: Array.from({ length: count }, (_, i) => i % columns === 15 ? 1 : 0),
+                    fine: [], road: [16 * 16, 0, 16 * 16, rows * 16], cracks: [] };
+                let current = mergeTerrainFrame(null, source);
+                const cached = new TerrainCanvasCache();
+                cached.enableNormals();
+                cached.update(current, 0);
+                const marks = Array.from({ length: 18 }, (_, i) =>
+                    Math.round(30 + Math.sin(i * Math.PI / 9) * 7) * columns +
+                    Math.round(16 + Math.cos(i * Math.PI / 9) * 7));
+                const differences = [];
+                for (let stage = 1; stage <= 3; stage++) {
+                    current = mergeTerrainFrame(current, { ...source, revision: stage + 1,
+                        fine: marks.map(index => ({ index, topsoil: source.material[index], stoneTop: -8,
+                            heights: Array.from({ length: 64 }, (_, i) =>
+                                i % 8 < stage + 1 && Math.floor(i / 8) < stage + 2 ? -stage * 2 : 0) })) });
+                    cached.update(current, 0);
+                    const fresh = new TerrainCanvasCache();
+                    fresh.enableNormals();
+                    fresh.update({ ...current, kindMaps: undefined }, 0);
+                    for (const channel of ['canvas', 'normalCanvas']) {
+                        const a = cached[channel], b = fresh[channel];
+                        const left = a.getContext('2d').getImageData(0, 0, a.width, a.height).data;
+                        const right = b.getContext('2d').getImageData(0, 0, b.width, b.height).data;
+                        let different = 0;
+                        for (let i = 0; i < left.length; i++) if (left[i] !== right[i]) different++;
+                        differences.push(different);
+                    }
+                }
+                return differences;
+            }
+            """);
+        CollectionAssert.AreEqual(new int[6], differences,
+            "Every ambush stage must match an independent full albedo and normal repaint");
+    }
+
     /// <summary>Mixed-material tiles remain pixel-identical to an independent atlas oracle after deferred repaint history.</summary>
     [TestMethod]
     public async Task MixedSplatTiles_KeepTheirOwnAlbedoAndNormalCoverageAfterOtherTilesAreDrawn()

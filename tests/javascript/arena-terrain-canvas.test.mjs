@@ -812,3 +812,20 @@ test('projected repaint bounds retain cliff and pit drawing inside the dirty cli
     assert.deepEqual(inside(regional.cues), inside(full.cues));
     assert.ok(stats.lastRepaintCellVisits < 60, 'less than half the map goes through the painter');
 });
+
+test('an eighteen-point ambush does not paint distant height extremes', () => {
+    const columns = 32, rows = 60;
+    const terrain = frame(columns, rows, new Array(columns * rows).fill(0));
+    terrain.surface[0] = 96;
+    terrain.surface[31] = -32;
+    const changed = Array.from({ length: 18 }, (_, i) =>
+        Math.round(30 + Math.sin(i * Math.PI / 9) * 7) * columns + Math.round(16 + Math.cos(i * Math.PI / 9) * 7));
+    terrain.fine = new Map(changed.map(index => [index, {
+        heights: Array.from({ length: 64 }, (_, i) => i % 9 === 0 ? -4 : 0), topsoil: 0, stoneTop: -8,
+    }]));
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const stats = { lastRepaintCellVisits: 0 };
+    paintTerrainRegion(ctx, terrain, 0, terrainDirtyRegions(columns, rows, changed), TERRAIN_PAD_UNITS, stats);
+    assert.ok(stats.lastRepaintCellVisits <= 600,
+        `local projected bounds should visit at most 600 cells, visited ${stats.lastRepaintCellVisits}; main visited 960`);
+});

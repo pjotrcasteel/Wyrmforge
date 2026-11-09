@@ -996,7 +996,7 @@ function draw(state, snapshot, width, height) {
         if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
         else drawHuntHazard(ctx,hazard);
     }
-    for (const enemy of snapshot.enemies) if (enemy.telegraph) drawEnemyTelegraph(ctx, enemy);
+    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
     drawTransformations(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawFieldAmbushTell(ctx, snapshot.fieldAmbush, visualSeconds, state.reducedMotion.matches);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
