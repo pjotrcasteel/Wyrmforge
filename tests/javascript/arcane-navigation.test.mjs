@@ -62,6 +62,18 @@ test('Web opens at readable close focus and stays pannable; overview remains exp
     assert.equal(m.view().scale, 0.95);
 });
 
+test('allocation is explicit and repeated node taps cannot spend points', () => {
+    const codeBehind = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/BuildView.razor.cs', import.meta.url), 'utf8');
+    const markup = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/BuildView.razor', import.meta.url), 'utf8');
+    const inspect = codeBehind.match(/private async Task InspectNode\(PassiveNodeDefinition node\)([\s\S]*?)private string\? allocationFeedback/);
+    assert.ok(inspect, 'InspectNode must exist');
+    assert.doesNotMatch(inspect[1], /AllocateFocusedRoute\s*\(/);
+    assert.match(markup, /@onclick="AllocateFocusedRoute"/);
+    assert.match(markup, /Unlock route/);
+});
+
 test('zoom exposes three visual detail levels without changing world coordinates', () => {
     const m = map();
     const initial = m.view();
