@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-shadows.js'
       - 'tests/Wyrmforge.Browser.Tests/TerrainEvidenceCaptureBrowserTests.cs'
       - 'tests/Wyrmforge.Browser.Tests/TerrainRepaintPixelBrowserTests.cs'
       - '.github/workflows/terrain-cache-pixel-parity.yml'
