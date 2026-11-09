@@ -194,10 +194,9 @@ public partial class BuildView : IAsyncDisposable
         focusedId = node.Id;
         allocationFeedback = null;
         inspectorOpen = true;
-        // Keep the Web in view. Details remain available below the map.
+        // Preserve the player's pan and zoom while inspecting or investing.
+        // Explicit school navigation and center controls handle camera movement.
         revealInspector = false;
-        var point = ArcaneWheelLayout.Position(node, ActiveSchool);
-        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, point.X, point.Y);
     }
 
     private string? allocationFeedback;
