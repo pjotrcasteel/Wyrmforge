@@ -415,6 +415,11 @@
     }
     .menu-nexus .school-wheel-view .web-layout .node-inspector {
         position: absolute;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        margin: 0;
+        opacity: 0;
         z-index: 12;
         left: 0;
         right: 0;
@@ -438,7 +443,9 @@
         transition: transform 180ms ease, visibility 180ms;
     }
     .menu-nexus .school-wheel-view .web-layout .node-inspector.open {
+        display: grid;
         transform: translateY(0);
+        opacity: 1;
         visibility: visible;
         pointer-events: auto;
     }
