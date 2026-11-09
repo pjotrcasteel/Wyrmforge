@@ -235,6 +235,8 @@ export class HuntGpuWorld {
         if (!this.projection) throw new RangeError(`Unknown Hunt projection: ${projection}`);
         this.canvas = document.createElement('canvas');
         this.quality = quality;
+        this.halfLightingResolution = quality === 'mobile' && typeof location !== 'undefined' &&
+            new URLSearchParams(location.search).get('huntHalfLighting') === '1';
         const device = typeof navigator === 'undefined' ? null : navigator;
         this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality,
             needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
@@ -301,7 +303,8 @@ export class HuntGpuWorld {
         const groundWidth = groundView?.width ?? width, groundHeight = groundView?.height ?? height;
         const groundX = groundView ? groundView.x - camera.x : 0;
         const groundY = groundView ? groundView.y - camera.y : 0;
-        this.engine.renderScale = scale;
+        // Keep terrain textures at their authored density for the mobile A/B.
+        this.engine.renderScale = this.halfLightingResolution ? Math.max(1, scale / 2) : scale;
         // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
         // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
         if (groundEmissive) {
