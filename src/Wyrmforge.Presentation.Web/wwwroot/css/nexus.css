@@ -400,3 +400,68 @@
 .menu-nexus .school-wheel-view .wheel-school-badge { width:120px; min-height:120px; align-items:center; }
 .menu-nexus .school-wheel-view .wheel-school-badge.current .wheel-school-icon { width:105px; height:105px; }
 .menu-nexus .school-wheel-view .web-dormant-sectors { pointer-events:none; }
+
+
+/* Arcane Web mobile-first contextual inspector. Keep the map at full height;
+   selection reveals a compact sheet rather than resizing the camera viewport. */
+@media (max-width: 760px) {
+    .menu-nexus .school-wheel-view .web-layout {
+        position: relative;
+        isolation: isolate;
+    }
+    .menu-nexus .school-wheel-view .web-layout .atlas-stage,
+    .menu-nexus .school-wheel-view .web-layout.inspecting .atlas-stage {
+        height: clamp(420px, calc(100svh - 170px), 800px);
+    }
+    .menu-nexus .school-wheel-view .web-layout .node-inspector {
+        position: absolute;
+        z-index: 12;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: none;
+        max-height: min(65svh, 480px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 14px 16px max(16px, env(safe-area-inset-bottom));
+        border-top: 2px solid #a87b50;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        border-radius: 12px 12px 0 0;
+        background: linear-gradient(180deg, #30232a, #18121b 90%);
+        box-shadow: 0 -8px 28px #08070bcc;
+        transform: translateY(102%);
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 180ms ease, visibility 180ms;
+    }
+    .menu-nexus .school-wheel-view .web-layout .node-inspector.open {
+        transform: translateY(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+    .menu-nexus .school-wheel-view .node-inspector .inspector-title {
+        margin-bottom: 4px;
+    }
+    .menu-nexus .school-wheel-view .node-inspector .inspector-effect {
+        margin: 6px 0;
+    }
+    .menu-nexus .school-wheel-view .node-inspector .route-action.allocate {
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+        width: 100%;
+        min-height: 48px;
+    }
+    .menu-nexus .school-wheel-view .node-inspector .inspector-close {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+    .menu-nexus .school-wheel-view .web-layout .node-inspector {
+        transition: none;
+    }
+}
