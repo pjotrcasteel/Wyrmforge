@@ -114,8 +114,31 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Benchmark:** mobile framebuffer formats, render-scale tiers, and selective attachment invalidation; do not assume a particular optimization helps without phone captures.
 - **Caution:** all nine are distinct MDN documentation pages, **not nine independent publishers or experiments**. They document browser APIs; they do not establish Wyrmforge performance.
 
+
+## Research batch 6 — continuous collision, editable compression and stress measurement (2026-11-09)
+
+48. [voxel-aabb-sweep](https://github.com/fenomas/voxel-aabb-sweep) — continuous AABB sweeping; warns that per-axis movement is direction-dependent for large motions.
+49. [Voxel Astra](https://github.com/fionnbanksg/voxel-astra) — independent browser voxel implementation with fixed-step physics, chunk-local updates and DDA; claims require device verification.
+50. [WebGPU Voxel Engine](https://github.com/JamesKevinJones/webgpu-voxel-engine) — alternative swept-AABB and DDA implementation; WebGPU compute features are outside our WebGL2 baseline.
+51. [Xepsa voxel sandbox build-along](https://www.xepsa.net/manual/book/games/build-voxel-1) — 16³ sparse chunk baseline, culled faces, incremental remesh, and swept collision.
+52. [Efficient Sparse Voxel Octrees (Laine and Karras)](https://research.nvidia.com/publication/2010-02_efficient-sparse-voxel-octrees-analysis-extensions-and-implementation) — compressed hierarchical occupancy and traversal; update cost/complexity remain relevant.
+53. [Editing Compressed High-resolution Voxel Scenes with Attributes](https://onlinelibrary.wiley.com/doi/10.1111/cgf.14757) — 2023 peer-reviewed work on editable compressed geometry plus attributes.
+54. [VoxelRT experiments](https://github.com/dubiousconst282/VoxelRT) — comparison of brickmaps, DDA, distance fields and octrees with editing-cost caveats; author-specific benchmark.
+55. [Geometry and Attribute Compression for Voxel Scenes](https://publications.graphics.tudelft.nl/papers/222) — palette compression and DAG separation of geometry/material attributes; not a mobile destruction benchmark.
+56. [Chrome Long Animation Frames API](https://developer.chrome.com/docs/web-platform/long-animation-frames) — instrument long animation frames where supported; cross-browser fallback required.
+57. [Random Access Segmentation Volume Compression](https://onlinelibrary.wiley.com/doi/10.1111/cgf.70116) — random-access versus compression tradeoff; medical volume data, not directly comparable to terrain.
+
+### Batch 6 implications
+
+- **Benchmark:** swept AABB versus substepped per-axis AABB for diagonal movement, high-speed falls, tunneling, and cross-chunk collision. AABB is an initial broad-phase approximation to the proposed capsule, not proof of capsule fidelity.
+- **Adopt:** collision reads committed voxels, never asynchronous render meshes; define whether unloaded/out-of-bounds space is solid, empty, or rejected.
+- **Adopt:** sparse chunk map with empty/uniform encodings and packed mixed arrays as first editable storage baseline; compare alternatives on mutation throughput, memory and query latency.
+- **Defer:** DAG/octree/brickmap renderer, WebGPU compute, and full GPU ray marching until actual WebGL2 mobile results justify them.
+- **Measure:** p95/p99 animation frame intervals plus Chrome long-frame diagnostics when available; use cross-browser rAF deltas as baseline, explicitly excluding hidden-tab intervals.
+- **Independence caution:** these are ten distinct source documents, not ten controlled comparative experiments; several are prototypes or implementations with different targets.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **28 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **18 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
