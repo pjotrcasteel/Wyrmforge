@@ -1,9 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Wyrmforge Voxel V2</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141b;color:#fff;font:14px system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:12px;left:12px;background:#10141bd9;padding:12px;border:1px solid #566;border-radius:8px}button{background:#263a49;color:white;border:1px solid #789;padding:9px;margin:4px;border-radius:6px}#status{font-size:12px;color:#cdd}</style></head><body><canvas id="world"></canvas><div id="hud"><strong>Voxel Engine 2.0 — Fast Experiment</strong><div id="status">Initializing…</div><button id="reset">Reset terrain</button><div>Drag to orbit · Tap terrain to destroy · Pinch to zoom</div></div>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141b;color:#fff;font:14px system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:12px;left:12px;background:#10141bd9;padding:12px;border:1px solid #566;border-radius:8px}button{background:#263a49;color:white;border:1px solid #789;padding:9px;margin:4px;border-radius:6px}#status{font-size:12px;color:#cdd}</style></head><body><canvas id="world"></canvas><div id="hud"><strong>Voxel Engine 2.0 — Fast Experiment</strong><div id="status">Initializing…</div><div id="build">Build: checking…</div><button id="reset">Reset terrain</button><div>Drag to orbit · Tap terrain to destroy · Pinch to zoom</div></div>
 <script type="module">
 const canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl2',{antialias:false,alpha:false,powerPreference:'high-performance'});
 const status=document.querySelector('#status');
+fetch('./build.txt',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Build metadata unavailable');return r.text()})
+  .then(sha=>document.querySelector('#build').textContent='Build: '+sha.trim().slice(0,12))
+  .catch(()=>document.querySelector('#build').textContent='Build: local / unverified');
 if(!gl){status.textContent='WebGL2 unavailable';throw Error('WebGL2 unavailable')}
 const vs=`#version 300 es
 in vec3 position;in vec3 color;uniform mat4 mvp;out vec3 vColor;
