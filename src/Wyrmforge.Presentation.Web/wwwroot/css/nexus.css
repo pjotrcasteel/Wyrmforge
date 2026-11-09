@@ -465,3 +465,49 @@
         transition: none;
     }
 }
+
+
+/* Progressive disclosure: readable close-up, simplified regional paths,
+   and a quiet full-wheel overview. Keep the DOM and world coordinates stable. */
+.menu-nexus .school-wheel-view .web-node.available {
+    border-style: dashed;
+    border-color: #d6a05c;
+}
+.menu-nexus .school-wheel-view .web-node.available.affordable {
+    animation: web-reachable-breathe 1.8s ease-in-out infinite;
+}
+.menu-nexus .school-wheel-view .web-node.available:not(.affordable) {
+    opacity: .78;
+    animation: none;
+}
+.menu-nexus .school-wheel-view .web-node.focused {
+    outline: 2px solid #f0e0c7;
+    outline-offset: 4px;
+}
+.menu-nexus .school-wheel-view .web-node.selected {
+    border-style: solid;
+}
+@keyframes web-reachable-breathe {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.22); }
+}
+.menu-nexus .school-wheel-view .arcane-web-viewport[data-lod="paths"] .web-node .node-label,
+.menu-nexus .school-wheel-view .arcane-web-viewport[data-lod="overview"] .web-node .node-label {
+    display: none;
+}
+.menu-nexus .school-wheel-view .arcane-web-viewport[data-lod="overview"] .web-node:not(.kind-keystone):not(.kind-origin) .node-glyph,
+.menu-nexus .school-wheel-view .arcane-web-viewport[data-lod="overview"] .web-node:not(.kind-keystone):not(.kind-origin) .minor-node-effects {
+    visibility: hidden;
+}
+.menu-nexus .school-wheel-view .arcane-web-viewport[data-lod="overview"] .web-edge:not(.active):not(.preview) {
+    opacity: .18;
+}
+.menu-nexus .school-wheel-view .arcane-web-viewport[data-lod="paths"] .web-edge:not(.active):not(.preview) {
+    opacity: .48;
+}
+@media (prefers-reduced-motion: reduce) {
+    .menu-nexus .school-wheel-view .web-node.available.affordable {
+        animation: none;
+        border-color: #f0bd75;
+    }
+}
