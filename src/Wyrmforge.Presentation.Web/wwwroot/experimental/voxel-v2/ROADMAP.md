@@ -5,11 +5,23 @@
 **Branch:** `experiment/voxel-v2`  
 **References:** [75-source research ledger](RESEARCH.md) · [Architecture decisions](ARCHITECTURE-DECISIONS.md) · [Live implementation status](PROGRESS.md) · [Canonical Wyrmforge roadmap](../../../../../docs/canon/roadmap.md) (repository-root relative link; consult canonical documents directly if this link does not resolve).
 
+## 0. Clean-room V2 mandate — owner decision (2026-11-09)
+
+**Hard rule: Voxel V2 is a ground-up engine, not V1.1, a V1 refactor, or an adapter around V1.** Do not import, call, copy, port, wrap, or depend on any V1 terrain code, data structures, meshing, renderer, shaders, physics, collision, destruction, effects, assets/materials, serialization, helpers, runtime services, or internal interfaces. Do not use V1's technical implementation as the starting design. New implementations and tests must be authored from first principles and independent external research.
+
+- **Allowed:** standard browser/WebGL2 APIs; generic development tooling, GitHub Actions and repository hosting infrastructure when they do not introduce V1 runtime dependencies; the independent 75-source research ledger; newly authored V2 code, assets, shaders, contracts and test fixtures.
+- **Isolation:** V2 source and tests have no imports or references to V1 game runtime modules. The standalone V2 lab must launch, render, mutate, query, replay and benchmark without loading V1. CI must enforce this with an explicit dependency/import audit.
+- **No inherited technical constants:** do not adopt V1 voxel pitch, grid dimensions, world units, material IDs, texture resolution, projection formula or physics rules by default. V2 chooses and documents its own values through experiments. Any eventual compatibility mapping is a **separate, explicit, future integration project**, not a V2 engine dependency.
+- **New V2 ecosystem:** Lighting V2, Physics V2, VFX V2, Audio V2, AI V2, animation and world-generation V2 communicate through newly designed, versioned, engine-neutral contracts. No V1 interfaces, event types or adapters are reused. Voxel V2 remains independently runnable without these consumers.
+- **Production safety:** V1 remains untouched and operational. No existing game feature is removed, replaced or migrated by this roadmap. Existing game canon governs the live game, **not** the internal architecture of the isolated V2 experiment.
+- **Legacy prototype review:** audit the existing V2 experimental page for copied V1 modules, assets or assumptions. Replace anything inherited before treating V2.0 as accepted. The existing demo is disposable and is not a design constraint.
+- **Acceptance proof:** a clean dependency graph, source/import audit, independent build and tests, fresh assets/shaders, and a documented V2-only schema. No milestone may pass if it depends on V1 runtime behavior.
+
 ## 1. Goal and non-negotiable boundaries
 
 Build a **buttery-smooth, fully destructible terrain foundation** in which ground, hills, cliffs, arches, overhangs and other solid geometry share one authoritative voxel representation. Destruction must be spatially local, deterministic, and observable. The renderer must not change the terrain truth. The lab must run on mobile Safari and Chrome, with desktop as a development environment.
 
-This experiment evaluates an editable 3D occupancy model, **not** permission to replace Wyrmforge's pixel-first 2.5D runtime with a default 3D mesh pipeline. Production canon currently defines 1 m blocks, 32 gameplay world units/m, 12.5 cm (8³) fracture cells and 64 terrain-art pixels/m. A 10 cm voxel pitch and WebGL2 mesh rendering may be evaluated **only in isolation**. The C# simulation retains authoritative gameplay, collision/navigation and save/replay ownership at integration; JS rendering and workers are derived presentation. Integration requires an explicit owner decision, 2.5D visual acceptance and actual phone evidence. Never silently replace approved assets, gameplay or the Town.
+Voxel V2 is an independent engine with its **own** coordinates, voxel resolution, storage, renderer, physics-query contracts, materials and tests. No V1 technical constants or interfaces are inherited. Production Wyrmforge remains unchanged during development; any eventual game migration or compatibility decision is a separate future approval, not a V2 foundation constraint.
 
 ## 2. Research-informed architecture
 
@@ -23,7 +35,7 @@ Lab UI / scenario harness / deterministic report exporter
                                 -> budgeted WebGL2 upload + disposal
                                 -> pixel-readable orthographic 2.5D view
 
-Future game: C# gameplay authority -> typed versioned adapter -> voxel queries/edits
+Future V2 ecosystem: independent authoritative gameplay -> new V2 contracts -> voxel queries/edits
                                               -> derived renderer, lighting/VFX/audio
 ```
 
@@ -40,7 +52,7 @@ Future game: C# gameplay authority -> typed versioned adapter -> voxel queries/e
 
 ### V2.0 — Isolated experiment shell and trustworthy instrumentation
 
-**Deliver:** isolated `/experimental/voxel-v2/` page; build SHA and experiment version visible; deterministic scene picker and seed; desktop pointer and mobile tap/orbit/pinch with cancellation handling; reset; frame-time p50/p95/p99 and hitch counts; report JSON export; CPU and estimated GPU/worker bytes; optional GPU timing when available. Keep production and experiment deployment distinguishable.
+**Deliver:** isolated `/experimental/voxel-v2/` page; build SHA and experiment version visible; deterministic scene picker and seed; desktop pointer and mobile tap/orbit/pinch with cancellation handling; reset; frame-time p50/p95/p99 and hitch counts; report JSON export; CPU and estimated GPU/worker bytes; optional GPU timing when available. Keep production and experiment deployment distinguishable. Require a V2-only dependency audit and independently authored assets, shaders and modules.
 
 **Critical deployment change:** GitHub Pages publishes a **whole-site artifact**. The current independent experimental and production workflows can race even with exact-main caches. Move to **one Pages deployment owner** or a genuinely separate preview host before claiming safe deployment. Check production root, existing game routes and experiment route after each publish; compare expected SHAs. A cache is not a safety guarantee.
 
@@ -88,11 +100,11 @@ Future game: C# gameplay authority -> typed versioned adapter -> voxel queries/e
 
 ### V2.6 — Typed integration boundaries (without production cutover)
 
-**Deliver:** versioned interfaces for terrain snapshots, edit commands, material queries, raycast/collision, change notifications, and renderer/lighting/VFX/audio hooks. Document C# ownership, adapter direction, thread/worker rules and failure handling. Keep feature-specific effects outside the terrain core.
+**Deliver:** entirely new V2-native versioned interfaces for terrain snapshots, edit commands, material queries, raycast/collision, change notifications, and Lighting V2/Physics V2/VFX V2/Audio V2 hooks. Define independent authority, adapter direction, thread/worker rules and failure handling. Do not import or reuse any V1 contracts or feature-specific systems.
 
 **Tests:** contract serialization/versioning, adapter fakes, event ordering, replay-compatible change notifications, renderer failure isolation.
 
-**Gate:** a minimal C#-authoritative integration proof in an isolated harness; existing game engines remain owners of lighting, VFX, audio, AI and animation. **No production migration without explicit owner approval and canonical 2.5D gates.**
+**Gate:** a minimal proof using freshly authored V2-only contracts and stub V2 consumers; no V1 imports, adapters, event types or services. **No production migration without explicit owner approval.**
 
 ### V2.7 — Foundation release and sustained mobile acceptance
 
@@ -123,18 +135,18 @@ Maintain a working vertical slice after every milestone. Small remote commits, i
 
 | Component | Voxel V2 exposes | Owner / integration rule |
 | --- | --- | --- |
-| C# gameplay and terrain | versioned occupancy, material queries, accepted edit commands, snapshots | **C# authoritative**; voxel JS prototype cannot become the source of gameplay truth |
+| Gameplay V2 | versioned occupancy, material queries, accepted edit commands, snapshots | define authority in new V2 contracts; no V1 gameplay dependency |
 | Lighting V2 | changed solid/occluder bounds, material/height/face data | lighting engine owns light transport, emitters, shadows and mobile budget |
 | Physics V2 | voxel collision/raycast queries and changed-cell notifications | physics owns actors and movement; no duplicate terrain store |
 | VFX V2 | typed impact, fracture and material events with stable world coordinates | VFX owns particles, dust, sparks, burns; cosmetic only |
 | Audio V2 | material and impact events | audio owns sound selection, mixing and spatialization |
-| AI/navigation V2 | changed walkability/visibility regions and solid queries | C# navigation/AI authority; incremental invalidation, no renderer dependency |
-| Animation/characters V2 | shared coordinate/projection contract and grounding queries | sprite-first 2.5D; terrain does not own rigs or animation |
+| AI/navigation V2 | changed walkability/visibility regions and solid queries | new V2 navigation contracts; incremental invalidation, no renderer dependency |
+| Animation/characters V2 | new V2 coordinate/projection contract and grounding queries | terrain does not own rigs or animation; no V1 sprite/animation pipeline dependency |
 | World generation V2 | seeded material/voxel initialization interface | generation owns biomes, landmarks and protected routes |
 | Save/replay | snapshot schema, ordered accepted edits, canonical hashes | gameplay/save owner controls persistence and schema migration |
 | HUD/debug tools | counters, test scenario commands, benchmark report schema | no performance-critical game logic in UI |
 
-**Cross-engine invariant:** one world coordinate contract; typed events; one owner per responsibility; changes can be replayed; cosmetic failures cannot roll back committed terrain truth. Respect production's existing 32-units/m metric and 12.5 cm cell contract unless explicitly revised.
+**Cross-engine invariant:** one **new V2** world coordinate contract; typed V2 events; one owner per responsibility; changes can be replayed; cosmetic failures cannot roll back committed terrain truth. V2 units and voxel pitch are independently selected; V1 metrics do not constrain them.
 
 ## 6. Standard benchmark matrix
 
@@ -159,7 +171,7 @@ Collect: commit/build SHA; seed; scene; device, OS, browser, viewport and render
 3. **Greedy mesh fragmentation:** benchmark, do not assume greedy is always fastest end-to-end.
 4. **Worker backlog/stale results:** enforce revisions, epoch, bounded queues, upload budgets and explicit disposal.
 5. **Cross-platform replay:** canonical integer voxel state is the hash target; avoid promising identical floating-point actor trajectories.
-6. **Canon mismatch:** 10 cm experimental pitch and WebGL2 3D meshes do not override 12.5 cm / 2.5D production rules.
+6. **Legacy contamination:** V1 modules, assets, constants and event contracts must not leak into V2. Audit imports and runtime dependencies before V2.0 acceptance; eventual compatibility is separate.
 
 **Deferred until evidence warrants:** octrees, sparse voxel DAGs, brickmaps, WebGPU compute, GPU ray marching, LOD/Transvoxel, smooth density meshing, fluid simulation, structural collapse, advanced lighting, full AI/enemies and production Hunt migration.
 
@@ -167,4 +179,4 @@ Collect: commit/build SHA; seed; scene; device, OS, browser, viewport and render
 
 Each milestone requires: merged or remotely checkpointed code on the intended branch, focused automated tests, a reproducible demo scenario, measured acceptance evidence, a current `PROGRESS.md` update, and a known-limitations note. Only mark **ACCEPTED** when all milestone-specific gates pass; otherwise mark **IN PROGRESS**, **BLOCKED** or **READY FOR DEVICE TEST**. Document both successes and failures.
 
-**Current verified state:** the 75-document ledger and architecture synthesis exist; the isolated prototype exists; V2.0 is not accepted; no real-device measurements or verified safe live deployment have been recorded. The immediate implementation task is to remove the dual-deployer Pages risk, then finish V2.0 instrumentation and validate the live routes and phones.
+**Current verified state:** the 75-document ledger and architecture synthesis exist; an experimental prototype exists but has **not yet passed the clean-room audit**; V2.0 is not accepted; no real-device measurements or verified safe live deployment have been recorded. The immediate implementation task is to remove the dual-deployer Pages risk, then finish V2.0 instrumentation and validate the live routes and phones.
