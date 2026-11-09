@@ -180,9 +180,21 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task InspectNode(PassiveNodeDefinition node)
     {
+        // A second tap invests in the previewed route; never refund by tapping.
+        if (inspectorOpen && focusedId == node.Id)
+        {
+            if (!IsSelected(node))
+            {
+                await AllocateFocusedRoute();
+            }
+
+            return;
+        }
+
         focusedId = node.Id;
         inspectorOpen = true;
-        revealInspector = true;
+        // Keep the Web in view. Details remain available below the map.
+        revealInspector = false;
         var point = ArcaneWheelLayout.Position(node, ActiveSchool);
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, point.X, point.Y);
     }
