@@ -28,14 +28,20 @@ jobs:
         with:
           lfs: false
 
+      - name: Identify current production revision
+        id: production
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api repos/${{ github.repository }}/commits/main --jq .sha)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
       - name: Restore complete published-site baseline
         id: baseline
         uses: actions/cache/restore@v4
         with:
           path: ./artifacts/web/wwwroot
-          key: wyrmforge-pages-base-${{ github.sha }}
-          restore-keys: |
-            wyrmforge-pages-base-
+          key: wyrmforge-pages-base-${{ steps.production.outputs.sha }}
 
       - name: Require a complete cached production site
         run: |
@@ -56,6 +62,16 @@ jobs:
           test -s "$target_dir/index.html"
           test -s artifacts/web/wwwroot/_framework/blazor.webassembly.js
           printf '%s\n' "${GITHUB_SHA}" > "$target_dir/build.txt"
+
+      - name: Refuse stale production baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current=$(gh api repos/${{ github.repository }}/commits/main --jq .sha)
+          test "$current" = "${{ steps.production.outputs.sha }}" || {
+            echo "::error::Main changed during experiment preparation; refusing stale-site deployment."
+            exit 1
+          }
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
