@@ -7,7 +7,7 @@
 // the facing changes.
 export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 import { drawEmergeParticles } from './arena-field-ambush-vfx.js';
-import { drawFootprint, drawCastShadow, footDrop } from './authored-grounding.js';
+import { drawFootprint, footDrop } from './authored-grounding.js';
 import { MAGE_VISUAL_SCALE } from './mage-visual-profile.js';
 
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
@@ -417,7 +417,6 @@ export function drawGrounded(ctx, name, actionName, direction, frame, x, y,
         return true;
     }
     drawFootprint(ctx, x, y + drop * .4, radius, alpha);
-    // The Wizard uses a grounded contact footprint only. Projecting the entire sprite\n    // onto the ground looks like a second, distorted mage (a false reflection).\n    if (name !== 'Wizard') {\n        drawCastShadow(ctx, strip, { x: column * width, y: row * height, width, height }, rootX, rootY, x, feetY, scale, alpha);\n    }
     const drawn = drawAuthoredCell(ctx, name, actionName, direction, frame, x, feetY, alpha, scale);
     if (renderMode === 'overlay' && glow) drawGlow('overlay', alpha * .9);
     return drawn;
