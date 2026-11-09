@@ -158,8 +158,29 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Change proposed deployment design:** prefer a single Pages deployment owner or isolated experiment host. Two independent full-site deployers remain unsafe even when both workflows share concurrency and cache keys; a cache is not an atomic view of the current deployed site.
 - **Evidence limitation:** seven of nine references are MDN API documentation, not independent performance experiments.
 
+
+## Research batch 8 — sustained mobile profiling and deployment ordering (2026-11-09)
+
+67. [Apple: Tailor apps for tile-based deferred rendering](https://developer.apple.com/documentation/metal/tailor-your-apps-for-apple-gpus-and-tile-based-deferred-rendering) — Apple GPU tile memory and bandwidth behavior. **Metal-specific details are not WebGL2 APIs.**
+68. [Apple: Reducing the memory footprint of Metal apps](https://developer.apple.com/documentation/metal/reducing-the-memory-footprint-of-metal-apps) — device-dependent iOS memory limits, GPU memory pressure, resolution and temporary target costs.
+69. [Android Developers: Slow sessions](https://developer.android.com/games/optimize/vitals/slow-session) — thermal throttling, frame pacing, GPU/CPU bottlenecks and long-running sessions; Swappy is for native renderers, not directly for browser JavaScript.
+70. [Android Developers: Tools for optimizing your game](https://developer.android.com/games/tools) — Perfetto, memory diagnostics and GPU tracing on physical Android devices.
+71. [Android Developers: Optimize power efficiency](https://developer.android.com/games/optimize/power) — refresh-rate and battery-performance tradeoffs; native APIs are not browser controls.
+72. [Chrome DevTools: Memory panel](https://developer.chrome.com/docs/devtools/memory) — heap snapshots, allocation timeline and sampling for JS and worker memory.
+73. [Chrome DevTools: Fix memory problems](https://developer.chrome.com/docs/devtools/memory-problems) — allocation/GC and retained-reference investigation.
+74. [GitHub Docs: Concurrency](https://docs.github.com/en/actions/concepts/workflows-and-actions/concurrency) — workflow serialization and pending-run behavior; serial does not automatically imply newest deployment.
+75. [GitHub Docs: Control workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) — ordering of queued jobs and runs; workflow dispatch order is not guaranteed.
+
+### Batch 8 implications
+
+- **Adopt:** 10-minute warm-device benchmarks; record thermal context when observable, render resolution, device/browser version, p50/p95/p99, hitch counts and sustained memory trend.
+- **Adopt:** instrument JavaScript heap allocation and GC in supported tooling, but keep in-app counters cross-browser and label estimates. Monitor input-to-visible latency as well as FPS.
+- **Benchmark:** framebuffer resolution, chunk buffer churn and texture bandwidth on actual iPhone Safari and Android Chrome; Metal/Android native optimizations are evidence of hardware constraints, not APIs available to WebGL2.
+- **Adopt:** only one authoritative Pages publication owner or a truly isolated preview host. Check production and experimental route content after every publish. Serialized workflows without freshness checking cannot prove preservation.
+- **Research scope completed:** 75 distinct reference documents listed. **This is not 75 independent implementations or 75 empirical benchmarks**. The evidence remains heterogeneous, with multiple pages from the same publishers and projects. Final architecture choices still require controlled benchmarks and actual-device verification.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **9 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **0 further distinct references remain; 75 reference documents recorded.**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
