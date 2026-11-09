@@ -192,6 +192,7 @@ public partial class BuildView : IAsyncDisposable
         }
 
         focusedId = node.Id;
+        allocationFeedback = null;
         inspectorOpen = true;
         // Keep the Web in view. Details remain available below the map.
         revealInspector = false;
@@ -199,11 +200,28 @@ public partial class BuildView : IAsyncDisposable
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, point.X, point.Y);
     }
 
+    private string? allocationFeedback;
+
     private async Task AllocateFocusedRoute()
     {
         var plan = FocusedPlan;
-        if (plan is null || plan.AdditionalCost > PointsLeft) return;
-        if (Selection.SelectPath(plan.NodeIds)) await OnSelectionChanged.InvokeAsync();
+        if (plan is null)
+        {
+            allocationFeedback = "This route is not available yet.";
+            return;
+        }
+
+        if (plan.AdditionalCost > PointsLeft)
+        {
+            allocationFeedback = "Not enough Arcane points for this route.";
+            return;
+        }
+
+        if (Selection.SelectPath(plan.NodeIds))
+        {
+            allocationFeedback = "Route learned. New paths are now available.";
+            await OnSelectionChanged.InvokeAsync();
+        }
     }
 
     private async Task RefundFocused()
