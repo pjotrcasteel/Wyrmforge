@@ -824,7 +824,8 @@ function draw(state, snapshot, width, height) {
     state.veinSeams = emissive?.seams ?? 0;
     const normal = gpu && layerLabEnabled('normals') && state.terrainCache?.normalCanvas ? groundNormalView(state, groundCaptureView ?? camera, groundCaptureView?.width ?? width, groundCaptureView?.height ?? height, artScale) : null;
     if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
-        groundAlbedo ? { source: groundAlbedo, scale: artScale, view: groundCaptureView, revision: terrainViewRevision(state, groundCaptureView, groundCaptureView.width, groundCaptureView.height, artScale) } : null);
+        groundAlbedo ? { source: groundAlbedo, scale: artScale, view: groundCaptureView, revision: terrainViewRevision(state, groundCaptureView, groundCaptureView.width, groundCaptureView.height, artScale) } : null,
+        emissive && gpu.quality === 'mobile' ? state.groundEmissiveRevision : undefined);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
@@ -2108,6 +2109,7 @@ function groundEmissiveView(state, view, seconds, scale, band, quality) {
     state.groundEmissiveKey = key;
     state.groundEmissiveFrame = frame;
     state.groundEmissiveResult = result;
+    state.groundEmissiveRevision = (state.groundEmissiveRevision ?? 0) + 1;
     return result;
 }
 
