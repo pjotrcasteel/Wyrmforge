@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Wyrmforge Voxel V2</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141b;color:#fff;font:14px system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:12px;left:12px;background:#10141bd9;padding:12px;border:1px solid #566;border-radius:8px}button{background:#263a49;color:white;border:1px solid #789;padding:9px;margin:4px;border-radius:6px}#status{font-size:12px;color:#cdd}</style></head><body><canvas id="world"></canvas><div id="hud"><strong>Voxel Engine 2.0 — Fast Experiment</strong><div id="status">Initializing…</div><button id="reset">Reset terrain</button><div>Drag to orbit · Tap terrain to destroy · Scroll/pinch to zoom</div></div>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141b;color:#fff;font:14px system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:12px;left:12px;background:#10141bd9;padding:12px;border:1px solid #566;border-radius:8px}button{background:#263a49;color:white;border:1px solid #789;padding:9px;margin:4px;border-radius:6px}#status{font-size:12px;color:#cdd}</style></head><body><canvas id="world"></canvas><div id="hud"><strong>Voxel Engine 2.0 — Fast Experiment</strong><div id="status">Initializing…</div><button id="reset">Reset terrain</button><div>Drag to orbit · Tap terrain to destroy · Pinch to zoom</div></div>
 <script type="module">
 const canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl2',{antialias:false,alpha:false,powerPreference:'high-performance'});
 const status=document.querySelector('#status');
@@ -36,11 +36,43 @@ gl.enableVertexAttribArray(p);gl.vertexAttribPointer(p,3,gl.FLOAT,false,24,0);gl
 function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o}
 function perspective(f,aspect,near,far){const t=1/Math.tan(f/2),o=new Float32Array(16);o[0]=t/aspect;o[5]=t;o[10]=(far+near)/(near-far);o[11]=-1;o[14]=2*far*near/(near-far);return o}
 function look(eye){const norm=a=>{const l=Math.hypot(...a);return a.map(v=>v/l)},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2]],z=norm(eye),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x.reduce((s,v,i)=>s+v*eye[i],0),-y.reduce((s,v,i)=>s+v*eye[i],0),-z.reduce((s,v,i)=>s+v*eye[i],0),1])}
-let yaw=.7,pitch=.65,dist=53,drag=null,frames=0,last=performance.now(),fps=0;
+let yaw=.7,pitch=.65,dist=53,drag=null,frames=0,last=performance.now(),fps=0;const pointers=new Map();let pinchDistance=null;
 function render(now){const dpr=Math.min(devicePixelRatio||1,1.5),w=Math.floor(canvas.clientWidth*dpr),h=Math.floor(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}gl.clearColor(.07,.09,.13,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.frontFace(gl.CCW);const eye=[Math.sin(yaw)*Math.cos(pitch)*dist,Math.sin(pitch)*dist,Math.cos(yaw)*Math.cos(pitch)*dist];gl.uniformMatrix4fv(loc,false,mul(perspective(.9,w/h,.1,250),look(eye)));let triangles=0;for(const c of chunks.values()){if(c.dirty)mesh(c);gl.bindBuffer(gl.ARRAY_BUFFER,c.buffer);gl.vertexAttribPointer(p,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(col,3,gl.FLOAT,false,24,12);gl.drawArrays(gl.TRIANGLES,0,c.count);triangles+=c.count/3}frames++;if(now-last>750){fps=Math.round(frames*1000/(now-last));frames=0;last=now;status.textContent=fps+' FPS · '+triangles+' triangles · '+chunks.size+' chunks'}requestAnimationFrame(render)}
-canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,moved:false}});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;yaw-=dx*.008;pitch=Math.max(.15,Math.min(1.4,pitch+dy*.008));drag.x=e.clientX;drag.y=e.clientY});
-canvas.addEventListener('pointerup',e=>{if(!drag)return;const moved=drag.moved;drag=null;if(moved)return;const rect=canvas.getBoundingClientRect(),nx=(e.clientX-rect.left)/rect.width*2-1,ny=1-(e.clientY-rect.top)/rect.height*2,aspect=rect.width/rect.height;const eye=[Math.sin(yaw)*Math.cos(pitch)*dist,Math.sin(pitch)*dist,Math.cos(yaw)*Math.cos(pitch)*dist];const forward=eye.map(v=>-v/dist),right=[Math.cos(yaw),0,-Math.sin(yaw)],up=[-Math.sin(yaw)*Math.sin(pitch),Math.cos(pitch),-Math.cos(yaw)*Math.sin(pitch)],scale=Math.tan(.9/2),dir=forward.map((v,i)=>v+right[i]*nx*scale*aspect+up[i]*ny*scale);const len=Math.hypot(...dir);for(let t=0;t<120;t+=.12){const x=Math.floor(eye[0]+dir[0]/len*t+SIZE/2),y=Math.floor(eye[1]+dir[1]/len*t+3),z=Math.floor(eye[2]+dir[2]/len*t+SIZE/2);const v=get(x,y,z);if(v){if(v!==4)set(x,y,z,0);break}}});
+canvas.addEventListener('pointerdown',e=>{
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false});
+  if(pointers.size===1){drag={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};pinchDistance=null}
+  else{drag=null;const pair=[...pointers.values()];pinchDistance=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y)}
+});
+canvas.addEventListener('pointermove',e=>{
+  const pointer=pointers.get(e.pointerId);if(!pointer)return;
+  const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;
+  if(Math.hypot(e.clientX-pointer.startX,e.clientY-pointer.startY)>8)pointer.moved=true;
+  pointer.x=e.clientX;pointer.y=e.clientY;
+  if(pointers.size>=2){
+    const pair=[...pointers.values()],distance=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
+    if(pinchDistance!==null&&distance>0)dist=Math.max(18,Math.min(95,dist*pinchDistance/distance));
+    pinchDistance=distance;return;
+  }
+  if(drag&&drag.id===e.pointerId){drag.moved=pointer.moved;yaw-=dx*.008;pitch=Math.max(.15,Math.min(1.4,pitch+dy*.008))}
+});
+function release(e){
+  const pointer=pointers.get(e.pointerId);if(!pointer)return;
+  const wasTap=pointers.size===1&&!pointer.moved&&e.type==='pointerup';
+  pointers.delete(e.pointerId);drag=null;pinchDistance=null;
+  if(pointers.size!==0)return;
+  if(!wasTap)return;
+  const rect=canvas.getBoundingClientRect(),nx=(e.clientX-rect.left)/rect.width*2-1,ny=1-(e.clientY-rect.top)/rect.height*2,aspect=rect.width/rect.height;
+  const eye=[Math.sin(yaw)*Math.cos(pitch)*dist,Math.sin(pitch)*dist,Math.cos(yaw)*Math.cos(pitch)*dist];
+  const forward=eye.map(v=>-v/dist),right=[Math.cos(yaw),0,-Math.sin(yaw)],up=[-Math.sin(yaw)*Math.sin(pitch),Math.cos(pitch),-Math.cos(yaw)*Math.sin(pitch)];
+  const scale=Math.tan(.9/2),dir=forward.map((v,i)=>v+right[i]*nx*scale*aspect+up[i]*ny*scale),len=Math.hypot(...dir);
+  for(let t=0;t<120;t+=.12){const x=Math.floor(eye[0]+dir[0]/len*t+SIZE/2),y=Math.floor(eye[1]+dir[1]/len*t+3),z=Math.floor(eye[2]+dir[2]/len*t+SIZE/2);
+    const v=get(x,y,z);if(v){if(v!==4)set(x,y,z,0);break}
+  }
+}
+canvas.addEventListener('pointerup',release);
+canvas.addEventListener('pointercancel',release);
 canvas.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(18,Math.min(95,dist+e.deltaY*.04))},{passive:false});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();status.textContent='Graphics context lost — reload to restore'});
 document.querySelector('#reset').onclick=reset;reset();requestAnimationFrame(render);
 </script></body></html>
