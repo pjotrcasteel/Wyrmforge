@@ -31,8 +31,32 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Risk:** a full-site Pages artifact from an old cache can roll back production; deployment safety is a V2.0 gate.
 - **Open question:** 10 cm experimental voxels vs existing 12.5 cm canon; owner approval required before integrating a changed gameplay contract.
 
+
+## Research batch 2 — storage, traversal, mobile rendering (2026-11-09)
+
+18. [voxel-framework chunk coordinates](https://docs.rs/voxel-framework/latest/src/voxel_framework/chunk/mod.rs.html) — Euclidean division for negative chunk positions.
+19. [voxel-framework DDA raycasting](https://docs.rs/voxel-framework/latest/voxel_framework/world/raycast/index.html) — cell-by-cell traversal and face normals.
+20. [Owl Engine voxel data API](https://owl.argawaen.net/media/documentation/0.2.1/d8/d14/namespaceowl_1_1data_1_1voxel.html) — floor division and compact run encoding.
+21. [Owl Engine voxel architecture](https://owl.argawaen.net/media/documentation/0.2.1/dd/d05/page-voxel.html) — chunk coordinate boundary examples and CPU/GPU separation.
+22. [Sector's Edge optimized CPU ray marching](https://vercidium.com/blog/optimised-voxel-raymarching/) — 32³ packed chunks, avoiding empty allocations, chunk-local traversal.
+23. [Amanatides–Woo reference implementation](https://www.mathworks.com/matlabcentral/fileexchange/26852-a-fast-voxel-traversal-algorithm-for-ray-tracing) — classic 3D DDA algorithm and references.
+24. [Mobile GPUs and tiled rendering](https://developers.meta.com/vr/documentation/native/android/gpu-tiled/) — tile-based mobile GPU architecture and power constraints.
+25. [WebGL/WebGPU texture upload benchmarks](https://github.com/mvaligursky/webgl-webgpu-texture-upload) — browser/GPU-dependent transfer performance; desktop-only evidence.
+26. [Voxel chunk scheduler refactor analysis](https://github.com/maguirekrist/voxel_enginevk/blob/main/chunk_refactor.md) — avoid event-only dirty tracking and centralize neighborhood sampling; engineering proposal, not validated universal result.
+27. [Interactive voxel brickmap and ray traversal](https://www.jorisar.nl/blog/VoxelPlayground/) — empty-brick acceleration and traversal alternatives; GPU architecture differs from WebGL2 baseline.
+
+### Batch 2 implications
+
+- **Adopt:** Euclidean/floor chunk division and positive local modulo, one canonical neighborhood sampler, test exact boundaries and negative positions.
+- **Adopt:** 3D DDA raycasting with tests for zero direction, tie boundaries, inside-solid origins, and maximum travel.
+- **Adopt:** separate authoritative packed voxel data from CPU mesh outputs and renderer-owned GPU allocations.
+- **Benchmark:** 16³ versus 32³ chunks, including update time, allocations, draw calls, and fragmented geometry.
+- **Defer:** brickmap ray-marched renderer; the referenced prototype does not establish WebGL2 phone suitability.
+- **Risk:** event-only mesh scheduling can strand dirty chunks; reconcile desired revisions against in-flight/completed mesh versions.
+- **Evidence caveat:** mobile tile-based architecture guidance is not a Wyrmforge phone benchmark; published texture-upload numbers are not transferable across devices.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **58 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **48 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
