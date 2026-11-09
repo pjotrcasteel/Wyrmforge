@@ -257,6 +257,12 @@ public partial class BuildView : IAsyncDisposable
         node.Kind == PassiveNodeKind.Origin ||
         ArcaneSchoolCatalog.Owner(node) is PassiveSchool.Fire || ArcaneSchoolCatalog.Owner(node) == ActiveSchool || IsAllocated(node.Id);
 
+    // Visual-only de-duplication: keep the domain graph and save data unchanged.
+    private static (string First, string Second) CanonicalConnection(PassiveTreeConnection connection) =>
+        string.CompareOrdinal(connection.From, connection.To) <= 0
+            ? (connection.From, connection.To)
+            : (connection.To, connection.From);
+
     private bool ShowConnection(PassiveTreeConnection connection) =>
         ShowNode(PassiveTreeCatalog.Get(connection.From)) && ShowNode(PassiveTreeCatalog.Get(connection.To));
 
