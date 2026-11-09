@@ -16,11 +16,10 @@ const anchors = {
 export function wizardAnchor(direction, kind, action = 'idle', frame = 0) {
     const anchor = anchors[direction] ?? anchors.S;
     const [x, y] = anchor[kind] ?? anchor.hand;
-    // Pixel-aligned movement, not subpixel sprite interpolation.
-    const step = action === 'walk' ? [0, -1, 0, 1, 0, -1, 0, 1][frame % 8]
-        : action === 'walk_start' ? [0, -1, 0][frame % 3]
-        : action === 'cast' ? [0, -1, -2, -2, -1, 0][frame % 6] : 0;
-    return { x, y: y + step };
+    // Until the individual sprite-frame coordinates are calibrated, do not
+    // invent frame-dependent bobbing. That made the crystal and launch point
+    // drift independently from the authored animation.
+    return { x, y };
 }
 
 export function wizardAnchorWorld(player, wizard, kind, scale = 7 / 6) {
