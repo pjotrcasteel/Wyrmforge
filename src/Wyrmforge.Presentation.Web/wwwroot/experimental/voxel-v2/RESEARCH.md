@@ -55,8 +55,25 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Risk:** event-only mesh scheduling can strand dirty chunks; reconcile desired revisions against in-flight/completed mesh versions.
 - **Evidence caveat:** mobile tile-based architecture guidance is not a Wyrmforge phone benchmark; published texture-upload numbers are not transferable across devices.
 
+
+## Research batch 3 — scheduling, ownership and cancellation (2026-11-09)
+
+28. [Godot Voxel Tools development notes](https://voxel-tools.readthedocs.io/en/latest/development/) — prioritised worker tasks and background thread pool; implementation evidence, not a mobile benchmark.
+29. [Godot Voxel Tools performance source](https://github.com/Zylann/godot_voxel/blob/master/doc/source/performance.md) — authoritative implementation discussion of unbounded snapshot accumulation, spatial locking, bulk edits, deferred GPU upload, and collider creation costs. **Same project as reference 4; distinct document, not an independent engine.**
+30. [Godot thread-safe APIs](https://docs.godotengine.org/en/latest/tutorials/performance/thread_safe_apis.html) — GPU operations can require synchronization and cause stalls; background CPU work is not equivalent to asynchronous GPU upload.
+31. [Godot Voxel Tools changelog](https://voxel-tools.readthedocs.io/en/latest/changelog/) — shutdown and queued-destruction race fixes illustrate lifecycle hazards. **Same project as references 4, 5, 28 and 29.**
+
+### Batch 3 conclusions
+
+- **Adopt:** one writer; bound pending jobs AND snapshot bytes; reserve main-thread GPU upload budget; treat GPU resource deletion as budgeted work; bulk spatial edits rather than per-cell event emission.
+- **Adopt:** each job carries chunk revision, sampled neighbor revisions, world-generation epoch and disposable buffer ownership. Accept mesh only when all versions match; discard stale outputs without altering voxel truth.
+- **Adopt:** reset increments world epoch, stops accepting previous-epoch results, and drains/terminates workers with a documented timeout. Explicit tests for reset/exit with work queued.
+- **Benchmark:** upload and deletion time independently of worker meshing time; collider work independently of rendering.
+- **Do not overclaim:** the revision/epoch protocol is our proposed design response to documented races, not a design proven by the cited documentation. Mobile performance and safe concurrency remain unverified.
+- **Source independence warning:** multiple references are documents from the same Godot Voxel Tools project. Count distinct documents separately, but do not represent them as independent implementations.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **48 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **44 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
