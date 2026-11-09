@@ -1297,7 +1297,7 @@ export function terrainDirtyRegions(columns, rows, changed) {
             const merged = { c0: Math.min(region.c0, other.c0), c1: Math.max(region.c1, other.c1),
                 r0: Math.min(region.r0, other.r0), r1: Math.max(region.r1, other.r1) };
             // Mass ambush impacts must not transitively coalesce into a near-full-map repaint.
-            if ((merged.c1 - merged.c0 + 1) * (merged.r1 - merged.r0 + 1) > 96) {
+            if ((merged.c1 - merged.c0 + 1) * (merged.r1 - merged.r0 + 1) > 256) {
                 i++;
                 continue;
             }
@@ -1307,7 +1307,28 @@ export function terrainDirtyRegions(columns, rows, changed) {
         }
         regions.push(region);
     }
-    return regions;
+    // Bounded regions can overlap. Subtract already covered rectangles so a
+    // dense ambush ring never repaints the same expensive terrain cell repeatedly.
+    const disjoint = [];
+    for (const region of regions) {
+        let pending = [region];
+        for (const existing of disjoint) {
+            const next = [];
+            for (const rect of pending) {
+                const left = Math.max(rect.c0, existing.c0), right = Math.min(rect.c1, existing.c1);
+                const top = Math.max(rect.r0, existing.r0), bottom = Math.min(rect.r1, existing.r1);
+                if (left > right || top > bottom) { next.push(rect); continue; }
+                if (rect.r0 < top) next.push({ ...rect, r1: top - 1 });
+                if (bottom < rect.r1) next.push({ ...rect, r0: bottom + 1 });
+                if (rect.c0 < left) next.push({ c0: rect.c0, c1: left - 1, r0: top, r1: bottom });
+                if (right < rect.c1) next.push({ c0: right + 1, c1: rect.c1, r0: top, r1: bottom });
+            }
+            pending = next;
+            if (!pending.length) break;
+        }
+        disjoint.push(...pending);
+    }
+    return disjoint;
 }
 
 /** Repaint only the dirty clips, in back-to-front painter order; outside pixels remain exactly as they were. */
