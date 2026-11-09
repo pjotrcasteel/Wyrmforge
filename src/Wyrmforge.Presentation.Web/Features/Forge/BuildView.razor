@@ -48,6 +48,11 @@
                 <button class="atlas-action" aria-label="Show whole Arcane Web" title="Whole Web" @onclick="ShowOverviewAsync">⤢</button>
             </nav>
 
+            @if (allocationFeedback is not null)
+            {
+                <div class="web-allocation-feedback" role="status" aria-live="polite">@allocationFeedback</div>
+            }
+
             <div class="arcane-web-viewport" data-wheel="six-schools" data-world-size="@ArcaneWheelLayout.Size"
                  data-start-x="@Coordinate(ArcaneWheelLayout.Center)" data-start-y="@Coordinate(ArcaneWheelLayout.Center - 400)"
                  role="region" aria-label="Arcane specialization map" tabindex="0" @ref="viewport">
