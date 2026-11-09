@@ -1325,6 +1325,10 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
     let padding = FACE_PIXELS;
     for (const sprite of Object.values(forestKit()?.sprites ?? {}))
         padding = Math.max(padding, sprite.h + 2);
+    // Use global extrema to skip rows whose projected faces cannot reach a dirty clip.
+    // Conservative bounds retain every possible wall, decal and raised micro-face.
+    const minHeight = Math.min(...low);
+    const maxHeight = Math.max(...high);
     let painted = 0;
     for (const { c0, c1, r0, r1 } of regions) {
         // The clipped area must be an exact slice of a fresh full repaint, not a blend
@@ -1338,7 +1342,11 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
         ctx.clip();
         ctx.clearRect(clipX, clipY, clipW, clipH);
         ctx.translate(0, offsetY);
-        for (let row = 0; row < rows; row++) {
+        const firstRow = Math.max(0, Math.floor(
+            (clipY - offsetY - FACE_PIXELS + minHeight * MICROCELL_UNITS - padding) / FACE_PIXELS) - 1);
+        const lastRow = Math.min(rows - 1, Math.ceil(
+            (clipY + clipH - offsetY + maxHeight * MICROCELL_UNITS + padding) / FACE_PIXELS) + 1);
+        for (let row = firstRow; row <= lastRow; row++) {
             for (let column = c0; column <= c1; column++) {
                 const index = row * columns + column;
                 const south = row + 1 < rows ? index + columns : index;
