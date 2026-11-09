@@ -178,8 +178,9 @@
         });
         state.resize = new ResizeObserver(() => render(viewport, state));
         state.resize.observe(viewport);
-        // The authored wheel is larger than the phone viewport; begin with a fitted overview.
-        overview(viewport);
+        // Start on the actionable Fire progression, not the overwhelming full wheel.
+        // The whole wheel remains accessible through pinch and the overview control.
+        reset(viewport);
     }
 
     function zoom(viewport, delta) {
