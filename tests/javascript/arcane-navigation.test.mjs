@@ -62,6 +62,19 @@ test('Web opens at readable close focus and stays pannable; overview remains exp
     assert.equal(m.view().scale, 0.95);
 });
 
+test('zoom exposes three visual detail levels without changing world coordinates', () => {
+    const m = map();
+    const initial = m.view();
+    assert.equal(m.viewport.dataset.lod, 'detail');
+    m.api.zoom(m.viewport, -0.5);
+    assert.equal(m.viewport.dataset.lod, 'paths');
+    m.api.overview(m.viewport);
+    assert.equal(m.viewport.dataset.lod, 'overview');
+    m.api.reset(m.viewport);
+    assert.equal(m.viewport.dataset.lod, 'detail');
+    assert.deepEqual(m.view(), initial);
+});
+
 test('dragging from a node pans without selecting; taps select once and cancellations never select', () => {
     const m = map(); let clicks = 0;
     const button = { focus() {}, click() { clicks++; } };
