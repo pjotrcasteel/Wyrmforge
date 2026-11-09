@@ -23,8 +23,13 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     const { family, reach, rank, progress, alpha, surge } = castMotionProfile(cast);
     if (alpha <= 0) return;
     ctx.save();
-    ctx.translate(cast.x, cast.y);
-    ctx.rotate(Number(cast.angle) || 0);
+    // The cast flare belongs at the Wizard's outstretched casting hand, not
+    // the simulation's body-centre origin. This is presentation-only: the
+    // authoritative projectile trajectory and hit detection remain unchanged.
+    const angle = Number(cast.angle) || 0;
+    const handReach = 9;
+    ctx.translate(cast.x + Math.cos(angle) * handReach, cast.y + Math.sin(angle) * handReach - 5);
+    ctx.rotate(angle);
     ctx.globalAlpha *= reducedMotion ? alpha * 0.65 : alpha;
     const extent = reducedMotion ? 0.72 : 1;
     const length = reach * extent;
