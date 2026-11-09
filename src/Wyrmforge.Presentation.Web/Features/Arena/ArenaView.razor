@@ -4,6 +4,7 @@
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
+    <div class="hunt-build-version" data-game-version="@AppBuildInfo.Version" aria-label="Game build version">@AppBuildInfo.Display</div>
     <button class="leave-run" title="Retreat — abandon this run" aria-label="Abandon run" @onclick="AbandonRunAsync">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <circle cx="13.5" cy="4" r="1.8"/>
