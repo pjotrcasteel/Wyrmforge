@@ -21,7 +21,7 @@ test('waygate handles absent exits without drawing',()=>{
 test('dormant gate is rendered but has no portal vortex',()=>{
     const ctx=fakeContext();
     drawAncientWaygate(ctx,{x:100,y:200,radius:30},0,true);
-    assert.ok(ctx.calls.some(([name])=>name==='fillRect'));
+    assert.ok(ctx.calls.some(([name])=>name==='stroke'));
     assert.equal(ctx.calls.filter(([name])=>name==='clip').length,0);
 });
 test('completed objective enables animated portal interior',()=>{
