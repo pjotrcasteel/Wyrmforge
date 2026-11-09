@@ -241,7 +241,11 @@ public partial class BuildView : IAsyncDisposable
         if (node.Requirement is not null) classes.Add("mutation-enhancer");
         if (IsSelected(node)) classes.Add("selected");
         else if (preview?.Contains(node.Id) == true) classes.Add("preview");
-        else if (Selection.CanSelect(node.Id)) classes.Add("available");
+        else if (Selection.CanSelect(node.Id))
+        {
+            classes.Add("available");
+            if (PointsLeft >= node.Cost) classes.Add("affordable");
+        }
         else classes.Add("locked");
 
         if (focusedId == node.Id && inspectorOpen) classes.Add("focused");
