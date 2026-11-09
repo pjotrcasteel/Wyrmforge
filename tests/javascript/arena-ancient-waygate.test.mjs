@@ -30,3 +30,10 @@ test('completed objective enables animated portal interior',()=>{
     assert.equal(ctx.calls.filter(([name])=>name==='clip').length,1);
     assert.ok(ctx.calls.filter(([name])=>name==='ellipse').length>=8);
 });
+
+test('waygate is scaled to two-thirds while retaining the exit anchor',()=>{
+    const ctx=fakeContext();
+    drawAncientWaygate(ctx,{x:100,y:200,radius:30},0,true);
+    assert.deepEqual(ctx.calls.find(([name])=>name==='translate'),['translate',100,200]);
+    assert.deepEqual(ctx.calls.find(([name])=>name==='scale'),['scale',2/3,2/3]);
+});

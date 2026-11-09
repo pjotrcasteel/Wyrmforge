@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="160" height="180" viewBox="0 0 160 180" shape-rendering="crispEdges">
+<svg fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg" width="160" height="180" viewBox="0 0 160 180" shape-rendering="crispEdges">
 <path d="M19 166V86 Q19 18 80 15 Q141 18 141 86V166H109V88 Q109 51 80 51 Q51 51 51 88V166Z" fill="#141719" stroke="#0d1012" stroke-width="7"/>
 <path d="M24 160V87 Q24 25 80 21 Q136 25 136 87V160H113V88 Q113 47 80 47 Q47 47 47 88V160Z" fill="#4a4a45" stroke="#77776d" stroke-width="3"/>
 <path d="M24 79h19l3 3v10l-4 2h-21z" fill="#55564f" stroke="#252b2b" stroke-width="2"/>
