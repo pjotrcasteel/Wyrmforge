@@ -1,5 +1,8 @@
 # Voxel v2 progress
 
+- **Execution roadmap:** [ROADMAP.md](ROADMAP.md) — research-integrated V2.0–V2.7 milestones, acceptance gates, benchmarks, deployment safety and V2 engine contracts.
+- **Research gate:** 75 documents recorded in [RESEARCH.md](RESEARCH.md), with decisions in [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md); this is documentary research, not device-performance proof.
+
 - Current milestone: **V2.0 — experiment shell** (in progress; acceptance not met).
 - Branch / commit: `experiment/voxel-v2`; see GitHub branch head for current SHA.
 - Deployment URL / deployed commit: proposed `/Wyrmforge/experimental/voxel-v2/`; **not verified live**.
