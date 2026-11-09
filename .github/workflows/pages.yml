@@ -3,11 +3,6 @@ name: Deploy Wyrmforge demo
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'src/Wyrmforge.Presentation.Web/wwwroot/experimental/voxel/**'
-      - 'tests/javascript/experimental-voxel/**'
-      - '.github/workflows/voxel-experiment.yml'
-      - '.github/workflows/voxel-fast-pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -105,12 +100,6 @@ jobs:
           grep -q '<base href="/Wyrmforge/" />' ./artifacts/web/wwwroot/index.html
           grep -q "${GITHUB_SHA}" ./artifacts/web/wwwroot/index.html
           ! grep -q '__WYRMFORGE_BUILD__' ./artifacts/web/wwwroot/index.html
-
-      - name: Cache assembled production Pages site for fast experiment publishing
-        uses: actions/cache/save@v4
-        with:
-          path: ./artifacts/web/wwwroot
-          key: pages-production-${{ github.sha }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
