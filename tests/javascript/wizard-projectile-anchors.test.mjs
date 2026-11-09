@@ -66,3 +66,16 @@ test('moving away from the cast origin cannot pull an in-flight projectile to th
     assert.equal(wizardProjectileVisualPosition(projectile, player, wizard,
         { ...cast, x: NaN }), null);
 });
+
+test('unverified frame bobbing cannot shift spell or crystal anchors', () => {
+    for (const direction of ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']) {
+        for (const kind of ['hand', 'crystal']) {
+            const idle = wizardAnchor(direction, kind, 'idle', 0);
+            for (const action of ['walk_start', 'walk', 'walk_stop', 'cast']) {
+                for (let frame = 0; frame < 8; frame++) {
+                    assert.deepEqual(wizardAnchor(direction, kind, action, frame), idle);
+                }
+            }
+        }
+    }
+});
