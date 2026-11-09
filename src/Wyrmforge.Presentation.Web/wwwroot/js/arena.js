@@ -28,7 +28,7 @@ import {
     setAuthoredRenderMode, enemyHasEmissivePose, emissionIntensity,
 } from './authored-characters.js?v=20261108-mage-head-v2';
 import { drawRecoveryGuide } from './arena-recovery.js';
-import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact, drawWizardProjectileLaunch } from './arena-spell-vfx.js';
+import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact, wizardProjectileVisualPosition } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js?v=20261108-mage-head-v2';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
@@ -1022,9 +1022,9 @@ function draw(state, snapshot, width, height) {
     // direction. The GPU world still receives its C# projectile light and
     // casts shadows; never suppress the projectile graphic after GPU shading.
     for (const projectile of snapshot.projectiles) {
-        if (authoredOn && authoredCharacter('Wizard'))
-            drawWizardProjectileLaunch(ctx, projectile, snapshot.player, state.authored.wizard, state.reducedMotion.matches);
-        drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
+        const visualPosition = authoredOn && authoredCharacter('Wizard')
+            ? wizardProjectileVisualPosition(projectile, snapshot.player, state.authored.wizard) : null;
+        drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds, visualPosition);
     }
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
