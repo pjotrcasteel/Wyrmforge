@@ -5,7 +5,7 @@
 const anchors = {
     E:  { hand: [13, -22], crystal: [16, -35] },
     SE: { hand: [11, -20], crystal: [14, -34] },
-    S:  { hand: [8, -19], crystal: [12, -34] },
+    S:  { hand: [8, -19], crystal: [5, -34] },
     SW: { hand: [-10, -20], crystal: [-13, -34] },
     W:  { hand: [-13, -22], crystal: [-16, -35] },
     NW: { hand: [-10, -23], crystal: [-13, -36] },
