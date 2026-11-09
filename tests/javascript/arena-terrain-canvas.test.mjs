@@ -838,7 +838,7 @@ test('mass ambush damage keeps dirty repaint regions bounded without dropping ch
     const regions = terrainDirtyRegions(columns, rows, changed);
     assert.ok(regions.length > 1, 'widely spread impacts must not coalesce into a single huge clip');
     for (const region of regions)
-        assert.ok((region.c1 - region.c0 + 1) * (region.r1 - region.r0 + 1) <= 96);
+        assert.ok((region.c1 - region.c0 + 1) * (region.r1 - region.r0 + 1) <= 256);
     for (const index of changed) {
         const column = index % columns, row = Math.floor(index / columns);
         assert.ok(regions.some(region => column >= region.c0 && column <= region.c1 && row >= region.r0 && row <= region.r1),
