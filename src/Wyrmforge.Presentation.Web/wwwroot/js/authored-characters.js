@@ -250,7 +250,11 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
     const cast = snapshot.castMotion;
     const casting = cast && Number.isFinite(cast.progress) && cast.progress >= 0 && cast.progress < 1 && action(manifest, 'cast');
     const aiming = Number.isFinite(player.aimAngle) && (player.manualAim || player.aimTargetId != null || player.aimPropId != null);
-    if (casting && Number.isFinite(cast.angle)) wizard.direction = pickDirectionFromAngle(cast.angle, wizard.direction);
+    // Movement owns the body's facing while walking. Aim may turn the body only
+    // when stationary; otherwise the Wizard visibly walks sideways/backwards
+    // because the aimed direction overrides the actual travel direction.
+    if (moving && wizard.heading) wizard.direction = wizard.heading;
+    else if (casting && Number.isFinite(cast.angle)) wizard.direction = pickDirectionFromAngle(cast.angle, wizard.direction);
     else if (aiming) wizard.direction = pickDirectionFromAngle(player.aimAngle, wizard.direction);
     else if (wizard.heading) wizard.direction = wizard.heading;
 
