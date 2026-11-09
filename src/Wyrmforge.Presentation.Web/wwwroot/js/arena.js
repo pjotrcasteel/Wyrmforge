@@ -912,7 +912,8 @@ function draw(state, snapshot, width, height) {
                     physicalVolume: capture.physicalVolume,
                     // Only the flame glows (its light is the C# emitter, not this); the post is an ordinary lit surface.
                     ...(layer.kind === 'torchFlame' ? { material: { roughness: .85, emission: '#ff8a30', emissionIntensity: .35 } } : {}),
-                    ...(layer.kind === 'exit' ? { material: { roughness: .8, emission: '#b18ae1', emissionIntensity: layer.locked ? .12 : .45 } } : {}),
+                    // Stone is non-emissive. The previous purple emission tinted the entire captured gate, even while sealed.
+                    ...(layer.kind === 'exit' ? { material: { roughness: .95, emissionIntensity: 0 } } : {}),
                     ...(emissiveMaterial ? { material: { roughness: .85, ...emissiveMaterial } } : {}),
                     ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
