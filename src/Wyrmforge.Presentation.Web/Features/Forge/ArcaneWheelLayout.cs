@@ -181,10 +181,30 @@ internal static class ArcaneWheelLayout
                 || connection.To == "constellation-Fire-approach-2-0") return Polyline([from, to]);
 
             var bend = connection.From == "fire-blast-shaping" || connection.To == "fire-blast-shaping" ? -1 : 1;
-            return CurvedLink(start, finish, bend * Math.Min(120, length * .08), length);
+            // Inner constellation shortcuts run between opposing nodes. Keep them
+            // closer to their chord rather than bowing into adjacent node markers.
+            var isInnerShortcut = IsConstellationShortcut(connection);
+            var offset = isInnerShortcut ? 0 : bend * Math.Min(120, length * .08);
+            return CurvedLink(start, finish, offset, length);
         }
         return Polyline([from, to]);
     }
+    private static bool IsConstellationShortcut(PassiveTreeConnection connection)
+    {
+        const string prefix = "constellation-Fire-";
+        if (!connection.From.StartsWith(prefix, StringComparison.Ordinal)
+            || !connection.To.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var from = connection.From[prefix.Length..].Split('-');
+        var to = connection.To[prefix.Length..].Split('-');
+        return from.Length == 2 && to.Length == 2
+            && from[0] == to[0]
+            && ((from[1] == "0" && to[1] == "4") || (from[1] == "4" && to[1] == "0"));
+    }
+
     private static string CurvedLink(Point from, Point to, double bend, double length)
     {
         if (length <= 0) return Polyline([from, to]);
