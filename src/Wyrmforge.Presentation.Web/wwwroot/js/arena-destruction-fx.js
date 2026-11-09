@@ -214,6 +214,27 @@ export function hasGroundEmission(frame, fx, band, view, seconds, includeCracks 
  * surface (bright in the dark, beneath every actor) instead of an additive layer drawn over creatures. Returns the canvas and the
  * vein seams drawn. `holder` keeps the reusable canvas between frames.
  */
+
+const animatedTerrainFrames = new WeakMap();
+
+/** Reports whether time can change the terrain emission pixels. */
+export function groundEmissionAnimated(frame, fx, band, seconds, reducedMotion, includeCracks) {
+    if (fx?.heat?.some(spot => heatStrength(seconds - spot.born, spot.life) > .01)) return true;
+    if (reducedMotion || !frame) return false;
+    if (includeCracks && veinRamp(band) && frame.cracks?.length) return true;
+    if (!animatedTerrainFrames.has(frame)) {
+        let bedrock = false;
+        for (const block of frame.fine?.values() ?? []) {
+            if (block.heights?.some(height => height <= BEDROCK_MICROCELLS)) {
+                bedrock = true;
+                break;
+            }
+        }
+        animatedTerrainFrames.set(frame, bedrock);
+    }
+    return animatedTerrainFrames.get(frame);
+}
+
 export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false, scale = 1, includeCracks = true) {
     // No emissive sources: avoid clearing a screen-sized canvas and uploading an all-black GPU texture on every frame.
     if (!hasGroundEmission(frame, fx, band, view, seconds, includeCracks)) return null;
