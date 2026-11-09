@@ -173,4 +173,77 @@ public sealed class TerrainEvidenceCaptureBrowserTests : PageTest
             $"independent-reference before={before}, after={after}, revision={revision}).");
     }
 
+    /// <summary>Cold Hunt entry waits for the forest kit before building the terrain cache.</summary>
+    [TestMethod]
+    public async Task ColdHuntEntry_PaintsTerrainOnceAfterDelayedForestArt()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1', '3');
+            localStorage.setItem('wyrmforge.characterSchool.v1', 'Pyromancer');
+            """);
+        var forestArtRequested = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseForestArt = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await Page.RouteAsync("**/forest-kit.json", async route =>
+        {
+            forestArtRequested.TrySetResult(true);
+            await releaseForestArt.Task;
+            await route.ContinueAsync();
+        });
+
+        try
+        {
+            await Page.GotoAsync(root + "/?god=1", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+            var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
+            await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+            await start.ClickAsync();
+            if (await Page.Locator(".character-creation").IsVisibleAsync())
+                await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+            await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+            await Page.Locator(".gate-action--primary").ClickAsync();
+            await Page.Locator(".gate-lineage--fire").ClickAsync();
+            await Page.Locator(".gate-tier--ready").First.ClickAsync();
+            await Page.Locator("button.route-node.available").First.ClickAsync();
+            await Page.GetByRole(AriaRole.Button, new()
+            {
+                NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$")
+            }).ClickAsync();
+            await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+            await Page.WaitForFunctionAsync("""
+                async () => {
+                    const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                    const d = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                    return d?.hunt1Terrain?.snapshotRevision != null;
+                }
+                """, null, new() { Timeout = 45000 });
+
+            await forestArtRequested.Task.WaitAsync(TimeSpan.FromSeconds(45));
+            var earlyPaints = await Page.EvaluateAsync<int>("""
+                async () => {
+                    const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    return readArenaDiagnostics(document.querySelector('canvas.game-canvas')).hunt1Terrain.fullRepaints;
+                }
+                """);
+            Assert.AreEqual(0, earlyPaints, "The forest kit is still blocked.");
+        }
+        finally
+        {
+            releaseForestArt.TrySetResult(true);
+        }
+
+        await Page.WaitForFunctionAsync("""
+            async () => {
+                const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                const d = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                return d?.hunt1Terrain?.paintedRevision === d?.hunt1Terrain?.snapshotRevision &&
+                    d?.hunt1Terrain?.fullRepaints === 1 && d.hunt1Terrain.artKitRepaints === 0;
+            }
+            """, null, new() { Timeout = 45000 });
+    }
+
 }
