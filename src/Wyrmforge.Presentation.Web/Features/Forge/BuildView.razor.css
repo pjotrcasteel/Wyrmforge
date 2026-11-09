@@ -1901,3 +1901,31 @@
 }
 .first-arcane-point-guide strong { color: #f6dcab; font-size: .67rem; letter-spacing: .12em; }
 @media (max-height: 550px) { .first-arcane-point-guide { top: 52px; } }
+
+/* Mobile Arcane Web: prioritize the map; details are in normal page flow. */
+@media (max-width: 760px) {
+    .atlas-stage {
+        height: max(650px, calc(100dvh - 112px));
+    }
+
+    .node-inspector {
+        position: relative;
+        z-index: auto;
+        inset: auto;
+        display: block;
+        max-height: none;
+        overflow: visible;
+        margin-top: 16px;
+        box-shadow: none;
+        backdrop-filter: none;
+    }
+
+    .node-inspector > p {
+        display: block;
+    }
+
+    .inspector-cost {
+        display: inline-flex;
+        margin-block: 8px;
+    }
+}
