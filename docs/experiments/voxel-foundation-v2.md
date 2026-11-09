@@ -39,3 +39,12 @@ Proposed public route: `/experimental/voxel` under the existing GitHub Pages bas
 
 ## Release policy
 Use a dedicated experiment branch and PR. Do not merge to main until route isolation, automated tests and build validation pass. Merge of an isolated route does not authorize switching production Hunt to this engine.
+
+## Fast iteration delivery (owner decision, 9 November 2026)
+- Develop the experiment as a standalone static HTML/JavaScript app. No Blazor or .NET dependency in its edit/test loop.
+- Keep it in the same repository and under the public route `/Wyrmforge/experimental/voxel/`.
+- Run focused JavaScript tests on every experimental change; keep full solution CI for production integration only.
+- GitHub Pages currently deploys the whole site through the main-branch `pages.yml` workflow, so an experiment-only push cannot independently update the same public Pages URL. Do not claim otherwise.
+- First create the static app and focused tests on the experiment branch. Then adjust the Pages publishing architecture to allow quick static-only experiment updates without losing the production site's published files. Preserve the existing site and 404 deep-link fallback.
+- Until that publishing path is proven, the route is not live and changes on the experiment branch are not public.
+- Optimize for small, coherent checkpoints with direct browser feedback; benchmark actual commit-to-live latency instead of promising a fixed deployment time.
