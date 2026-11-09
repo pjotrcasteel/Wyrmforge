@@ -1,3 +1,4 @@
+import { wizardAnchorWorld } from './wizard-anchors.js';
 import { drawFireballV5 } from './arena-fireball-v5.js';
 import { drawFirePixelProjectile, drawFirePixelImpact } from './arena-fire-pixels.js';
 
@@ -18,7 +19,7 @@ export function castMotionProfile(cast) {
     return { family: spellFamily(cast?.spell, cast?.combination), reach: 21 + 7 * rank + (surge ? 12 : 0), rank, progress, alpha: 1 - progress, surge };
 }
 
-export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
+export function drawSpellCastMotion(ctx, cast, reducedMotion = false, wizard = null, player = null) {
     if (!cast) return;
     const { family, reach, rank, progress, alpha, surge } = castMotionProfile(cast);
     if (alpha <= 0) return;
@@ -28,7 +29,9 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     // authoritative projectile trajectory and hit detection remain unchanged.
     const angle = Number(cast.angle) || 0;
     const handReach = 9;
-    ctx.translate(cast.x + Math.cos(angle) * handReach, cast.y + Math.sin(angle) * handReach - 5);
+    const hand = wizard && player ? wizardAnchorWorld(player, wizard, 'hand') : null;
+    ctx.translate(hand?.x ?? cast.x + Math.cos(angle) * handReach,
+        hand?.y ?? cast.y + Math.sin(angle) * handReach - 5);
     ctx.rotate(angle);
     ctx.globalAlpha *= reducedMotion ? alpha * 0.65 : alpha;
     const extent = reducedMotion ? 0.72 : 1;
