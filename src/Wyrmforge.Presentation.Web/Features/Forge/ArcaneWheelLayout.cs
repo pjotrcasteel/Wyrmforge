@@ -168,16 +168,20 @@ internal static class ArcaneWheelLayout
         }
         var from = Position(PassiveTreeCatalog.Get(connection.From), active);
         var to = Position(PassiveTreeCatalog.Get(connection.To), active);
-        if (connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal))
+        if (connection.From.StartsWith("constellation-Fire-", StringComparison.Ordinal)
+            || connection.To.StartsWith("constellation-Fire-", StringComparison.Ordinal))
         {
-            var length = Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
-            // Keep the small facets angular. Curve the longer routes that
-            // connect them into branches, instead of outlining every loop.
-            if (length < 235 || connection.To == "constellation-Fire-approach-2-0") return Polyline([from, to]);
-            var bend = connection.From == "fire-blast-shaping" ? -1 : 1;
-            // Keep short links close to their endpoints and give the long
-            // Fire approaches a wider sweep. Rotation uses the same geometry.
-            return CurvedLink(from, to, bend * Math.Min(120, length * .08), length);
+            // Choose the bend from the logical endpoints, not the stored edge direction.
+            // Reversing an edge must not turn its curved lane into a straight crossing.
+            var reverse = string.CompareOrdinal(connection.From, connection.To) > 0;
+            var start = reverse ? to : from;
+            var finish = reverse ? from : to;
+            var length = Math.Sqrt(Math.Pow(finish.X - start.X, 2) + Math.Pow(finish.Y - start.Y, 2));
+            if (length < 235 || connection.From == "constellation-Fire-approach-2-0"
+                || connection.To == "constellation-Fire-approach-2-0") return Polyline([from, to]);
+
+            var bend = connection.From == "fire-blast-shaping" || connection.To == "fire-blast-shaping" ? -1 : 1;
+            return CurvedLink(start, finish, bend * Math.Min(120, length * .08), length);
         }
         return Polyline([from, to]);
     }
