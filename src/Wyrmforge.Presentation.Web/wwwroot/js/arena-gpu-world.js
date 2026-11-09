@@ -304,7 +304,14 @@ export class HuntGpuWorld {
         this.engine.renderScale = scale;
         // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
         // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
-        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, groundWidth, groundHeight, undefined, true, scale);
+        if (groundEmissive) {
+            // Emissive is animated and must refresh every frame. On mobile, upload its smooth glow at half
+            // terrain pixel density: this quarters its texture bandwidth without changing the world-space
+            // ground plane, terrain albedo, normal detail, crack geometry, or encounter simulation.
+            const emissiveScale = this.quality === 'mobile' ? Math.max(1, scale / 2) : scale;
+            this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, groundWidth, groundHeight,
+                undefined, true, emissiveScale);
+        }
         // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
         // Static terrain normals share the same immutable camera-window revision as its albedo. Moving lights do not change either.
         if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, groundWidth, groundHeight, ground?.revision, false, scale);
