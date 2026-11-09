@@ -1929,3 +1929,22 @@
         margin-block: 8px;
     }
 }
+
+/* Compact allocation confirmation without hiding the Web or moving its camera. */
+.atlas-stage .web-allocation-feedback {
+    position: absolute;
+    z-index: 12;
+    top: 64px;
+    left: 50%;
+    width: max-content;
+    max-width: min(78%, 340px);
+    padding: 8px 12px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(218, 156, 80, .7);
+    border-radius: 8px;
+    background: rgba(28, 19, 18, .94);
+    color: #f4d8ac;
+    text-align: center;
+    font-size: .8rem;
+    pointer-events: none;
+}
