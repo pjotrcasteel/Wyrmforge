@@ -5,6 +5,7 @@ import { wizardProjectileVisualPosition } from '../../src/Wyrmforge.Presentation
 
 const player = { x: 100, y: 100 };
 const wizard = { direction: 'E', action: 'cast', frame: 3 };
+const cast = { spell: 1, angle: 0, progress: .2 };
 
 test('all eight Wizard directions have finite distinct hand and crystal anchors', () => {
     for (const direction of ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']) {
@@ -18,15 +19,21 @@ test('all eight Wizard directions have finite distinct hand and crystal anchors'
 
 test('projectile starts visually at casting hand and converges to authoritative coordinates', () => {
     const hand = wizardAnchorWorld(player, wizard, 'hand');
-    const atOrigin = wizardProjectileVisualPosition({ x: 100, y: 100, angle: 0 }, player, wizard);
+    const atOrigin = wizardProjectileVisualPosition({ x: 100, y: 100, angle: 0, spell: 1 }, player, wizard, cast);
     assert.deepEqual(atOrigin, hand);
-    const near = wizardProjectileVisualPosition({ x: 118, y: 100, angle: 0 }, player, wizard);
+    const near = wizardProjectileVisualPosition({ x: 118, y: 100, angle: 0, spell: 1 }, player, wizard, cast);
     assert.ok(near.x > 118 && near.x < hand.x + 18);
-    assert.equal(wizardProjectileVisualPosition({ x: 136, y: 100, angle: 0 }, player, wizard), null);
+    assert.equal(wizardProjectileVisualPosition({ x: 136, y: 100, angle: 0, spell: 1 }, player, wizard, cast), null);
 });
 
 test('never redirect old, backward or off-axis projectiles', () => {
-    assert.equal(wizardProjectileVisualPosition({ x: 150, y: 100, angle: 0 }, player, wizard), null);
-    assert.equal(wizardProjectileVisualPosition({ x: 98, y: 100, angle: 0 }, player, wizard), null);
-    assert.equal(wizardProjectileVisualPosition({ x: 105, y: 120, angle: 0 }, player, wizard), null);
+    assert.equal(wizardProjectileVisualPosition({ x: 150, y: 100, angle: 0, spell: 1 }, player, wizard, cast), null);
+    assert.equal(wizardProjectileVisualPosition({ x: 98, y: 100, angle: 0, spell: 1 }, player, wizard, cast), null);
+    assert.equal(wizardProjectileVisualPosition({ x: 105, y: 120, angle: 0, spell: 1 }, player, wizard, cast), null);
+});
+
+test('nearby unrelated projectile is never snapped to the Wizard hand', () => {
+    assert.equal(wizardProjectileVisualPosition({ x: 105, y: 100, angle: 0, spell: 2 }, player, wizard, cast), null);
+    assert.equal(wizardProjectileVisualPosition({ x: 105, y: 100, angle: Math.PI, spell: 1 }, player, wizard, cast), null);
+    assert.equal(wizardProjectileVisualPosition({ x: 105, y: 100, angle: 0, spell: 1 }, player, wizard, null), null);
 });
