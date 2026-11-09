@@ -309,8 +309,11 @@ export class HuntGpuWorld {
             // terrain pixel density: this quarters its texture bandwidth without changing the world-space
             // ground plane, terrain albedo, normal detail, crack geometry, or encounter simulation.
             const emissiveScale = this.quality === 'mobile' ? Math.max(1, scale / 2) : scale;
+            // Animated glow needs no more than 30 uploads/sec on mobile; other frames reuse
+            // the previous GPU texture while actor motion, terrain and lighting continue normally.
+            const emissiveRevision = this.quality === 'mobile' ? Math.floor(performance.now() / (1000 / 30)) : undefined;
             this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, groundWidth, groundHeight,
-                undefined, true, emissiveScale);
+                emissiveRevision, true, emissiveScale);
         }
         // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
         // Static terrain normals share the same immutable camera-window revision as its albedo. Moving lights do not change either.
