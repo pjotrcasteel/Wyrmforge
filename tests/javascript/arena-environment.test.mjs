@@ -59,7 +59,8 @@ test('opened healing caches use their own stone-and-herb silhouette, not an XP d
 
 test('performance telemetry remains opt-in and never obscures ordinary combat', () => {
     const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
-    assert.match(arena, /new URLSearchParams\(window\.location\.search\)\.get\('perf'\) !== '1'/);
+    assert.match(arena, /params\.get\('perf'\) === '1'/);
+    assert.match(arena, /params\.get\('perfCapture'\) === '1'/);
 });
 
 test('habitats carry a distinct restrained wash, and the plan keeps the habitat', () => {
