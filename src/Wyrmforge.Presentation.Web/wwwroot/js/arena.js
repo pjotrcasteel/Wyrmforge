@@ -2,6 +2,7 @@ import { huntLayerCapture, huntLayerRevision, visibleHuntEnemyLayers, prepareHun
     prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261108-enemy-cull-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
+import { preloadForestKit } from './forest-kit.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
@@ -112,6 +113,9 @@ export function initializeArena(canvas, dotNetReference, { huntEntryLoading = fa
     const state = createState(canvas, dotNetReference);
     // This promise settles on real decoded atlas/VFX results; failed optional
     // sheets retain their existing game fallbacks, never an indefinite spinner.
+    state.entryForestKitSettled = !huntEntryLoading;
+    if (huntEntryLoading)
+        void preloadForestKit().then(() => { state.entryForestKitSettled = true; });
     state.entryAssetsSettled = false;
     Promise.allSettled([atlasLoad, fireballLoad, paintedLoad, hollowLoad])
         .then(() => { if (state.active) state.entryAssetsSettled = true; });
@@ -457,7 +461,11 @@ function frame(state, timestamp) {
         // A C# bootstrap snapshot can carry a placeholder 800x600 world, Arcane
         // school and no terrain. Do not show it as a torn/black G4 Hunt frame.
         const waitingForWorld = state.g4StageFrames && !hasAuthoritativeHuntWorld(state.latestSnapshot);
-        if (state.latestSnapshot && !waitingForWorld) {
+        // The entry veil is already up. Build the terrain cache once, with the
+        // forest art and the chosen renderer's normal-map requirements known.
+        const waitingForTerrainArt = state.entryGate?.isBlocking() && state.latestSnapshot?.environment?.terrain &&
+            (!state.entryForestKitSettled || state.gpuPending);
+        if (state.latestSnapshot && !waitingForWorld && !waitingForTerrainArt) {
             draw(state, state.latestSnapshot, rect.width, rect.height);
             // The scene may become visible only after its current authoritative
             // terrain revision was actually painted by the game renderer.
