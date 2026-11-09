@@ -115,11 +115,14 @@ export function wizardProjectileVisualPosition(projectile, player, wizard, cast 
     if (!projectile || !player || !wizard || !cast) return null;
     // Do not attach unrelated projectiles that pass close to the player.
     // The simulation may have several spells in flight simultaneously.
-    if (cast.spell !== projectile.spell || Number(cast.progress) >= 1) return null;
+    if (cast.spell !== projectile.spell || wizard.action !== 'cast') return null;
+    const progress = Number(cast.progress);
+    if (!Number.isFinite(progress) || progress < 0 || progress >= 1) return null;
     const angle = Number(projectile.angle);
     const castAngle = Number(cast.angle);
-    if (!Number.isFinite(castAngle) || Math.cos(angle - castAngle) < .94) return null;
-    if (!Number.isFinite(angle)) return null;
+    if (!Number.isFinite(angle) || !Number.isFinite(castAngle)
+        || Math.cos(angle - castAngle) < .94) return null;
+    if (![projectile.x, projectile.y, player.x, player.y].every(Number.isFinite)) return null;
     const dx = projectile.x - player.x, dy = projectile.y - player.y;
     const forward = dx * Math.cos(angle) + dy * Math.sin(angle);
     const sideways = Math.abs(dx * Math.sin(angle) - dy * Math.cos(angle));
