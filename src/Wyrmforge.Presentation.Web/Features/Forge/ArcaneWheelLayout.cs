@@ -133,7 +133,17 @@ internal static class ArcaneWheelLayout
         foreach (var bridge in Bridges)
         {
             var index = Array.IndexOf(bridge.Nodes, connection.From);
-            if (index < 0 || index >= 3 || bridge.Nodes[index + 1] != connection.To) continue;
+            var reverse = false;
+            if (index > 0 && bridge.Nodes[index - 1] == connection.To)
+            {
+                index--;
+                reverse = true;
+            }
+            else if (index < 0 || index >= 3 || bridge.Nodes[index + 1] != connection.To)
+            {
+                continue;
+            }
+
             var arc = Arc(bridge, active);
             var start = arc.Start + (arc.End - arc.Start) * index / 3;
             var end = arc.Start + (arc.End - arc.Start) * (index + 1) / 3;
@@ -149,6 +159,11 @@ internal static class ArcaneWheelLayout
                 points.Add(Polar(end, 1000));
                 points.Add(Position(PassiveTreeCatalog.Get(connection.To), active));
             }
+            if (reverse)
+            {
+                points.Reverse();
+            }
+
             return Polyline(points);
         }
         var from = Position(PassiveTreeCatalog.Get(connection.From), active);
