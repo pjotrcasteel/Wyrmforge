@@ -123,6 +123,14 @@ export function wizardProjectileVisualPosition(projectile, player, wizard, cast 
     if (!Number.isFinite(angle) || !Number.isFinite(castAngle)
         || Math.cos(angle - castAngle) < .94) return null;
     if (![projectile.x, projectile.y, player.x, player.y].every(Number.isFinite)) return null;
+    // During movement the body faces its travel direction. If the cast aims
+    // behind that pose, the authored hand is on the wrong side of the sprite:
+    // prefer the authoritative projectile over a visibly backward launch.
+    const facingAngle = {
+        E: 0, SE: Math.PI / 4, S: Math.PI / 2, SW: 3 * Math.PI / 4,
+        W: Math.PI, NW: -3 * Math.PI / 4, N: -Math.PI / 2, NE: -Math.PI / 4,
+    }[wizard.direction];
+    if (Number.isFinite(facingAngle) && Math.cos(angle - facingAngle) < .38) return null;
     const dx = projectile.x - player.x, dy = projectile.y - player.y;
     const forward = dx * Math.cos(angle) + dy * Math.sin(angle);
     const sideways = Math.abs(dx * Math.sin(angle) - dy * Math.cos(angle));
