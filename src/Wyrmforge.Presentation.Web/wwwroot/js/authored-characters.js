@@ -579,7 +579,7 @@ export function drawAuthoredWizard(ctx, player, state, hit = false) {
             player.x, feetY - footDrop(radius), { radius, scale: MAGE_VISUAL_SCALE });
         // Crystal glow participates in the same emissive lighting composition
         // as the authored sprite, rather than drawing a fake ground light.
-        drawWizardCrystal(ctx, player, wizard, true);
+        if (drawn) drawWizardCrystal(ctx, player, wizard, true);
         return drawn;
     }
     // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
