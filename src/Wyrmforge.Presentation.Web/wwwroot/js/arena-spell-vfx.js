@@ -106,35 +106,34 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false, wizard = n
 }
 
 /**
- * Short launch bridge conceals the simulation-origin offset for the first
- * few pixels of travel. It never moves the authoritative projectile.
+ * Purely visual launch origin. Projectiles are born at the C# player centre;
+ * for the first 36 world units, interpolate the rendered sprite from the
+ * authored casting hand to its authoritative position. This leaves collisions,
+ * damage, projectile lights and all simulation snapshots unchanged.
  */
-export function drawWizardProjectileLaunch(ctx, projectile, player, wizard, reducedMotion = false) {
-    if (!projectile || !player || !wizard) return;
+export function wizardProjectileVisualPosition(projectile, player, wizard) {
+    if (!projectile || !player || !wizard) return null;
+    const angle = Number(projectile.angle);
+    if (!Number.isFinite(angle)) return null;
+    const dx = projectile.x - player.x, dy = projectile.y - player.y;
+    const forward = dx * Math.cos(angle) + dy * Math.sin(angle);
+    const sideways = Math.abs(dx * Math.sin(angle) - dy * Math.cos(angle));
+    // Never pull an old projectile back to the mage, or move a projectile
+    // from another volley lane that happens to cross the player's position.
+    if (forward < 0 || forward >= 36 || sideways > 8) return null;
     const hand = wizardAnchorWorld(player, wizard, 'hand');
-    const distance = Math.hypot(projectile.x - hand.x, projectile.y - hand.y);
-    if (distance > 30 || distance < 2) return;
-    const angle = Number(projectile.angle) || 0;
-    const forward = (projectile.x - hand.x) * Math.cos(angle)
-        + (projectile.y - hand.y) * Math.sin(angle);
-    if (forward < -5) return;
-    ctx.save();
-    ctx.globalAlpha = reducedMotion ? .35 : Math.max(.12, .7 * (1 - distance / 36));
-    ctx.strokeStyle = '#ffba71';
-    ctx.lineWidth = reducedMotion ? 1 : 2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(hand.x, hand.y);
-    ctx.lineTo(projectile.x, projectile.y);
-    ctx.stroke();
-    ctx.restore();
+    const weight = Math.pow(1 - forward / 36, 2);
+    return {
+        x: projectile.x + (hand.x - player.x) * weight,
+        y: projectile.y + (hand.y - player.y) * weight,
+    };
 }
 
-export function drawSpellProjectile(ctx, projectile, reducedMotion = false, visualSeconds = 0) {
+export function drawSpellProjectile(ctx, projectile, reducedMotion = false, visualSeconds = 0, visualPosition = null) {
     const family = spellFamily(projectile.spell, projectile.combination);
     const radius = Math.max(2, projectile.radius);
     ctx.save();
-    ctx.translate(projectile.x, projectile.y);
+    ctx.translate(visualPosition?.x ?? projectile.x, visualPosition?.y ?? projectile.y);
     ctx.rotate(Number(projectile.angle) || 0);
     if (family === 'fire') {
         if (!drawFireballV5(ctx, projectile, visualSeconds, reducedMotion)) drawFirePixelProjectile(ctx, projectile, reducedMotion);
