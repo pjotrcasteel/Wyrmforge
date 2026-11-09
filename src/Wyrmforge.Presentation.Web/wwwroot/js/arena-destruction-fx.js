@@ -80,9 +80,15 @@ export function createDestructionFx() { return { heat: [], chips: [], craters: 0
 /** Records a frame change. `now` is seconds on any monotonic clock shared with `drawDestructionFx`. */
 export function observeTerrain(fx, previous, next, now, reducedMotion = false) {
     const events = craterEvents(previous, next);
+    // Heat cells are projected at the height of the crater when they were created.
+    // Later impacts can deepen the same block; retaining the old projected glow
+    // makes the lava-like layer hover or jitter independently of the actual crater.
+    // Replace the old heat for that block instead of stacking stale coordinates.
+    const updatedBlocks = new Set(next?.changed ?? []);
+    if (updatedBlocks.size) fx.heat = fx.heat.filter(spot => !updatedBlocks.has(spot.blockIndex));
     for (const event of events) {
         fx.craters++;
-        fx.heat.push({ x: event.x, y: event.y, radius: 16 + Math.min(26, Math.sqrt(event.count) * 3.2), born: now,
+        fx.heat.push({ blockIndex: event.index, x: event.x, y: event.y, radius: 16 + Math.min(26, Math.sqrt(event.count) * 3.2), born: now,
             cells: event.cells, rim: event.rim, maxDepth: event.maxDepth, life: reducedMotion ? HEAT_SECONDS_REDUCED : HEAT_SECONDS });
         if (reducedMotion) continue;
         const total = Math.min(16, 4 + Math.floor(event.count / 3));
