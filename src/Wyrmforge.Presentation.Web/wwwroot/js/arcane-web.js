@@ -178,6 +178,8 @@
         });
         state.resize = new ResizeObserver(() => render(viewport, state));
         state.resize.observe(viewport);
+        // The authored wheel is larger than the phone viewport; begin with a fitted overview.
+        overview(viewport);
     }
 
     function zoom(viewport, delta) {
