@@ -101,6 +101,8 @@ function calculateCellShadow(frame, column, row, own) {
         if (highest - h0 > 1) {
             let best = 0;
             for (let s = 1; s <= REACH; s++) {
+                // The ray only climbs. Once even the tallest nearby occluder cannot shade it, later samples cannot contribute.
+                if (highest - h0 - s * SLOPE <= .5) break;
                 const qx = Math.floor(px + TOWARD_X * s), qy = Math.floor(py + TOWARD_Y * s);
                 if (qx < 0 || qy < 0 || qx >= width || qy >= height) break;
                 const rise = heights[qy * width + qx] - h0 - s * SLOPE;
