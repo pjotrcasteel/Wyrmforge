@@ -111,9 +111,14 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false, wizard = n
  * authored casting hand to its authoritative position. This leaves collisions,
  * damage, projectile lights and all simulation snapshots unchanged.
  */
-export function wizardProjectileVisualPosition(projectile, player, wizard) {
-    if (!projectile || !player || !wizard) return null;
+export function wizardProjectileVisualPosition(projectile, player, wizard, cast = null) {
+    if (!projectile || !player || !wizard || !cast) return null;
+    // Do not attach unrelated projectiles that pass close to the player.
+    // The simulation may have several spells in flight simultaneously.
+    if (cast.spell !== projectile.spell || Number(cast.progress) >= 1) return null;
     const angle = Number(projectile.angle);
+    const castAngle = Number(cast.angle);
+    if (!Number.isFinite(castAngle) || Math.cos(angle - castAngle) < .94) return null;
     if (!Number.isFinite(angle)) return null;
     const dx = projectile.x - player.x, dy = projectile.y - player.y;
     const forward = dx * Math.cos(angle) + dy * Math.sin(angle);
