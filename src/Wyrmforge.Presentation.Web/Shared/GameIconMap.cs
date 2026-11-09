@@ -16,7 +16,7 @@ public static class GameIconMap
         ["❄"] = "frost", ["❆"] = "frost", ["❅"] = "frost",
         ["⚡"] = "storm", ["ϟ"] = "storm", ["↯"] = "storm", ["⌁"] = "storm",
         ["♥"] = "heart", ["💙"] = "heart",
-        ["⬟"] = "shield", ["◉"] = "rune", ["◴"] = "hourglass", ["⟳"] = "cycle", ["≋"] = "wave",
+        ["⚔"] = "fang", ["⬟"] = "shield", ["◉"] = "rune", ["◴"] = "hourglass", ["⟳"] = "cycle", ["≋"] = "wave",
         ["➶"] = "arrow", ["➤"] = "arrow", ["↟"] = "arrow",
         ["♛"] = "crown", ["🐉"] = "wyrm", ["🪽"] = "wing", ["🦷"] = "fang",
     };
