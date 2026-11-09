@@ -93,8 +93,29 @@ Date: 2026-11-09. Status: **in progress**, not a 75-source completed review.
 - **Investigate before V2.0 acceptance:** GitHub Pages cache visibility and freshness are distinct from deployment safety. Even an exact-main cache can be stale relative to a newly published deployment, and another deployment may race after checking main SHA. Require post-deploy production route checks and a single-owner publication strategy or isolated preview host.
 - **Research methodology:** seven distinct references; two GitHub Docs pages are from the same publisher and two Gaffer articles from the same author. Distinct documents do not equal independent experimental validation.
 
+
+## Research batch 5 — browser lifecycle, mobile input and memory (2026-11-09)
+
+39. [MDN: WebGL context restored](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/webglcontextrestored_event) — old GPU objects become invalid after restoration; rebuild resources.
+40. [MDN: WEBGL_lose_context extension](https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_lose_context) — deterministic context-loss injection for regression tests.
+41. [MDN: Performance.measureUserAgentSpecificMemory](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory) — experimental memory measurement, requires cross-origin isolation.
+42. [MDN: Performance.memory](https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory) — deprecated, Chromium-only and not reliable for total memory.
+43. [MDN: Pointer events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events) — capture, cancellation, multi-touch lifecycle.
+44. [MDN: CSS touch-action](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action) — browser gesture ownership and pointer cancellation.
+45. [MDN: pointercancel event](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointercancel_event) — input state cleanup for interrupted gestures.
+46. [MDN: WebGL2 invalidateFramebuffer](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/invalidateFramebuffer) — discard unused attachments; relevant to tile-based GPU memory bandwidth.
+47. [MDN: WebGL getError](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError) — detect OUT_OF_MEMORY and CONTEXT_LOST_WEBGL without treating diagnostics as a zero-cost per-frame operation.
+
+### Batch 5 implications
+
+- **Adopt:** context-loss test mode; suspend GPU work on loss, preserve committed voxel truth, recreate GPU resources after restore, reject old renderer-epoch uploads.
+- **Adopt:** explicit byte accounting for packed voxels, worker snapshots, CPU meshes and known GPU buffers; label GPU accounting as estimates. Do not require cross-origin isolation or Chromium-only memory APIs.
+- **Adopt:** pointer capture and cancellation-safe gesture state machine, with tap versus orbit versus pinch disambiguation; verify interrupted pinch cannot trigger an accidental edit.
+- **Benchmark:** mobile framebuffer formats, render-scale tiers, and selective attachment invalidation; do not assume a particular optimization helps without phone captures.
+- **Caution:** all nine are distinct MDN documentation pages, **not nine independent publishers or experiments**. They document browser APIs; they do not establish Wyrmforge performance.
+
 ## Remaining research
 
-Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **37 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
+Target 75 distinct sources across storage, meshing, destruction, workers, mobile graphics, physics, persistence and deployment. **28 further distinct references remain**. Do not claim research gate complete before each is inspected and linked to a decision or rejection.
 
 No device performance claims are supported by this desk research.
