@@ -79,6 +79,31 @@ test('dragging from a node pans without selecting; taps select once and cancella
     assert.equal(clicks, 1);
 });
 
+
+test('two consecutive node taps dispatch two selections without moving the camera', () => {
+    const m = map(); let clicks = 0;
+    const node = { focus() {}, click() { clicks++; } };
+    const before = m.view();
+    for (let i = 0; i < 2; i++) {
+        m.emit('pointerdown', 150, 220, 1, node);
+        m.emit('pointerup', 150, 220, 1, node);
+    }
+    assert.equal(clicks, 2);
+    assert.deepEqual(m.view(), before);
+});
+
+test('a node tap after dragging is not treated as a second selection', () => {
+    const m = map(); let clicks = 0;
+    const node = { focus() {}, click() { clicks++; } };
+    m.emit('pointerdown', 100, 100, 1, node);
+    m.emit('pointermove', 180, 140, 1, node);
+    m.emit('pointerup', 180, 140, 1, node);
+    assert.equal(clicks, 0);
+    m.emit('pointerdown', 150, 220, 1, node);
+    m.emit('pointerup', 150, 220, 1, node);
+    assert.equal(clicks, 1);
+});
+
 test('pinching keeps the midpoint anchored and never activates a node on release', () => {
     const m = map(); let clicks = 0;
     const button = { focus() {}, click() { clicks++; } };
