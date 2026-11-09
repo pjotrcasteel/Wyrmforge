@@ -28,7 +28,7 @@ public sealed class WetForestPlayableMaterialBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.GotoAsync(root.TrimEnd('/') + "/arena-material-kit?seed=1204",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
+        await Page.WaitForFunctionAsync("() => document.getElementById('wyrmforge-ignition')?.classList.contains('ignition-complete') === true",
             null, new PageWaitForFunctionOptions { Timeout = 45000 });
 
         var before = await Page.EvaluateAsync<string>(@"async ({width, habitat}) => {
