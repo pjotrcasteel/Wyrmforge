@@ -29,7 +29,12 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false, wizard = n
     // authoritative projectile trajectory and hit detection remain unchanged.
     const angle = Number(cast.angle) || 0;
     const handReach = 9;
-    const hand = wizard && player ? wizardAnchorWorld(player, wizard, 'hand') : null;
+    // A cast flare must not teleport to the current hand if the mage has
+    // already moved away from the simulation's cast origin.
+    const anchored = wizard?.action === 'cast' && player
+        && [cast.x, cast.y, player.x, player.y].every(Number.isFinite)
+        && Math.hypot(player.x - cast.x, player.y - cast.y) <= 6;
+    const hand = anchored ? wizardAnchorWorld(player, wizard, 'hand') : null;
     ctx.translate(hand?.x ?? cast.x + Math.cos(angle) * handReach,
         hand?.y ?? cast.y + Math.sin(angle) * handReach - 5);
     ctx.rotate(angle);
