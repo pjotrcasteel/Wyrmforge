@@ -49,6 +49,9 @@ public sealed partial class RunSimulation
         }
     }
 
+    /// <summary>Temporary opt-in while field ambush performance is being repaired. Ordinary encounters remain enabled.</summary>
+    public bool FieldAmbushEnabled { get; set; } = false;
+
     private FieldAmbushRuntime? fieldAmbush;
 
     /// <summary>How many field ambushes have sprung this Hunt (presentation and tests).</summary>
@@ -63,7 +66,7 @@ public sealed partial class RunSimulation
     /// <summary>Returns true while a tell is running (every other spawn waits).</summary>
     private bool UpdateFieldAmbush(double delta, double width, double height)
     {
-        if (!mapState.EncounterActive || arenaEnvironment?.AmbushFields is not { Count: > 0 } fields) return false;
+        if (!FieldAmbushEnabled || !mapState.EncounterActive || arenaEnvironment?.AmbushFields is not { Count: > 0 } fields) return false;
         // Terrain is authored in fixed world metres, not browser viewport pixels. Using
         // the viewport here clips every ambush spawn to a 390x700 corner of the
         // 1024x1920 arena, leaving the ring without legal marks.
