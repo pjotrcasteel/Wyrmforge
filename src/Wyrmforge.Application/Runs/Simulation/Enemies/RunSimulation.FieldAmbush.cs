@@ -64,6 +64,14 @@ public sealed partial class RunSimulation
     private bool UpdateFieldAmbush(double delta, double width, double height)
     {
         if (!mapState.EncounterActive || arenaEnvironment?.AmbushFields is not { Count: > 0 } fields) return false;
+        // Terrain is authored in fixed world metres, not browser viewport pixels. Using
+        // the viewport here clips every ambush spawn to a 390x700 corner of the
+        // 1024x1920 arena, leaving the ring without legal marks.
+        if (arenaEnvironment.Terrain is not null)
+        {
+            width = ArenaMetricEnvelope.CombatWidth;
+            height = ArenaMetricEnvelope.CombatHeight;
+        }
         var ambush = fieldAmbush ??= new FieldAmbushRuntime(fields);
         if (ambush.Telling)
         {

@@ -206,10 +206,15 @@ public sealed class ArenaTerrainIntegrationTests
         Assert.IsTrue(simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt));
         simulation.Tick(0, default, 390, 700);
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+        // The scripted entrance advances the hunter during Tick; assert the initial
+        // protected spawn before the first entrance movement, then verify the walk.
+        var entrance = simulation.CreateSnapshot();
+        Assert.IsNotNull(entrance.Environment?.Terrain);
+        Assert.AreEqual(ArenaMetricEnvelope.CombatWidth, entrance.World!.Width);
+        Assert.AreEqual(528, entrance.Player.X, 1, "the hunter starts at the south end of the protected road");
+        Assert.IsGreaterThan(entrance.World!.Height * .85, entrance.Player.Y, "the hunter starts in the south clearing");
         var snapshot = simulation.Tick(.05, default, 390, 700);
-        Assert.IsNotNull(snapshot.Environment?.Terrain);
-        Assert.AreEqual(ArenaMetricEnvelope.CombatWidth, snapshot.World!.Width);
-        Assert.AreEqual(528, snapshot.Player.X, 1, "the hunter enters at the south end of the road, on the protected clearing");
-        Assert.IsGreaterThan(snapshot.World!.Height * .85, snapshot.Player.Y, "the hunter enters at the south (bottom) end");
+        Assert.IsTrue(simulation.HuntEntranceActive, "the hunter walks the scripted entrance after spawning");
+        Assert.IsGreaterThan(snapshot.World!.Height * .85, snapshot.Player.Y, "the entrance stays on the south road");
     }
 }
