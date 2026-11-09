@@ -149,7 +149,7 @@ internal static class ArcaneWheelLayout
             var end = arc.Start + (arc.End - arc.Start) * (index + 1) / 3;
             if (bridge.Outer && index == 0)
             {
-                points.Add(Position(PassiveTreeCatalog.Get(connection.From), active));
+                points.Add(Position(PassiveTreeCatalog.Get(bridge.Nodes[0]), active));
                 points.Add(Polar(start, 1000));
             }
             var steps = Math.Max(1, (int)Math.Ceiling(Math.Abs(end - start) / (Math.PI / 45)));
@@ -157,7 +157,7 @@ internal static class ArcaneWheelLayout
             if (bridge.Outer && index == 2)
             {
                 points.Add(Polar(end, 1000));
-                points.Add(Position(PassiveTreeCatalog.Get(connection.To), active));
+                points.Add(Position(PassiveTreeCatalog.Get(bridge.Nodes[3]), active));
             }
             if (reverse)
             {
