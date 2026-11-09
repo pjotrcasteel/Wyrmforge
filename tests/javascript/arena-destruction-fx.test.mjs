@@ -295,3 +295,15 @@ test('the ground emissive map is an opaque black canvas with the glows drawn in 
         assert.equal(created.length, 1);
     } finally { delete globalThis.document; }
 });
+test('a second impact replaces stale crater heat at its new terrain height', () => {
+    const base = whole(2, 1);
+    const first = mergeTerrainFrame(base, { revision: 2, columns: 2, rows: 1, surface: [0, 0], material: [0, 0], fine: [bowl(3)] });
+    const second = mergeTerrainFrame(first, { revision: 3, columns: 2, rows: 1, surface: [0, 0], material: [0, 0], fine: [bowl(6)] });
+    const fx = createDestructionFx();
+    observeTerrain(fx, base, first, 1, true);
+    const originalY = fx.heat[0].cells[0].y;
+    observeTerrain(fx, first, second, 2, true);
+    assert.equal(fx.heat.length, 1, 'old projected heat must not remain above the deeper crater');
+    assert.ok(fx.heat[0].cells[0].y > originalY, 'heat follows the new lowered voxel top');
+    assert.equal(fx.heat[0].blockIndex, 1);
+});
