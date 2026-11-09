@@ -18,6 +18,7 @@ public sealed class FieldAmbushTests
     {
         var simulation = new RunSimulationFactory(new SeededRandomSource(seed)).Create(new HashSet<string>(), seed: seed, hunt: HuntSelection.FireTierOne);
         simulation.EnableHunt1Terrain(influence);
+        simulation.FieldAmbushEnabled = true;
         Assert.IsTrue(simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt));
         simulation.Tick(0, default, Width, Height);
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
@@ -42,6 +43,18 @@ public sealed class FieldAmbushTests
             while (simulation.PendingChoices.Count > 0) Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
         }
         return snapshot;
+    }
+
+    [TestMethod]
+    public void FieldAmbushIsDisabledByDefaultWithoutDisablingOrdinaryHunts()
+    {
+        var (simulation, player, environment) = Start(42);
+        simulation.FieldAmbushEnabled = false;
+        Quiet(simulation, player, 6);
+        player.Position = ArenaTerrainGrid.CenterOf(environment.AmbushFields[0].Column, environment.AmbushFields[0].Row);
+        var snapshot = Quiet(simulation, player, 2);
+        Assert.IsNull(snapshot.FieldAmbush);
+        Assert.AreEqual(0, simulation.FieldAmbushesSprung);
     }
 
     [TestMethod]
