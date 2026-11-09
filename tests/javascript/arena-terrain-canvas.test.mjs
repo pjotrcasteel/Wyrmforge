@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
     composeTerrainSplatPixels,
     drawWall, wallTextureSourceY,
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, terrainBaseKindMap, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, terrainDirtyRegions, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, paintTerrainRegion, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 import { TILE, MEGA, generateTileSet, normalFromTile } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
@@ -789,4 +789,43 @@ test('sub-12-pixel islands retain the majority material for both albedo and norm
         assert.deepEqual(Array.from(composed.normal.subarray(pixel * 4, pixel * 4 + 4)),
             sampledSplatPixel(atlas, 9, 15, 48, x, y, true));
     }
+});
+
+test('projected repaint bounds retain cliff and pit drawing inside the dirty clip', () => {
+    const terrain = frame(3, 40, new Array(120).fill(0));
+    terrain.surface[25 * 3 + 1] = 64;
+    terrain.surface[15 * 3 + 1] = -32;
+    terrain.fine = new Map([[16 * 3 + 2, {
+        topsoil: TERRAIN_MATERIAL.Soil,
+        heights: Array.from({ length: 64 }, (_, i) => i < 8 ? -32 : 0),
+    }]]);
+    const clip = { c0: 0, c1: 2, r0: 20, r1: 20 };
+    const full = recorder();
+    const regional = Object.assign(recorder(), { beginPath() {}, rect() {}, clip() {} });
+    const stats = { lastRepaintCellVisits: 0 };
+    paintTerrain(full, terrain, 0, 0);
+    paintTerrainRegion(regional, terrain, 0, [clip], 0, stats);
+
+    const inside = calls => calls.filter(([type, , y, , height]) =>
+        type === 'fillRect' && y < 25 * 32 && y + height > 16 * 32);
+    assert.deepEqual(inside(regional.calls), inside(full.calls));
+    assert.deepEqual(inside(regional.cues), inside(full.cues));
+    assert.ok(stats.lastRepaintCellVisits < 60, 'less than half the map goes through the painter');
+});
+
+test('an eighteen-point ambush does not paint distant height extremes', () => {
+    const columns = 32, rows = 60;
+    const terrain = frame(columns, rows, new Array(columns * rows).fill(0));
+    terrain.surface[0] = 96;
+    terrain.surface[31] = -32;
+    const changed = Array.from({ length: 18 }, (_, i) =>
+        Math.round(30 + Math.sin(i * Math.PI / 9) * 7) * columns + Math.round(16 + Math.cos(i * Math.PI / 9) * 7));
+    terrain.fine = new Map(changed.map(index => [index, {
+        heights: Array.from({ length: 64 }, (_, i) => i % 9 === 0 ? -4 : 0), topsoil: 0, stoneTop: -8,
+    }]));
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const stats = { lastRepaintCellVisits: 0 };
+    paintTerrainRegion(ctx, terrain, 0, terrainDirtyRegions(columns, rows, changed), TERRAIN_PAD_UNITS, stats);
+    assert.ok(stats.lastRepaintCellVisits <= 600,
+        `local projected bounds should visit at most 600 cells, visited ${stats.lastRepaintCellVisits}; main visited 960`);
 });

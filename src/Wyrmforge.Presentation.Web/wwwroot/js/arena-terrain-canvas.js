@@ -1306,17 +1306,20 @@ export function terrainDirtyRegions(columns, rows, changed) {
 
 /** Repaint only the dirty clips, in back-to-front painter order; outside pixels remain exactly as they were. */
 export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_PAD_UNITS, stats = null) {
-    const { rows } = frame;
-    let low = Infinity, high = -Infinity;
-    const include = heights => {
-        for (const height of heights) {
-            low = Math.min(low, height);
-            high = Math.max(high, height);
+    const { columns, rows } = frame;
+    const low = Float64Array.from(frame.surface);
+    const high = Float64Array.from(frame.surface);
+    for (let index = 0; index < low.length; index++) {
+        const base = frame.baseSurface?.[index] ?? frame.surface[index];
+        low[index] = Math.min(low[index], base);
+        high[index] = Math.max(high[index], base);
+    }
+    for (const [index, block] of frame.fine ?? []) {
+        for (const height of block.heights) {
+            low[index] = Math.min(low[index], height);
+            high[index] = Math.max(high[index], height);
         }
-    };
-    include(frame.surface);
-    if (frame.baseSurface) include(frame.baseSurface);
-    for (const block of frame.fine?.values() ?? []) include(block.heights);
+    }
     // Walls can reach the next row's lowest microcolumn. Decals may
     // extend below the face, so include the largest loaded sprite.
     let padding = FACE_PIXELS;
@@ -1329,21 +1332,24 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
         // Keep canonical order within conservative projected bounds.
         const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
         const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
-        const first = Math.max(0, Math.floor((clipY - offsetY + low * MICROCELL_UNITS - FACE_PIXELS - padding) / FACE_PIXELS));
-        const last = Math.min(rows - 1, Math.ceil((clipY + clipH - offsetY + high * MICROCELL_UNITS + padding) / FACE_PIXELS));
-        const bounded = Number.isFinite(first) && Number.isFinite(last);
-        const startRow = bounded ? first : 0;
-        const endRow = bounded ? last : rows - 1;
-        if (stats) stats.lastRepaintCellVisits += Math.max(0, endRow - startRow + 1) * (c1 - c0 + 1);
         ctx.save();
         ctx.beginPath();
         ctx.rect(clipX, clipY, clipW, clipH);
         ctx.clip();
         ctx.clearRect(clipX, clipY, clipW, clipH);
         ctx.translate(0, offsetY);
-        for (let row = startRow; row <= endRow; row++)
-            for (let column = c0; column <= c1; column++)
+        for (let row = 0; row < rows; row++) {
+            for (let column = c0; column <= c1; column++) {
+                const index = row * columns + column;
+                const south = row + 1 < rows ? index + columns : index;
+                const origin = offsetY + row * FACE_PIXELS;
+                const top = origin - high[index] * MICROCELL_UNITS - padding;
+                const bottom = origin + FACE_PIXELS - Math.min(low[index], low[south]) * MICROCELL_UNITS + padding;
+                if (bottom <= clipY || top >= clipY + clipH) continue;
+                if (stats) stats.lastRepaintCellVisits++;
                 painted += paintTerrainCell(ctx, frame, band, column, row);
+            }
+        }
         ctx.restore();
     }
     return painted;
