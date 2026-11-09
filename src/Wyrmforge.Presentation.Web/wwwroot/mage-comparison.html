@@ -10,6 +10,7 @@ p{color:#b9b5b0}#status{text-align:center}</style></head><body>
 <h1 style="text-align:center">Mage comparison — actual game renderers</h1>
 <p style="text-align:center">Both renderers use the current Wyrmforge source. Select a direction and animation to compare.</p>
 <div class="controls" id="directions"></div><div class="controls" id="actions"></div>
+<div class="controls"><label><input id="anchors" type="checkbox" checked> Show hand (orange), crystal (cyan) and sprite root (white)</label></div>
 <p id="status">Loading authored Wizard sprites…</p>
 <main><section><h2>Legacy mage</h2><canvas id="legacy" width="420" height="340"></canvas><p>Four-direction renderer / legacy art</p></section>
 <section><h2>Authored Wizard (current Hunt)</h2><canvas id="authored" width="420" height="340"></canvas><p>Eight-direction authored sprite set</p></section></main>
@@ -17,6 +18,7 @@ p{color:#b9b5b0}#status{text-align:center}</style></head><body>
 import {drawMage} from './js/arena-mage.js';
 import {preloadAuthoredCharacter,authoredCharacter,drawAuthoredWizard,createAuthoredState} from './js/authored-characters.js';
 import {loadArt} from './js/art-atlas.js';
+import {wizardAnchorWorld} from './js/wizard-anchors.js';
 let direction='S',action='walk',start=performance.now();
 const dirs=['N','NE','E','SE','S','SW','W','NW'];
 function buttons(id,values,selected){const el=document.getElementById(id);for(const v of values){const b=document.createElement('button');b.textContent=v;b.onclick=()=>{selected(v);start=performance.now();};el.append(b);}}
@@ -38,6 +40,18 @@ function paint(canvas,label,now){
    state.wizard.direction=direction;state.wizard.action=spec===set.manifest.actions[action]?action:'idle';
    state.wizard.frame=Math.floor(elapsed*1000/110)%spec.framesPerDirection;
    drawAuthoredWizard(ctx,player,state,false);
+   if(document.getElementById('anchors').checked){
+    const points=[
+     {x:player.x,y:player.y+12,color:'#ffffff',label:'root'},
+     {...wizardAnchorWorld(player,state.wizard,'hand'),color:'#ff9b46',label:'hand'},
+     {...wizardAnchorWorld(player,state.wizard,'crystal'),color:'#7be6ee',label:'crystal'}
+    ];
+    for(const point of points){
+     ctx.fillStyle=point.color;
+     ctx.fillRect(point.x-1,point.y-1,3,3);
+     ctx.fillText(point.label,point.x+3,point.y-3);
+    }
+   }
   }
  }
  ctx.restore();
