@@ -48,9 +48,9 @@ function map(touchEvents = false, worldSize = 3200) {
     return { api, viewport, emit, touch, view, listeners, windowListeners, disconnected: () => disconnected };
 }
 
-test('Web opens at fitted overview scale and stays pannable even when the full world fits', () => {
+test('Web opens at readable close focus and stays pannable; overview remains explicit', () => {
     const m = map();
-    assert.ok(m.view().scale > 0 && m.view().scale < 0.95);
+    assert.equal(m.view().scale, 0.95);
     m.api.overview(m.viewport);
     const before = m.view();
     m.emit('pointerdown', 100, 100);
@@ -60,6 +60,31 @@ test('Web opens at fitted overview scale and stays pannable even when the full w
     assert.ok(Math.abs(m.view().y - before.y - 80) < 0.001);
     m.api.reset(m.viewport);
     assert.equal(m.view().scale, 0.95);
+});
+
+test('allocation is explicit and repeated node taps cannot spend points', () => {
+    const codeBehind = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/BuildView.razor.cs', import.meta.url), 'utf8');
+    const markup = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/BuildView.razor', import.meta.url), 'utf8');
+    const inspect = codeBehind.match(/private async Task InspectNode\(PassiveNodeDefinition node\)([\s\S]*?)private string\? allocationFeedback/);
+    assert.ok(inspect, 'InspectNode must exist');
+    assert.doesNotMatch(inspect[1], /AllocateFocusedRoute\s*\(/);
+    assert.match(markup, /@onclick="AllocateFocusedRoute"/);
+    assert.match(markup, /Unlock route/);
+});
+
+test('zoom exposes three visual detail levels without changing world coordinates', () => {
+    const m = map();
+    const initial = m.view();
+    assert.equal(m.viewport.dataset.lod, 'detail');
+    m.api.zoom(m.viewport, -0.5);
+    assert.equal(m.viewport.dataset.lod, 'paths');
+    m.api.overview(m.viewport);
+    assert.equal(m.viewport.dataset.lod, 'overview');
+    m.api.reset(m.viewport);
+    assert.equal(m.viewport.dataset.lod, 'detail');
+    assert.deepEqual(m.view(), initial);
 });
 
 test('dragging from a node pans without selecting; taps select once and cancellations never select', () => {

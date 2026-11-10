@@ -180,14 +180,9 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task InspectNode(PassiveNodeDefinition node)
     {
-        // A second tap invests in the previewed route; never refund by tapping.
+        // Selection is always a preview. Only the explicit inspector action spends points.
         if (inspectorOpen && focusedId == node.Id)
         {
-            if (!IsSelected(node))
-            {
-                await AllocateFocusedRoute();
-            }
-
             return;
         }
 
@@ -246,7 +241,11 @@ public partial class BuildView : IAsyncDisposable
         if (node.Requirement is not null) classes.Add("mutation-enhancer");
         if (IsSelected(node)) classes.Add("selected");
         else if (preview?.Contains(node.Id) == true) classes.Add("preview");
-        else if (Selection.CanSelect(node.Id)) classes.Add("available");
+        else if (Selection.CanSelect(node.Id))
+        {
+            classes.Add("available");
+            if (PointsLeft >= node.Cost) classes.Add("affordable");
+        }
         else classes.Add("locked");
 
         if (focusedId == node.Id && inspectorOpen) classes.Add("focused");
