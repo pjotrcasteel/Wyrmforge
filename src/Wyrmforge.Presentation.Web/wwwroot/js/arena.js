@@ -17,7 +17,7 @@ import { mountLayerLab, layerLabEnabled, layerLabView, layerLabSnapshot } from '
 import { captureTerrainEvidence, captureTerrainViewport, sampleCachedTerrainViewport, compareTerrainPixels } from './arena-terrain-evidence.js?v=20261108-terrain-evidence-v1';
 import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
-import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js?v=20261108-crack-isolation-v1';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive, groundEmissionAnimated } from './arena-destruction-fx.js?v=20261108-crack-isolation-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
@@ -2118,8 +2118,10 @@ function groundEmissiveView(state, view, seconds, scale, band, quality) {
     const frame = state.terrainFrame;
     const reducedMotion = state.reducedMotion.matches;
     const includeCracks = layerLabEnabled('crackVeins');
+    const animated = groundEmissionAnimated(frame, state.destructionFx, band, seconds, reducedMotion, includeCracks);
+    const tick = animated ? Math.floor(seconds * 30) : 'static';
     const key = quality === 'mobile'
-        ? `${Math.floor(seconds * 30)}:${view.x}:${view.y}:${view.width}:${view.height}:${scale}:${band}:${reducedMotion}:${includeCracks}`
+        ? `${tick}:${view.x}:${view.y}:${view.width}:${view.height}:${scale}:${band}:${reducedMotion}:${includeCracks}`
         : null;
     if (key !== null && state.groundEmissiveKey === key && state.groundEmissiveFrame === frame)
         return state.groundEmissiveResult;
